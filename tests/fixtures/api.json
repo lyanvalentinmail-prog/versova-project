@@ -6,8 +6,8 @@
   "prefix": ".",
   "memoryMode": true,
   "uptimeSec": 4,
-  "commands": 41,
-  "implemented": 41,
+  "commands": 34,
+  "implemented": 34,
   "counts": {
    "totalBots": 2,
    "main": 0,
@@ -17,24 +17,15 @@
    "tokens": 0,
    "catalogUses": 2,
    "online": 1,
-   "commands": 41,
-   "implemented": 41,
-   "catalogBots": 12,
+   "commands": 34,
+   "implemented": 34,
+   "catalogBots": 3,
    "servers": 6
   },
   "catalogUses": {
    "versova": 1,
-   "moderador": 1,
-   "economia": 0,
-   "ia": 0,
-   "musica": 0,
-   "juegos": 0,
-   "stickers": 0,
-   "descargas": 0,
-   "bienvenidas": 0,
-   "encuestas": 0,
-   "ventas": 0,
-   "auditoria": 0
+   "raiden": 0,
+   "yae-miku": 0
   },
   "servers": [
    {
@@ -200,7 +191,11 @@
     "emoji": "🚀"
    }
   ],
-  "googleEnabled": false
+  "googleEnabled": false,
+  "support": {
+   "whatsapp": "59896719709",
+   "email": "lyanvalentinmail@gmail.com"
+  }
  },
  "/api/catalog": {
   "bots": [
@@ -243,402 +238,90 @@
     "priceUsd": 0,
     "users": 1,
     "owned": false,
-    "subbotId": null
+    "subbotId": null,
+    "priceCoins": 0,
+    "link": "https://github.com/lyanvalentinmail-prog/versova-project"
    },
    {
-    "slug": "moderador",
-    "name": "Moderador Pro",
-    "emoji": "🛡️",
-    "tagline": "Antilink, antispam y control total",
-    "description": "Bloquea enlaces, detecta spam y administra el grupo automáticamente. Expulsa, banea y devuelve integrantes con un solo comando.",
-    "category": "Moderación",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#22c55e",
-    "features": [
-     "Antilink y antispam configurables",
-     "Advertencias automáticas con límite",
-     "Expulsión, ban y desban con auditoría",
-     "Apertura y cierre del grupo"
-    ],
-    "commands": [
-     "add",
-     "expulsar",
-     "ban",
-     "unban",
-     "warn",
-     "unwarn",
-     "close",
-     "open",
-     "admins"
-    ],
-    "popularity": 88,
-    "featured": true,
-    "active": true,
-    "sort": 2,
-    "priceUsd": 0,
-    "users": 1,
-    "owned": true,
-    "subbotId": null
-   },
-   {
-    "slug": "economia",
-    "name": "Economía V-Coin",
-    "emoji": "🪙",
-    "tagline": "Monedas, tienda y ranking",
-    "description": "Le da monedas a tu grupo: trabajo, ruleta, robos con cooldown, tienda interna y ranking de los más ricos. También sirve para la economía de la plataforma.",
-    "category": "Economía",
-    "pricing": "coins",
-    "price_usd": "3.00",
-    "price_coins": 400,
-    "badge": "POPULAR",
-    "accent": "#f59e0b",
-    "features": [
-     "Monedero por integrante y por grupo",
-     "Trabajo, diario, ruleta y robo",
-     "Tienda interna con objetos",
-     "Ranking global de riqueza"
-    ],
-    "commands": [
-     "coins",
-     "daily",
-     "work",
-     "robar",
-     "rank",
-     "tienda",
-     "comprar"
-    ],
-    "popularity": 95,
-    "featured": true,
-    "active": true,
-    "sort": 3,
-    "priceUsd": 3,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "ia",
-    "name": "IA Assistant",
-    "emoji": "🤖",
-    "tagline": "ChatGPT dentro de tu grupo",
-    "description": "Responde preguntas, resume conversaciones, traduce y genera textos o imágenes. Se activa escrito el comando o respondiendo a un mensaje.",
-    "category": "Inteligencia",
-    "pricing": "coins",
-    "price_usd": "5.00",
-    "price_coins": 900,
-    "badge": "IA",
-    "accent": "#06b6d4",
-    "features": [
-     "Respuestas en español e inglés",
-     "Resumen de conversaciones largas",
-     "Traducción instantánea",
-     "Generación de imágenes"
-    ],
-    "commands": [
-     "ia",
-     "gpt",
-     "resumen",
-     "traducir",
-     "imagen"
-    ],
-    "popularity": 91,
-    "featured": true,
-    "active": true,
-    "sort": 4,
-    "priceUsd": 5,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "musica",
-    "name": "Música & Radio",
-    "emoji": "🎵",
-    "tagline": "Reproduce música en el grupo",
-    "description": "Descarga audio de tus enlaces favoritos y lo envía como nota de voz o archivo. Incluye radio 24/7 y listas compartidas.",
-    "category": "Música",
-    "pricing": "coins",
-    "price_usd": "4.00",
-    "price_coins": 600,
-    "badge": null,
-    "accent": "#ec4899",
-    "features": [
-     "Descarga de audio por enlace",
-     "Radio 24/7",
-     "Listas colaborativas",
-     "Letras sincronizadas"
-    ],
-    "commands": [
-     "play",
-     "audio",
-     "radio",
-     "letra",
-     "playlist"
-    ],
-    "popularity": 76,
-    "featured": false,
-    "active": true,
-    "sort": 5,
-    "priceUsd": 4,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "juegos",
-    "name": "Juegos & Trivia",
-    "emoji": "🎮",
-    "tagline": "Minijuegos para romper el hielo",
-    "description": "Trivia, ahorcado, dados, tic tac toe, preguntas de rol y torneos por grupos con premios en monedas.",
+    "slug": "raiden",
+    "name": "Raiden WaBot",
+    "emoji": "⚡",
+    "tagline": "Bot anime completo: descargas, stickers, IA y más",
+    "description": "Bot de WhatsApp en Node.js + Baileys inspirado en Raiden (Genshin Impact). Código abierto en GitHub.",
     "category": "Juegos",
-    "pricing": "coins",
-    "price_usd": "2.00",
-    "price_coins": 350,
-    "badge": null,
-    "accent": "#a855f7",
-    "features": [
-     "Trivia con premios",
-     "Ahorcado y dados",
-     "Torneos por equipos",
-     "Ranking de jugadores"
-    ],
-    "commands": [
-     "trivia",
-     "ahorcado",
-     "dados",
-     "ppt",
-     "torneo"
-    ],
-    "popularity": 70,
-    "featured": false,
-    "active": true,
-    "sort": 6,
-    "priceUsd": 2,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "stickers",
-    "name": "Stickers Studio",
-    "emoji": "🎨",
-    "tagline": "Crea stickers desde fotos y videos",
-    "description": "Convierte imágenes, videos y GIFs en stickers, quita fondos, recorta y añade texto. También hace emojis personalizados.",
-    "category": "Utilidades",
     "pricing": "free",
     "price_usd": "0.00",
     "price_coins": 0,
     "badge": "GRATIS",
-    "accent": "#14b8a6",
+    "accent": "#6366f1",
     "features": [
-     "Foto y video a sticker",
-     "Recorte y fondo transparente",
-     "Texto sobre stickers",
-     "Paquetes por grupo"
+     "Descargas: Instagram, YouTube, Spotify, TikTok y letras",
+     "Stickers: creación, estilo BRAT y Sticker.ly",
+     "Más de 40 comandos de reacciones anime",
+     "IA conversacional y generación de logos"
     ],
     "commands": [
+     "menu",
+     "ping",
+     "download",
      "sticker",
-     "s",
-     "attp",
-     "emojimix",
-     "toimg"
+     "marry",
+     "antilink"
     ],
-    "popularity": 84,
-    "featured": false,
+    "popularity": 86,
+    "featured": true,
     "active": true,
-    "sort": 7,
+    "sort": 1,
     "priceUsd": 0,
     "users": 0,
     "owned": false,
-    "subbotId": null
+    "subbotId": null,
+    "priceCoins": 0,
+    "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot"
    },
    {
-    "slug": "descargas",
-    "name": "Descargas Multi",
-    "emoji": "📥",
-    "tagline": "Video y audio de todas las redes",
-    "description": "Descarga video o audio desde TikTok, Instagram, YouTube, Twitter y Facebook con un solo comando y calidad configurable.",
-    "category": "Utilidades",
+    "slug": "yae-miku",
+    "name": "Yae Miku Bot",
+    "emoji": "🎧",
+    "tagline": "Bot de rol y moderación con sub-bots",
+    "description": "Bot de WhatsApp abierto en GitHub (MIT): matrimonio/divorcio, antilink y sub-bots persistentes.",
+    "category": "Juegos",
     "pricing": "free",
     "price_usd": "0.00",
     "price_coins": 0,
     "badge": "GRATIS",
-    "accent": "#3b82f6",
+    "accent": "#22d3ee",
     "features": [
-     "TikTok, IG, YouTube y más",
-     "Audio o video",
-     "Calidad seleccionable",
-     "Sin marca de agua"
+     "Matrimonio/divorcio con pareja visible en el perfil",
+     "Antilink: borra enlaces y expulsa al que los envíe",
+     "Sub-bots persistentes: se restauran al reconectar",
+     "Moderación de grupos y comandos sociales"
     ],
     "commands": [
-     "ytmp4",
-     "ytmp3",
-     "tiktok",
-     "ig",
-     "fb"
+     "menu",
+     "marry",
+     "divorce",
+     "antilink",
+     "profile",
+     "config"
     ],
-    "popularity": 82,
-    "featured": false,
+    "popularity": 74,
+    "featured": true,
     "active": true,
-    "sort": 8,
+    "sort": 1,
     "priceUsd": 0,
     "users": 0,
     "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "bienvenidas",
-    "name": "Bienvenidas & Despedidas",
-    "emoji": "🎉",
-    "tagline": "Recibe a los nuevos con estilo",
-    "description": "Mensajes e imágenes de bienvenida personalizables, contador de integrantes, despedidas y antidepuración de inactivos.",
-    "category": "Moderación",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#f97316",
-    "features": [
-     "Bienvenida con imagen",
-     "Despedida automática",
-     "Contador de miembros",
-     "Purga de inactivos"
-    ],
-    "commands": [
-     "bienvenida",
-     "despedida",
-     "setwelcome",
-     "inactivos",
-     "purga"
-    ],
-    "popularity": 68,
-    "featured": false,
-    "active": true,
-    "sort": 9,
-    "priceUsd": 0,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "encuestas",
-    "name": "Encuestas & Sorteos",
-    "emoji": "📊",
-    "tagline": "Decisiones del team en segundos",
-    "description": "Crea encuestas con votos en vivo, sorteos con requisitos y lista de participantes, y recordatorios para eventos del team.",
-    "category": "Team & Rol",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#eab308",
-    "features": [
-     "Encuestas con botones",
-     "Sorteos con requisitos",
-     "Recordatorios programados",
-     "Resultados en vivo"
-    ],
-    "commands": [
-     "encuesta",
-     "sorteo",
-     "recordar",
-     "votar"
-    ],
-    "popularity": 64,
-    "featured": false,
-    "active": true,
-    "sort": 10,
-    "priceUsd": 0,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "ventas",
-    "name": "Catálogo de Ventas",
-    "emoji": "🛒",
-    "tagline": "Vende dentro de WhatsApp",
-    "description": "Catálogo de productos, carrito, pedidos con confirmación y envío de datos de pago. Ideal para ventas de rol o servicios.",
-    "category": "Economía",
-    "pricing": "usd",
-    "price_usd": "8.00",
-    "price_coins": 1500,
-    "badge": "PRO",
-    "accent": "#ef4444",
-    "features": [
-     "Catálogo con imágenes",
-     "Carrito y pedidos",
-     "Estados de entrega",
-     "Historial de ventas"
-    ],
-    "commands": [
-     "catalogo",
-     "pedido",
-     "pagar",
-     "entregar"
-    ],
-    "popularity": 59,
-    "featured": false,
-    "active": true,
-    "sort": 11,
-    "priceUsd": 8,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
-   },
-   {
-    "slug": "auditoria",
-    "name": "Auditoría & Logs",
-    "emoji": "🔎",
-    "tagline": "Todo lo que pasa, registrado",
-    "description": "Registra cada acción administrativa, comandos usados y actividad del grupo. Exporta el historial cuando lo necesites.",
-    "category": "Moderación",
-    "pricing": "usd",
-    "price_usd": "12.00",
-    "price_coins": 2200,
-    "badge": "PRO",
-    "accent": "#64748b",
-    "features": [
-     "Log de administración",
-     "Estadísticas por integrante",
-     "Alertas al owner",
-     "Exportación CSV"
-    ],
-    "commands": [
-     "logs",
-     "stats",
-     "reporte",
-     "exportar"
-    ],
-    "popularity": 48,
-    "featured": false,
-    "active": true,
-    "sort": 12,
-    "priceUsd": 12,
-    "users": 0,
-    "owned": false,
-    "subbotId": null
+    "subbotId": null,
+    "priceCoins": 0,
+    "link": "https://github.com/Abrahan987/Yae-Miku-Bot"
    }
   ],
   "categories": [
    "Team & Rol",
-   "Moderación",
-   "Economía",
-   "Inteligencia",
-   "Música",
-   "Juegos",
-   "Utilidades"
+   "Juegos"
   ],
-  "owned": [
-   {
-    "slug": "moderador",
-    "subbotId": null,
-    "paidCoins": 0
-   }
-  ]
+  "owned": []
  },
  "/api/servers": {
   "servers": [
@@ -1193,90 +876,6 @@
     "usage": ".open"
    },
    {
-    "name": "coins",
-    "args": "[@usuario]",
-    "category": "Economía",
-    "description": "Muestra tus V-Coins.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".coins [@usuario]"
-   },
-   {
-    "name": "daily",
-    "args": "",
-    "category": "Economía",
-    "description": "Reclama tu bono diario.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".daily"
-   },
-   {
-    "name": "work",
-    "args": "",
-    "category": "Economía",
-    "description": "Trabaja para ganar V-Coins.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".work"
-   },
-   {
-    "name": "robar",
-    "args": "<@usuario>",
-    "category": "Economía",
-    "description": "Intenta robar V-Coins.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".robar <@usuario>"
-   },
-   {
-    "name": "rank",
-    "args": "",
-    "category": "Economía",
-    "description": "Ranking de riqueza del team.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".rank"
-   },
-   {
-    "name": "tienda",
-    "args": "",
-    "category": "Economía",
-    "description": "Muestra la tienda interna.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".tienda"
-   },
-   {
-    "name": "comprar",
-    "args": "<id>",
-    "category": "Economía",
-    "description": "Compra un objeto con V-Coins.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".comprar <id>"
-   },
-   {
     "name": "aceptar",
     "args": "",
     "category": "Interacción",
@@ -1303,7 +902,7 @@
   ]
  },
  "/api/menu": {
-  "text": "ㅤㅤㅤㅤۖㅤㅤㅤㅤㅤۖ\n\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤㅤㅤ𓆩ㅤ禊ㅤ𓆪\n\nㅤㅤㅤ𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨\n\nㅤㅤㅤㅤ𝐁𝗈𝗍 𝗌𝗒𝗌𝗍𝖾𝗆\n\nㅤ➢ㅤ◢𝟔𝟔 ; 𝟕𝟕◣ㅤ禍...ㅤ𝐁𝐎𝐓𝐒\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀ㅤ◌\n\nㅤㅤㅤㅤ𓆩 ☕ 𓆪\nㅤㅤㅤ𝓜𝓮𝓷𝓾 𝓭𝓮 𝓬𝓸𝓶𝓪𝓷𝓭𝓸𝓼\nㅤㅤㅤㅤ( ᵕ ᴗ ᵕ )♡\n\nㅤㅤ࿙ׄ࿚᮫᜔۬፟֟࿙ׄ࿚\n\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐅𝐎𝐑𝐌𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝖻𝗈𝗍 𝗂𝗇𝖿𝗈𝗋𝗆𝖺𝗍𝗂𝗈𝗇 𓂃\n\nㅤ𖦹ㅤ𝖭𝖺𝗆𝖾ㅤ⁙ㅤᴠᴇ́ʀsᴏᴠᴀ\nㅤ𖦹ㅤ𝖳𝖾𝖺𝗆ㅤ⁙    ◢禍◣ 𝐕𝖊𝖗𝖘𝖔𝐯𝖆 ࿙☕࿚\nㅤ𖦹ㅤ𝖯𝗋𝖾𝖿𝗂𝗑ㅤ⁙ㅤ.\nㅤ𖦹ㅤ𝖲𝗍𝖺𝗍𝗎𝗌ㅤ⁙ㅤᴏɴʟɪɴᴇ\nㅤ𖦹ㅤ𝖵𝖾𝗋𝗌𝗂𝗈𝗇ㅤ⁙ㅤ𝟷.𝟶\n\nㅤㅤㅤ(˶ᵔ ᵕ ᵔ˶) .ᐟ\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟏 ◣\n⸸ㅤ׃ㅤ ~𝕽𝐄𝐆𝐈𝐒𝐓𝐑𝐎~ ㅤ׃\nㅤㅤ𓂃 𝗆𝖾𝗆𝖻𝖾𝗋 𝗋𝖾𝗀𝗂𝗌𝗍𝗋𝖺𝗍𝗂𝗈𝗇 𓂃\nㅤㅤㅤ(｡•̀ᴗ-)✧\n\nㅤ୨ৎㅤ.reg <nombre.edad>\nㅤ୨ৎㅤ.unreg\nㅤ୨ৎㅤ.rol <personaje>\n    ୨ৎㅤ.roles \nㅤ୨ৎㅤ.ficha\nㅤ୨ৎㅤ.editar <nombre.edad>\nㅤ୨ৎㅤ.mirol\nㅤ୨ৎㅤ.cambiarol <personaje>\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᴗ͈ˬᴗ͈)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟐 ◣\n𖤐ㅤ׃ㅤ ~𝕲𝐄𝐒𝐓𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗍𝖾𝖺𝗆 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𓂃\nㅤㅤㅤ(๑˃̵ᴗ˂̵)و\n\nㅤ୨ৎㅤ.team\nㅤ୨ৎㅤ.miembros\nㅤ୨ৎㅤ.afk <motivo>\nㅤ୨ৎㅤ.inactivos\n\nㅤㅤ࿙🥢࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(˶˃ ᵕ ˂˶)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟑 ◣\n☕ㅤ׃ㅤ ~𝕻𝐄𝐑𝐒𝐎𝐍𝐀𝐉𝐄𝐒~ ㅤ׃\nㅤㅤ𓂃 𝗋𝗈𝗅𝖾 𝗌𝗒𝗌𝗍𝖾𝗆 𓂃\nㅤㅤㅤ( ੭ ˙ᗜ˙ )੭\n\nㅤ୨ৎㅤ.reservar\nㅤ୨ৎㅤ.liberar\n\nㅤㅤ࿙𖤐࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᵕ ᴗ ᵕ )ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟒 ◣\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐓𝐄𝐑𝐀𝐂𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗈𝖼𝗂𝖺𝗅 & 𝖿𝗎𝗇 𓂃\nㅤㅤㅤ(づ๑•ᴗ•๑)づ♡\n\nㅤ୨ৎㅤ.perfil <@usuario>\nㅤ୨ৎㅤ.pareja <@usuario>\nㅤ୨ৎㅤ.rechazar\nㅤ୨ৎㅤ.ship <@usuario> <@usuario>\nㅤ୨ৎㅤ.reglas\nㅤ୨ৎㅤ.admins\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(っ˘ω˘ς)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟓 ◣\n⛓️ㅤ׃ㅤ ~𝕬𝐃𝐌𝐈𝐍𝐈𝐒𝐓𝐑𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗍𝖺𝖿𝖿 𝗈𝗇𝗅𝗒 𓂃\nㅤㅤㅤ( •̀ - •́ )✧\n\nㅤ୨ৎㅤ.add\nㅤ୨ৎㅤ.expulsar\nㅤ୨ৎㅤ.ban\nㅤ୨ৎㅤ.unban\nㅤ୨ৎㅤ.resetrol\nㅤ୨ৎㅤ.warn\nㅤ୨ৎㅤ.unwarn\nㅤ୨ৎㅤ.acceptrol\nㅤ୨ৎㅤ.denyrol\nㅤ୨ৎㅤ.anuncio\nㅤ୨ৎㅤ.close\nㅤ୨ৎㅤ.open\n\nㅤㅤ࿙ׄ࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(๑˃̵ᴗ˂̵)وㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟔 ◣\n🪙ㅤ׃ㅤ ~𝕰𝐂𝐎𝐍𝐎𝐌𝐈𝐀~ ㅤ׃\nㅤㅤ𓂃 𝗏-𝖼𝗈𝗂𝗇𝗌 & 𝗅𝗈𝗈𝗍 𓂃\nㅤㅤㅤ(づ｡◕‿‿◕｡)づ\n\nㅤ୨ৎㅤ.coins [@usuario]\nㅤ୨ৎㅤ.daily\nㅤ୨ৎㅤ.work\nㅤ୨ৎㅤ.robar <@usuario>\nㅤ୨ৎㅤ.rank\nㅤ୨ৎㅤ.tienda\nㅤ୨ৎㅤ.comprar <id>\n\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ𓆩ㅤ禍ㅤ𓆪\nㅤㅤ ~𝕰𝐍𝐃 𝐎𝐅 𝐌𝐄𝐍𝐔~\nㅤㅤㅤ( ᴗ͈ˬᴗ͈) ♡\n\nㅤㅤ𝖸𝗈𝗎𝗋 𝗋𝗈𝗅𝖾 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗂𝖽𝖾𝗇𝗍𝗂𝗍𝗒.\nㅤㅤ𝖸𝗈𝗎\n\n𝗋 𝗍𝖾𝖺𝗆 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗌𝗍𝗈𝗋𝗒.\n\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀\nㅤㅤㅤ𝖾𝗌𝗍.ㅤ𝟐𝟎𝟐𝟔\n\nㅤㅤ࿙ׄ࿚ㅤ𓆩 ☕ 𝟔𝟔 ; 𝟕𝟕𓆪ㅤ࿙ׄ࿚",
+  "text": "ㅤㅤㅤㅤۖㅤㅤㅤㅤㅤۖ\n\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤㅤㅤ𓆩ㅤ禊ㅤ𓆪\n\nㅤㅤㅤ𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨\n\nㅤㅤㅤㅤ𝐁𝗈𝗍 𝗌𝗒𝗌𝗍𝖾𝗆\n\nㅤ➢ㅤ◢𝟔𝟔 ; 𝟕𝟕◣ㅤ禍...ㅤ𝐁𝐎𝐓𝐒\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀ㅤ◌\n\nㅤㅤㅤㅤ𓆩 ☕ 𓆪\nㅤㅤㅤ𝓜𝓮𝓷𝓾 𝓭𝓮 𝓬𝓸𝓶𝓪𝓷𝓭𝓸𝓼\nㅤㅤㅤㅤ( ᵕ ᴗ ᵕ )♡\n\nㅤㅤ࿙ׄ࿚᮫᜔۬፟֟࿙ׄ࿚\n\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐅𝐎𝐑𝐌𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝖻𝗈𝗍 𝗂𝗇𝖿𝗈𝗋𝗆𝖺𝗍𝗂𝗈𝗇 𓂃\n\nㅤ𖦹ㅤ𝖭𝖺𝗆𝖾ㅤ⁙ㅤᴠᴇ́ʀsᴏᴠᴀ\nㅤ𖦹ㅤ𝖳𝖾𝖺𝗆ㅤ⁙    ◢禍◣ 𝐕𝖊𝖗𝖘𝖔𝐯𝖆 ࿙☕࿚\nㅤ𖦹ㅤ𝖯𝗋𝖾𝖿𝗂𝗑ㅤ⁙ㅤ.\nㅤ𖦹ㅤ𝖲𝗍𝖺𝗍𝗎𝗌ㅤ⁙ㅤᴏɴʟɪɴᴇ\nㅤ𖦹ㅤ𝖵𝖾𝗋𝗌𝗂𝗈𝗇ㅤ⁙ㅤ𝟷.𝟶\n\nㅤㅤㅤ(˶ᵔ ᵕ ᵔ˶) .ᐟ\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟏 ◣\n⸸ㅤ׃ㅤ ~𝕽𝐄𝐆𝐈𝐒𝐓𝐑𝐎~ ㅤ׃\nㅤㅤ𓂃 𝗆𝖾𝗆𝖻𝖾𝗋 𝗋𝖾𝗀𝗂𝗌𝗍𝗋𝖺𝗍𝗂𝗈𝗇 𓂃\nㅤㅤㅤ(｡•̀ᴗ-)✧\n\nㅤ୨ৎㅤ.reg <nombre.edad>\nㅤ୨ৎㅤ.unreg\nㅤ୨ৎㅤ.rol <personaje>\n    ୨ৎㅤ.roles \nㅤ୨ৎㅤ.ficha\nㅤ୨ৎㅤ.editar <nombre.edad>\nㅤ୨ৎㅤ.mirol\nㅤ୨ৎㅤ.cambiarol <personaje>\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᴗ͈ˬᴗ͈)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟐 ◣\n𖤐ㅤ׃ㅤ ~𝕲𝐄𝐒𝐓𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗍𝖾𝖺𝗆 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𓂃\nㅤㅤㅤ(๑˃̵ᴗ˂̵)و\n\nㅤ୨ৎㅤ.team\nㅤ୨ৎㅤ.miembros\nㅤ୨ৎㅤ.afk <motivo>\nㅤ୨ৎㅤ.inactivos\n\nㅤㅤ࿙🥢࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(˶˃ ᵕ ˂˶)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟑 ◣\n☕ㅤ׃ㅤ ~𝕻𝐄𝐑𝐒𝐎𝐍𝐀𝐉𝐄𝐒~ ㅤ׃\nㅤㅤ𓂃 𝗋𝗈𝗅𝖾 𝗌𝗒𝗌𝗍𝖾𝗆 𓂃\nㅤㅤㅤ( ੭ ˙ᗜ˙ )੭\n\nㅤ୨ৎㅤ.reservar\nㅤ୨ৎㅤ.liberar\n\nㅤㅤ࿙𖤐࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᵕ ᴗ ᵕ )ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟒 ◣\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐓𝐄𝐑𝐀𝐂𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗈𝖼𝗂𝖺𝗅 & 𝖿𝗎𝗇 𓂃\nㅤㅤㅤ(づ๑•ᴗ•๑)づ♡\n\nㅤ୨ৎㅤ.perfil <@usuario>\nㅤ୨ৎㅤ.pareja <@usuario>\nㅤ୨ৎㅤ.rechazar\nㅤ୨ৎㅤ.ship <@usuario> <@usuario>\nㅤ୨ৎㅤ.reglas\nㅤ୨ৎㅤ.admins\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(っ˘ω˘ς)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟓 ◣\n⛓️ㅤ׃ㅤ ~𝕬𝐃𝐌𝐈𝐍𝐈𝐒𝐓𝐑𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗍𝖺𝖿𝖿 𝗈𝗇𝗅𝗒 𓂃\nㅤㅤㅤ( •̀ - •́ )✧\n\nㅤ୨ৎㅤ.add\nㅤ୨ৎㅤ.expulsar\nㅤ୨ৎㅤ.ban\nㅤ୨ৎㅤ.unban\nㅤ୨ৎㅤ.resetrol\nㅤ୨ৎㅤ.warn\nㅤ୨ৎㅤ.unwarn\nㅤ୨ৎㅤ.acceptrol\nㅤ୨ৎㅤ.denyrol\nㅤ୨ৎㅤ.anuncio\nㅤ୨ৎㅤ.close\nㅤ୨ৎㅤ.open\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ𓆩ㅤ禍ㅤ𓆪\nㅤㅤ ~𝕰𝐍𝐃 𝐎𝐅 𝐌𝐄𝐍𝐔~\nㅤㅤㅤ( ᴗ͈ˬᴗ͈) ♡\n\nㅤㅤ𝖸𝗈𝗎𝗋 𝗋𝗈𝗅𝖾 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗂𝖽𝖾𝗇𝗍𝗂𝗍𝗒.\nㅤㅤ𝖸𝗈𝗎\n\n𝗋 𝗍𝖾𝖺𝗆 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗌𝗍𝗈𝗋𝗒.\n\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀\nㅤㅤㅤ𝖾𝗌𝗍.ㅤ𝟐𝟎𝟐𝟔\n\nㅤㅤ࿙ׄ࿚ㅤ𓆩 ☕ 𝟔𝟔 ; 𝟕𝟕𓆪ㅤ࿙ׄ࿚",
   "hasBannerImage": false,
   "imageUrl": null
  },
@@ -1323,7 +922,6 @@
     "color": "free"
    },
    "extraSpaceGb": 0,
-   "coins": 275,
    "handle": null,
    "avatarUrl": null,
    "theme": "dark",
@@ -1529,339 +1127,6 @@
     "featured": true,
     "active": true,
     "sort": 1
-   },
-   {
-    "slug": "moderador",
-    "name": "Moderador Pro",
-    "emoji": "🛡️",
-    "tagline": "Antilink, antispam y control total",
-    "description": "Bloquea enlaces, detecta spam y administra el grupo automáticamente. Expulsa, banea y devuelve integrantes con un solo comando.",
-    "category": "Moderación",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#22c55e",
-    "features": [
-     "Antilink y antispam configurables",
-     "Advertencias automáticas con límite",
-     "Expulsión, ban y desban con auditoría",
-     "Apertura y cierre del grupo"
-    ],
-    "commands": [
-     "add",
-     "expulsar",
-     "ban",
-     "unban",
-     "warn",
-     "unwarn",
-     "close",
-     "open",
-     "admins"
-    ],
-    "popularity": 88,
-    "featured": true,
-    "active": true,
-    "sort": 2
-   },
-   {
-    "slug": "economia",
-    "name": "Economía V-Coin",
-    "emoji": "🪙",
-    "tagline": "Monedas, tienda y ranking",
-    "description": "Le da monedas a tu grupo: trabajo, ruleta, robos con cooldown, tienda interna y ranking de los más ricos. También sirve para la economía de la plataforma.",
-    "category": "Economía",
-    "pricing": "coins",
-    "price_usd": "3.00",
-    "price_coins": 400,
-    "badge": "POPULAR",
-    "accent": "#f59e0b",
-    "features": [
-     "Monedero por integrante y por grupo",
-     "Trabajo, diario, ruleta y robo",
-     "Tienda interna con objetos",
-     "Ranking global de riqueza"
-    ],
-    "commands": [
-     "coins",
-     "daily",
-     "work",
-     "robar",
-     "rank",
-     "tienda",
-     "comprar"
-    ],
-    "popularity": 95,
-    "featured": true,
-    "active": true,
-    "sort": 3
-   },
-   {
-    "slug": "ia",
-    "name": "IA Assistant",
-    "emoji": "🤖",
-    "tagline": "ChatGPT dentro de tu grupo",
-    "description": "Responde preguntas, resume conversaciones, traduce y genera textos o imágenes. Se activa escrito el comando o respondiendo a un mensaje.",
-    "category": "Inteligencia",
-    "pricing": "coins",
-    "price_usd": "5.00",
-    "price_coins": 900,
-    "badge": "IA",
-    "accent": "#06b6d4",
-    "features": [
-     "Respuestas en español e inglés",
-     "Resumen de conversaciones largas",
-     "Traducción instantánea",
-     "Generación de imágenes"
-    ],
-    "commands": [
-     "ia",
-     "gpt",
-     "resumen",
-     "traducir",
-     "imagen"
-    ],
-    "popularity": 91,
-    "featured": true,
-    "active": true,
-    "sort": 4
-   },
-   {
-    "slug": "musica",
-    "name": "Música & Radio",
-    "emoji": "🎵",
-    "tagline": "Reproduce música en el grupo",
-    "description": "Descarga audio de tus enlaces favoritos y lo envía como nota de voz o archivo. Incluye radio 24/7 y listas compartidas.",
-    "category": "Música",
-    "pricing": "coins",
-    "price_usd": "4.00",
-    "price_coins": 600,
-    "badge": null,
-    "accent": "#ec4899",
-    "features": [
-     "Descarga de audio por enlace",
-     "Radio 24/7",
-     "Listas colaborativas",
-     "Letras sincronizadas"
-    ],
-    "commands": [
-     "play",
-     "audio",
-     "radio",
-     "letra",
-     "playlist"
-    ],
-    "popularity": 76,
-    "featured": false,
-    "active": true,
-    "sort": 5
-   },
-   {
-    "slug": "juegos",
-    "name": "Juegos & Trivia",
-    "emoji": "🎮",
-    "tagline": "Minijuegos para romper el hielo",
-    "description": "Trivia, ahorcado, dados, tic tac toe, preguntas de rol y torneos por grupos con premios en monedas.",
-    "category": "Juegos",
-    "pricing": "coins",
-    "price_usd": "2.00",
-    "price_coins": 350,
-    "badge": null,
-    "accent": "#a855f7",
-    "features": [
-     "Trivia con premios",
-     "Ahorcado y dados",
-     "Torneos por equipos",
-     "Ranking de jugadores"
-    ],
-    "commands": [
-     "trivia",
-     "ahorcado",
-     "dados",
-     "ppt",
-     "torneo"
-    ],
-    "popularity": 70,
-    "featured": false,
-    "active": true,
-    "sort": 6
-   },
-   {
-    "slug": "stickers",
-    "name": "Stickers Studio",
-    "emoji": "🎨",
-    "tagline": "Crea stickers desde fotos y videos",
-    "description": "Convierte imágenes, videos y GIFs en stickers, quita fondos, recorta y añade texto. También hace emojis personalizados.",
-    "category": "Utilidades",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#14b8a6",
-    "features": [
-     "Foto y video a sticker",
-     "Recorte y fondo transparente",
-     "Texto sobre stickers",
-     "Paquetes por grupo"
-    ],
-    "commands": [
-     "sticker",
-     "s",
-     "attp",
-     "emojimix",
-     "toimg"
-    ],
-    "popularity": 84,
-    "featured": false,
-    "active": true,
-    "sort": 7
-   },
-   {
-    "slug": "descargas",
-    "name": "Descargas Multi",
-    "emoji": "📥",
-    "tagline": "Video y audio de todas las redes",
-    "description": "Descarga video o audio desde TikTok, Instagram, YouTube, Twitter y Facebook con un solo comando y calidad configurable.",
-    "category": "Utilidades",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#3b82f6",
-    "features": [
-     "TikTok, IG, YouTube y más",
-     "Audio o video",
-     "Calidad seleccionable",
-     "Sin marca de agua"
-    ],
-    "commands": [
-     "ytmp4",
-     "ytmp3",
-     "tiktok",
-     "ig",
-     "fb"
-    ],
-    "popularity": 82,
-    "featured": false,
-    "active": true,
-    "sort": 8
-   },
-   {
-    "slug": "bienvenidas",
-    "name": "Bienvenidas & Despedidas",
-    "emoji": "🎉",
-    "tagline": "Recibe a los nuevos con estilo",
-    "description": "Mensajes e imágenes de bienvenida personalizables, contador de integrantes, despedidas y antidepuración de inactivos.",
-    "category": "Moderación",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#f97316",
-    "features": [
-     "Bienvenida con imagen",
-     "Despedida automática",
-     "Contador de miembros",
-     "Purga de inactivos"
-    ],
-    "commands": [
-     "bienvenida",
-     "despedida",
-     "setwelcome",
-     "inactivos",
-     "purga"
-    ],
-    "popularity": 68,
-    "featured": false,
-    "active": true,
-    "sort": 9
-   },
-   {
-    "slug": "encuestas",
-    "name": "Encuestas & Sorteos",
-    "emoji": "📊",
-    "tagline": "Decisiones del team en segundos",
-    "description": "Crea encuestas con votos en vivo, sorteos con requisitos y lista de participantes, y recordatorios para eventos del team.",
-    "category": "Team & Rol",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#eab308",
-    "features": [
-     "Encuestas con botones",
-     "Sorteos con requisitos",
-     "Recordatorios programados",
-     "Resultados en vivo"
-    ],
-    "commands": [
-     "encuesta",
-     "sorteo",
-     "recordar",
-     "votar"
-    ],
-    "popularity": 64,
-    "featured": false,
-    "active": true,
-    "sort": 10
-   },
-   {
-    "slug": "ventas",
-    "name": "Catálogo de Ventas",
-    "emoji": "🛒",
-    "tagline": "Vende dentro de WhatsApp",
-    "description": "Catálogo de productos, carrito, pedidos con confirmación y envío de datos de pago. Ideal para ventas de rol o servicios.",
-    "category": "Economía",
-    "pricing": "usd",
-    "price_usd": "8.00",
-    "price_coins": 1500,
-    "badge": "PRO",
-    "accent": "#ef4444",
-    "features": [
-     "Catálogo con imágenes",
-     "Carrito y pedidos",
-     "Estados de entrega",
-     "Historial de ventas"
-    ],
-    "commands": [
-     "catalogo",
-     "pedido",
-     "pagar",
-     "entregar"
-    ],
-    "popularity": 59,
-    "featured": false,
-    "active": true,
-    "sort": 11
-   },
-   {
-    "slug": "auditoria",
-    "name": "Auditoría & Logs",
-    "emoji": "🔎",
-    "tagline": "Todo lo que pasa, registrado",
-    "description": "Registra cada acción administrativa, comandos usados y actividad del grupo. Exporta el historial cuando lo necesites.",
-    "category": "Moderación",
-    "pricing": "usd",
-    "price_usd": "12.00",
-    "price_coins": 2200,
-    "badge": "PRO",
-    "accent": "#64748b",
-    "features": [
-     "Log de administración",
-     "Estadísticas por integrante",
-     "Alertas al owner",
-     "Exportación CSV"
-    ],
-    "commands": [
-     "logs",
-     "stats",
-     "reporte",
-     "exportar"
-    ],
-    "popularity": 48,
-    "featured": false,
-    "active": true,
-    "sort": 12
    }
   ],
   "uses": [
@@ -1880,378 +1145,7 @@
    "extraSpaceGb": 0,
    "extraSpaceFree": 0
   },
-  "economy": {
-   "coin": {
-    "name": "V-Coin",
-    "symbol": "🪙",
-    "prefix": "V$"
-   },
-   "coins": 275,
-   "ledger": [
-    {
-     "id": 3,
-     "user_id": 2,
-     "amount": 25,
-     "kind": "daily",
-     "detail": "Bono diario",
-     "meta": {},
-     "created_at": "2026-10-12T08:10:32.275Z"
-    },
-    {
-     "id": 2,
-     "user_id": 2,
-     "amount": 250,
-     "kind": "welcome",
-     "detail": "Bono de bienvenida",
-     "meta": {},
-     "created_at": "2026-10-12T08:10:32.239Z"
-    }
-   ],
-   "items": [
-    {
-     "id": "coin-space-1gb",
-     "name": "1 GB extra de espacio",
-     "description": "Suma 1 GB al pool de tu cuenta y repártelo entre tus bots.",
-     "price_coins": 300,
-     "kind": "space",
-     "payload": {
-      "spaceGb": 1
-     },
-     "badge": null,
-     "available": true,
-     "sort": 1
-    },
-    {
-     "id": "coin-token-premium",
-     "name": "Token Premium",
-     "description": "Canjeable al crear un sub-bot Premium (2 GB dedicados).",
-     "price_coins": 700,
-     "kind": "token",
-     "payload": {
-      "tier": "premium",
-      "spaceGb": 2
-     },
-     "badge": "RECOMENDADO",
-     "available": true,
-     "sort": 2
-    },
-    {
-     "id": "coin-token-vip",
-     "name": "Token VIP",
-     "description": "Canjeable al crear un sub-bot VIP (4 GB dedicados).",
-     "price_coins": 2500,
-     "kind": "token",
-     "payload": {
-      "tier": "vip",
-      "spaceGb": 4
-     },
-     "badge": null,
-     "available": true,
-     "sort": 3
-    },
-    {
-     "id": "coin-plan-premium",
-     "name": "Plan Premium",
-     "description": "Hasta 5 bots con 2 GB por bot y acceso anticipado a comandos.",
-     "price_coins": 1200,
-     "kind": "plan",
-     "payload": {
-      "plan": "premium"
-     },
-     "badge": null,
-     "available": true,
-     "sort": 4
-    },
-    {
-     "id": "coin-plan-vip",
-     "name": "Plan VIP",
-     "description": "Hasta 10 bots con 5 GB por bot, prioridad de soporte y todo ilimitado.",
-     "price_coins": 4000,
-     "kind": "plan",
-     "payload": {
-      "plan": "vip"
-     },
-     "badge": "TOP",
-     "available": true,
-     "sort": 5
-    },
-    {
-     "id": "coin-banner-pack",
-     "name": "Pack de banners",
-     "description": "Banners animados listos para tu menú, más 3 subidas extra de imagen.",
-     "price_coins": 150,
-     "kind": "premium-feature",
-     "payload": {
-      "banners": 5
-     },
-     "badge": null,
-     "available": true,
-     "sort": 6
-    },
-    {
-     "id": "coin-prefix-pack",
-     "name": "Pack de prefijos",
-     "description": "Activa hasta 8 prefijos simultáneos (/, #, !, +, -, ., *, ~) en un bot.",
-     "price_coins": 250,
-     "kind": "premium-feature",
-     "payload": {
-      "prefixes": 8
-     },
-     "badge": null,
-     "available": true,
-     "sort": 7
-    }
-   ],
-   "daily": {
-    "available": false,
-    "lastClaimAt": "2026-10-12T08:10:32.275Z",
-    "nextAt": "2026-10-13T08:10:32.275Z",
-    "reward": 25
-   },
-   "missions": [
-    {
-     "id": "daily",
-     "name": "Bono diario",
-     "description": "Entra cada día y reclama tus monedas.",
-     "reward": 25,
-     "claimed": false,
-     "ready": false,
-     "available": true
-    },
-    {
-     "id": "profile",
-     "name": "Perfil completo",
-     "description": "Pon nombre corto, moneda y canal en un bot.",
-     "reward": 60,
-     "claimed": false,
-     "ready": false,
-     "available": false
-    },
-    {
-     "id": "first-bot",
-     "name": "Primer bot",
-     "description": "Crea tu primer bot en la plataforma.",
-     "reward": 100,
-     "claimed": false,
-     "ready": true,
-     "available": true
-    },
-    {
-     "id": "first-catalog",
-     "name": "Primer bot del catálogo",
-     "description": "Activa cualquier bot del catálogo.",
-     "reward": 80,
-     "claimed": false,
-     "ready": true,
-     "available": true
-    },
-    {
-     "id": "first-purchase",
-     "name": "Primera compra",
-     "description": "Compra algo en la tienda con V-Coins.",
-     "reward": 50,
-     "claimed": false,
-     "ready": false,
-     "available": false
-    },
-    {
-     "id": "three-bots",
-     "name": "Coleccionista",
-     "description": "Ten 3 bots activos a la vez.",
-     "reward": 150,
-     "claimed": false,
-     "ready": false,
-     "available": false
-    }
-   ]
-  },
   "tokens": []
- },
- "/api/economy": {
-  "coin": {
-   "name": "V-Coin",
-   "symbol": "🪙",
-   "prefix": "V$"
-  },
-  "coins": 275,
-  "ledger": [
-   {
-    "id": 3,
-    "user_id": 2,
-    "amount": 25,
-    "kind": "daily",
-    "detail": "Bono diario",
-    "meta": {},
-    "created_at": "2026-10-12T08:10:32.275Z"
-   },
-   {
-    "id": 2,
-    "user_id": 2,
-    "amount": 250,
-    "kind": "welcome",
-    "detail": "Bono de bienvenida",
-    "meta": {},
-    "created_at": "2026-10-12T08:10:32.239Z"
-   }
-  ],
-  "items": [
-   {
-    "id": "coin-space-1gb",
-    "name": "1 GB extra de espacio",
-    "description": "Suma 1 GB al pool de tu cuenta y repártelo entre tus bots.",
-    "price_coins": 300,
-    "kind": "space",
-    "payload": {
-     "spaceGb": 1
-    },
-    "badge": null,
-    "available": true,
-    "sort": 1
-   },
-   {
-    "id": "coin-token-premium",
-    "name": "Token Premium",
-    "description": "Canjeable al crear un sub-bot Premium (2 GB dedicados).",
-    "price_coins": 700,
-    "kind": "token",
-    "payload": {
-     "tier": "premium",
-     "spaceGb": 2
-    },
-    "badge": "RECOMENDADO",
-    "available": true,
-    "sort": 2
-   },
-   {
-    "id": "coin-token-vip",
-    "name": "Token VIP",
-    "description": "Canjeable al crear un sub-bot VIP (4 GB dedicados).",
-    "price_coins": 2500,
-    "kind": "token",
-    "payload": {
-     "tier": "vip",
-     "spaceGb": 4
-    },
-    "badge": null,
-    "available": true,
-    "sort": 3
-   },
-   {
-    "id": "coin-plan-premium",
-    "name": "Plan Premium",
-    "description": "Hasta 5 bots con 2 GB por bot y acceso anticipado a comandos.",
-    "price_coins": 1200,
-    "kind": "plan",
-    "payload": {
-     "plan": "premium"
-    },
-    "badge": null,
-    "available": true,
-    "sort": 4
-   },
-   {
-    "id": "coin-plan-vip",
-    "name": "Plan VIP",
-    "description": "Hasta 10 bots con 5 GB por bot, prioridad de soporte y todo ilimitado.",
-    "price_coins": 4000,
-    "kind": "plan",
-    "payload": {
-     "plan": "vip"
-    },
-    "badge": "TOP",
-    "available": true,
-    "sort": 5
-   },
-   {
-    "id": "coin-banner-pack",
-    "name": "Pack de banners",
-    "description": "Banners animados listos para tu menú, más 3 subidas extra de imagen.",
-    "price_coins": 150,
-    "kind": "premium-feature",
-    "payload": {
-     "banners": 5
-    },
-    "badge": null,
-    "available": true,
-    "sort": 6
-   },
-   {
-    "id": "coin-prefix-pack",
-    "name": "Pack de prefijos",
-    "description": "Activa hasta 8 prefijos simultáneos (/, #, !, +, -, ., *, ~) en un bot.",
-    "price_coins": 250,
-    "kind": "premium-feature",
-    "payload": {
-     "prefixes": 8
-    },
-    "badge": null,
-    "available": true,
-    "sort": 7
-   }
-  ],
-  "daily": {
-   "available": false,
-   "lastClaimAt": "2026-10-12T08:10:32.275Z",
-   "nextAt": "2026-10-13T08:10:32.275Z",
-   "reward": 25
-  },
-  "missions": [
-   {
-    "id": "daily",
-    "name": "Bono diario",
-    "description": "Entra cada día y reclama tus monedas.",
-    "reward": 25,
-    "claimed": false,
-    "ready": false,
-    "available": true
-   },
-   {
-    "id": "profile",
-    "name": "Perfil completo",
-    "description": "Pon nombre corto, moneda y canal en un bot.",
-    "reward": 60,
-    "claimed": false,
-    "ready": false,
-    "available": false
-   },
-   {
-    "id": "first-bot",
-    "name": "Primer bot",
-    "description": "Crea tu primer bot en la plataforma.",
-    "reward": 100,
-    "claimed": false,
-    "ready": true,
-    "available": true
-   },
-   {
-    "id": "first-catalog",
-    "name": "Primer bot del catálogo",
-    "description": "Activa cualquier bot del catálogo.",
-    "reward": 80,
-    "claimed": false,
-    "ready": true,
-    "available": true
-   },
-   {
-    "id": "first-purchase",
-    "name": "Primera compra",
-    "description": "Compra algo en la tienda con V-Coins.",
-    "reward": 50,
-    "claimed": false,
-    "ready": false,
-    "available": false
-   },
-   {
-    "id": "three-bots",
-    "name": "Coleccionista",
-    "description": "Ten 3 bots activos a la vez.",
-    "reward": 150,
-    "claimed": false,
-    "ready": false,
-    "available": false
-   }
-  ],
-  "purchases": []
  },
  "/api/store/catalog": {
   "items": [
@@ -2260,27 +1154,29 @@
     "kind": "token",
     "name": "Token Premium",
     "description": "Canjeable al crear un sub-bot Premium (2 GB). Se entrega al instante tras la compra.",
-    "priceUsd": 1,
+    "priceUsd": 0,
     "available": true,
     "tier": "premium",
-    "spaceGb": 2
+    "spaceGb": 2,
+    "badge": "GRATIS"
    },
    {
     "id": "token-vip",
     "kind": "token",
     "name": "Token VIP",
     "description": "Canjeable al crear un sub-bot VIP (4 GB). Se entrega al instante tras la compra.",
-    "priceUsd": 5,
+    "priceUsd": 0,
     "available": true,
     "tier": "vip",
-    "spaceGb": 4
+    "spaceGb": 4,
+    "badge": "GRATIS"
    },
    {
     "id": "space-1gb",
     "kind": "space",
     "name": "1 GB extra",
     "description": "Espacio adicional en el pool de tu cuenta. Repártelo entre tus sub-bots como quieras.",
-    "priceUsd": 1,
+    "priceUsd": 0,
     "available": true,
     "spaceGb": 1
    },
@@ -2289,7 +1185,7 @@
     "kind": "plan",
     "name": "Plan Premium",
     "description": "Hasta 5 sub-bots con 2 GB por bot. Actívalo al instante.",
-    "priceUsd": 1,
+    "priceUsd": 0,
     "available": true,
     "plan": "premium"
    },
@@ -2298,75 +1194,10 @@
     "kind": "plan",
     "name": "Plan VIP",
     "description": "Hasta 10 sub-bots con 5 GB por bot. Actívalo al instante.",
-    "priceUsd": 5,
+    "priceUsd": 0,
     "available": true,
-    "plan": "vip"
-   },
-   {
-    "id": "coins-500",
-    "kind": "coins",
-    "name": "500 V-Coins",
-    "description": "Monedas de la plataforma para activar bots del catálogo y comprar mejoras.",
-    "priceUsd": 2,
-    "available": true,
-    "coins": 500,
-    "badge": "ECONOMÍA"
-   },
-   {
-    "id": "coins-1600",
-    "kind": "coins",
-    "name": "1600 V-Coins",
-    "description": "1600 monedas (100 de regalo) para el catálogo y la tienda interna.",
-    "priceUsd": 5,
-    "available": true,
-    "coins": 1600,
-    "badge": "+100 BONUS"
-   },
-   {
-    "id": "coins-4500",
-    "kind": "coins",
-    "name": "4500 V-Coins",
-    "description": "4500 monedas (500 de regalo) para desbloquear los bots PRO.",
-    "priceUsd": 10,
-    "available": true,
-    "coins": 4500,
-    "badge": "+500 BONUS"
-   },
-   {
-    "id": "bot-musica",
-    "kind": "bot",
-    "name": "Sub-bot de Música",
-    "description": "Descargas, playlists y radio en tu grupo.",
-    "priceUsd": 3,
-    "available": false,
-    "badge": "Próximamente"
-   },
-   {
-    "id": "bot-juegos",
-    "kind": "bot",
-    "name": "Sub-bot de Juegos",
-    "description": "Trivia, dados y rankings para tu team.",
-    "priceUsd": 3,
-    "available": false,
-    "badge": "Próximamente"
-   },
-   {
-    "id": "bot-ia",
-    "kind": "bot",
-    "name": "Sub-bot IA",
-    "description": "Chat inteligente, resúmenes e imágenes.",
-    "priceUsd": 8,
-    "available": false,
-    "badge": "Próximamente"
-   },
-   {
-    "id": "bot-stickers",
-    "kind": "bot",
-    "name": "Sub-bot de Stickers",
-    "description": "Crea stickers desde fotos y videos.",
-    "priceUsd": 2,
-    "available": false,
-    "badge": "Próximamente"
+    "plan": "vip",
+    "badge": "TOP"
    }
   ],
   "plans": {
@@ -2381,7 +1212,7 @@
    "premium": {
     "id": "premium",
     "name": "Premium",
-    "priceUsd": 1,
+    "priceUsd": 0,
     "spacePerBotGb": 2,
     "maxBots": 5,
     "color": "premium"
@@ -2389,7 +1220,7 @@
    "vip": {
     "id": "vip",
     "name": "VIP",
-    "priceUsd": 5,
+    "priceUsd": 0,
     "spacePerBotGb": 5,
     "maxBots": 10,
     "color": "vip"
@@ -2406,13 +1237,13 @@
     "name": "Premium",
     "spaceGb": 2,
     "requiresToken": true,
-    "priceUsd": 1
+    "priceUsd": 0
    },
    "vip": {
     "name": "VIP",
     "spaceGb": 4,
     "requiresToken": true,
-    "priceUsd": 5
+    "priceUsd": 0
    }
   },
   "user": {
@@ -2430,13 +1261,11 @@
     "color": "free"
    },
    "extraSpaceGb": 0,
-   "coins": 275,
    "handle": null,
    "avatarUrl": null,
    "theme": "dark",
    "createdAt": "2026-10-12T08:10:32.239Z"
   },
-  "coins": 275,
   "usage": {
    "botsUsed": 1,
    "botsMax": 3,

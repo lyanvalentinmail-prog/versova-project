@@ -17,9 +17,23 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: OWNER_NUMBERS
-        sync: false
+        value: "59896719709"
+      - key: OWNER_EMAIL
+        value: "lyanvalentinmail@gmail.com"
       - key: BOT_PHONE
         sync: false
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_SECURE
+        value: "false"
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+      - key: MAIL_FROM
+        value: "Versova <no-reply@versova.app>"
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET

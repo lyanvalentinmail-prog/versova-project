@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS groups (
@@ -184,26 +184,12 @@ ALTER TABLE subbots ADD COLUMN IF NOT EXISTS display_name  TEXT NOT NULL DEFAULT
 ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_prefix    TEXT NOT NULL DEFAULT '.';
 ALTER TABLE subbots ADD COLUMN IF NOT EXISTS banner_text   TEXT NOT NULL DEFAULT '';
 
--- Economía dentro de cada grupo (bot de economía / monedas del team).
-CREATE TABLE IF NOT EXISTS group_bank (
-  group_id      TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-  wa_id         TEXT NOT NULL,
-  coins         INTEGER NOT NULL DEFAULT 0,
-  last_daily_at TIMESTAMPTZ,
-  last_work_at  TIMESTAMPTZ,
-  last_rob_at   TIMESTAMPTZ,
-  inventory     JSONB NOT NULL DEFAULT '[]',
-  PRIMARY KEY (group_id, wa_id)
-);
-CREATE INDEX IF NOT EXISTS group_bank_coins ON group_bank (group_id, coins DESC);
-
 -- Reglas y anuncios configurables por grupo.
 ALTER TABLE groups ADD COLUMN IF NOT EXISTS rules TEXT NOT NULL DEFAULT '';
 
--- ===================== v4: economía, catálogo y opciones del bot =====================
+-- ===================== v4: catálogo y opciones del bot =====================
 
--- Monedas y perfil público de la cuenta.
-ALTER TABLE web_users ADD COLUMN IF NOT EXISTS coins        INTEGER NOT NULL DEFAULT 0;
+-- Perfil público de la cuenta.
 ALTER TABLE web_users ADD COLUMN IF NOT EXISTS handle       TEXT;
 ALTER TABLE web_users ADD COLUMN IF NOT EXISTS avatar_url   TEXT;
 ALTER TABLE web_users ADD COLUMN IF NOT EXISTS theme        TEXT NOT NULL DEFAULT 'dark';
@@ -251,6 +237,7 @@ CREATE TABLE IF NOT EXISTS bot_catalog (
   featured     BOOLEAN NOT NULL DEFAULT false,
   active       BOOLEAN NOT NULL DEFAULT true,
   sort         INTEGER NOT NULL DEFAULT 100,
+  link         TEXT NOT NULL DEFAULT '',
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -265,40 +252,6 @@ CREATE TABLE IF NOT EXISTS catalog_uses (
   UNIQUE (user_id, bot_slug)
 );
 CREATE INDEX IF NOT EXISTS catalog_uses_user ON catalog_uses (user_id);
-
--- Movimientos de monedas (economía de la plataforma).
-CREATE TABLE IF NOT EXISTS coin_ledger (
-  id         SERIAL PRIMARY KEY,
-  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
-  amount     INTEGER NOT NULL,
-  kind       TEXT NOT NULL,
-  detail     TEXT NOT NULL DEFAULT '',
-  meta       JSONB NOT NULL DEFAULT '{}',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS coin_ledger_user ON coin_ledger (user_id, created_at DESC);
-
--- Tienda de la economía: lo que se compra con monedas.
-CREATE TABLE IF NOT EXISTS coin_items (
-  id          TEXT PRIMARY KEY,
-  name        TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  price_coins INTEGER NOT NULL DEFAULT 0,
-  kind        TEXT NOT NULL DEFAULT 'space',
-  payload     JSONB NOT NULL DEFAULT '{}',
-  badge       TEXT,
-  available   BOOLEAN NOT NULL DEFAULT true,
-  sort        INTEGER NOT NULL DEFAULT 100
-);
-
--- Misiones reclamadas (una vez por misión).
-CREATE TABLE IF NOT EXISTS mission_claims (
-  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
-  mission_id TEXT NOT NULL,
-  reward     INTEGER NOT NULL DEFAULT 0,
-  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, mission_id)
-);
 
 -- Grupos vinculados a cada bot.
 CREATE TABLE IF NOT EXISTS subbot_groups (
@@ -340,4 +293,15 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
+
+-- ===================== v5: sin economía; repos GitHub en el catálogo =====================
+
+-- La economía (V-Coins, misiones, banco por grupo) se eliminó por completo:
+-- se borran sus tablas y la columna de saldo para que no queden restos en bases existentes.
+ALTER TABLE bot_catalog ADD COLUMN IF NOT EXISTS link TEXT NOT NULL DEFAULT '';
+DROP TABLE IF EXISTS group_bank;
+DROP TABLE IF EXISTS coin_ledger;
+DROP TABLE IF EXISTS coin_items;
+DROP TABLE IF EXISTS mission_claims;
+ALTER TABLE web_users DROP COLUMN IF EXISTS coins;
 `;

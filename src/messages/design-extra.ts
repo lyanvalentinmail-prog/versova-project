@@ -3,7 +3,7 @@ import { formatDate, formatRemaining } from '../utils/time.js';
 import { TEAM, frame, mention } from './design.js';
 
 /* =========================================================================
-   Plantillas de los comandos de gestión, administración, social y economía.
+   Plantillas de los comandos de gestión, administración y social.
    Mantienen la misma estética que el resto del menú de VÉRSOVA.
    ========================================================================= */
 
@@ -69,7 +69,6 @@ export const perfilUsuario = (p: {
   afk: string;
   partner: string;
   warnings: number;
-  coins: number;
 }) =>
   frame({
     mark: '𓆩 ♱ 𓆪',
@@ -84,7 +83,6 @@ export const perfilUsuario = (p: {
       `Pareja ⁙ ${p.partner}`,
       `Estado ⁙ ${p.afk}`,
       `Advertencias ⁙ ${p.warnings}/${config.defaults.warnLimit}`,
-      `Monedas ⁙ ${p.coins}`,
     ],
   });
 
@@ -205,97 +203,6 @@ export const grupoEstado = (p: { open: boolean }) =>
 
 export const noPuedoHacerlo = (detalle: string) =>
   frame({ mark: '⚠️', title: 'NO SE PUDO COMPLETAR', face: '(｡•́︿•̀｡)', lines: [detalle] });
-
-/* ------------------------------- economía ------------------------------- */
-
-export const monedero = (p: { user: string; coins: number }) =>
-  frame({
-    mark: '🪙',
-    title: 'MONEDERO',
-    face: '(˶ᵔ ᵕ ᵔ˶)',
-    lines: [
-      `${p.user} tiene ⁙ ${p.coins} V-Coins`,
-      '',
-      `Gana más con ${config.bot.prefix}daily y ${config.bot.prefix}work.`,
-      `Gasta en ${config.bot.prefix}tienda y ${config.bot.prefix}comprar <id>.`,
-    ],
-  });
-
-export const dailyCobrado = (p: { user: string; reward: number; total: number; streak: number }) =>
-  frame({
-    mark: '🎁',
-    title: 'BONO DIARIO',
-    face: '(ﾉ´ヮ`)ﾉ*: ･ﾟ',
-    lines: [`${p.user} recibió ⁙ +${p.reward} V-Coins`, `Racha ⁙ ${p.streak} días`, `Total ⁙ ${p.total} V-Coins`],
-  });
-
-export const dailyEspera = (p: { remaining: string }) =>
-  frame({ mark: '⏳', title: 'BONO DIARIO', face: '(っ˘ω˘ς)', lines: ['Ya cobraste tu bono de hoy.', `Vuelve en ⁙ ${p.remaining}`] });
-
-export const trabajoCobrado = (p: { user: string; job: string; reward: number; total: number }) =>
-  frame({
-    mark: '💼',
-    title: 'TRABAJO COMPLETADO',
-    face: '(๑˃̵ᴗ˂̵)و',
-    lines: [`${p.user} trabajó de ⁙ ${p.job}`, `Ganó ⁙ +${p.reward} V-Coins`, `Total ⁙ ${p.total} V-Coins`],
-  });
-
-export const trabajoEspera = (p: { remaining: string }) =>
-  frame({ mark: '⏳', title: 'CANSADO', face: '( ˘ω˘ )', lines: ['Necesitas descansar antes de volver a trabajar.', `Vuelve en ⁙ ${p.remaining}`] });
-
-export const ranking = (p: { rows: Array<{ position: number; name: string; coins: number }> }) =>
-  frame({
-    mark: '🏆',
-    title: 'RANKING DE RIQUEZA',
-    face: '(๑•̀ㅂ•́)و✧',
-    lines: p.rows.length
-      ? p.rows.map((row) => `${row.position === 1 ? '🥇' : row.position === 2 ? '🥈' : row.position === 3 ? '🥉' : String(row.position).padStart(2, '0')} ⁙ ${row.name} — ${row.coins}`)
-      : ['Todavía nadie tiene monedas. Usa el comando de trabajo para empezar.'],
-  });
-
-export const tiendaInterna = (p: { items: Array<{ id: string; name: string; price: number }> }) =>
-  frame({
-    mark: '🛒',
-    title: 'TIENDA DEL TEAM',
-    face: '( ੭ ˙ᗜ˙ )੭',
-    lines: [
-      ...p.items.map((item) => `${item.name} ⁙ ${item.price} V-Coins ⁙ id: ${item.id}`),
-      '',
-      `Compra con ⁙ ${config.bot.prefix}comprar <id>`,
-    ],
-  });
-
-export const compraRealizada = (p: { user: string; name: string; price: number; total: number }) =>
-  frame({
-    mark: '🧾',
-    title: 'COMPRA REALIZADA',
-    face: '(๑˃̵ᴗ˂̵)و',
-    lines: [`${p.user} compró ⁙ ${p.name}`, `Pagó ⁙ ${p.price} V-Coins`, `Saldo ⁙ ${p.total} V-Coins`],
-  });
-
-export const monedasInsuficientes = (p: { needed: number; coins: number }) =>
-  frame({
-    mark: '💸',
-    title: 'MONEDAS INSUFICIENTES',
-    face: '(╥﹏╥)',
-    lines: [`Necesitas ⁙ ${p.needed} V-Coins`, `Tienes ⁙ ${p.coins} V-Coins`, '', `Trabaja con ${config.bot.prefix}work para ganar más.`],
-  });
-
-export const roboExitoso = (p: { robber: string; victim: string; amount: number; total: number }) =>
-  frame({
-    mark: '🥷',
-    title: 'ROBO EXITOSO',
-    face: '( •̀ - •́ )✧',
-    lines: [`${p.robber} le robó ${p.amount} V-Coins a ${p.victim}.`, `Saldo ⁙ ${p.total} V-Coins`],
-  });
-
-export const roboFallido = (p: { robber: string; victim: string; multa: number }) =>
-  frame({
-    mark: '🚨',
-    title: 'ROBO FALLIDO',
-    face: '(╯°□°)╯',
-    lines: [`${p.robber} intentó robar a ${p.victim} y falló.`, `Multa ⁙ -${p.multa} V-Coins`],
-  });
 
 export const recordatorio = (p: { text: string; when: string }) =>
   frame({ mark: '⏰', title: 'RECORDATORIO', face: '(˶˃ ᵕ ˂˶)', lines: [p.text, `Programado ⁙ ${p.when}`] });

@@ -9,7 +9,6 @@ const V = (() => {
     user: null,
     platform: null,
     auth: { googleEnabled: false, demoLogin: true },
-    economy: null,
   };
 
   /* ------------------------------- utilidades ------------------------------ */
@@ -38,8 +37,6 @@ const V = (() => {
     String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
   const num = (value) => new Intl.NumberFormat('es-UY').format(Number(value ?? 0));
-
-  const coins = (value) => `🪙 ${num(value)}`;
 
   function uptime(seconds) {
     const total = Math.max(0, Math.floor(Number(seconds) || 0));
@@ -137,7 +134,7 @@ const V = (() => {
   ];
 
   const MENU = [
-    { href: '/', ico: '⌂', title: 'Inicio', text: 'Resumen de tu plataforma y economía' },
+    { href: '/', ico: '⌂', title: 'Inicio', text: 'Resumen de tu plataforma y tus bots' },
     { href: '/registrar', ico: '＋', title: 'Registrar bot', text: 'Asistente de 5 pasos' },
     { href: '/bots', ico: '🤖', title: 'Mis Bots', text: 'Sesiones activas y opciones' },
     { href: '/store', ico: '🛒', title: 'Tienda', text: 'Tokens, espacio, monedas y bots' },
@@ -242,7 +239,7 @@ const V = (() => {
               el('div', { class: 'small muted wrap-text', text: state.user.email }),
               el('div', { class: 'small', style: 'margin-top:6px' }, [
                 el('span', { class: 'pill accent', text: `Plan ${state.user.planInfo?.name ?? state.user.plan}` }),
-                el('span', { class: 'pill', text: `🪙 ${num(state.user.coins)}` }),
+                el('span', { class: 'pill green', text: 'Todo gratis · 0 $' }),
               ]),
             ]),
             el('a', { href: '/bots' }, ['🤖 Mis Bots']),
@@ -291,7 +288,6 @@ const V = (() => {
       const data = await api('/api/auth/me');
       state.user = data.user ?? null;
       state.auth = { googleEnabled: Boolean(data.googleEnabled), demoLogin: data.demoLogin !== false };
-      state.economy = state.user ? { coins: state.user.coins } : null;
     } catch {
       state.user = null;
     }
@@ -340,7 +336,10 @@ const V = (() => {
   async function ensureSession() {
     const user = await loadSession();
     if (!user) {
-      window.location.href = '/?login=1';
+      // Lleva la página actual como «next» para volver tras iniciar sesión.
+      const page = document.documentElement.dataset.page || '';
+      const next = `/${page}`;
+      window.location.href = `/?login=1${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`;
       return null;
     }
     return user;
@@ -348,10 +347,13 @@ const V = (() => {
 
   function googleButton() {
     if (!state.auth.googleEnabled) return null;
+    const page = document.documentElement.dataset.page || '';
+    const next = `/${page}`;
+    const startHref = next !== '/' ? `/api/auth/google/start?next=${encodeURIComponent(next)}` : '/api/auth/google/start';
     return el('div', {}, [
       el('div', { class: 'divider', text: 'o' }),
       el('div', { style: 'height:10px' }),
-      el('a', { class: 'btn btn-block', href: '/api/auth/google/start' }, ['🅖 Continuar con Google']),
+      el('a', { class: 'btn btn-block', href: startHref }, ['🅖 Continuar con Google']),
     ]);
   }
 
@@ -406,7 +408,7 @@ const V = (() => {
   }
 
   return {
-    state, $, qs, qsa, el, escape, num, coins, uptime, timeAgo, dateTime, api, toast, applyTheme, toggleTheme,
+    state, $, qs, qsa, el, escape, num, uptime, timeAgo, dateTime, api, toast, applyTheme, toggleTheme,
     buildChrome, hideLoading, loadSession, loadPlatform, logout, ensureSession, setStatus, setText, fill,
     googleButton, statTile, meter, note, confirmDialog, openModal, closeModal, openSheet, closeSheet, copy,
     NAV, MENU,

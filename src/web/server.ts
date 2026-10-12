@@ -12,36 +12,25 @@ import { allCommands } from '../core/router.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
 import { memoryMode, pool } from '../database/db.js';
 import {
-  addCoins,
   addExtraSpace,
   allocatedExtraGb,
   auditLog,
   bumpSubBotUptime,
   countCatalogUses,
   countSubBots,
-  countUnusedTokens,
   createCatalogUse,
   createReport,
-  createSubBot,
   createSubBotWithToken,
   createTokens,
-  claimMission,
   deleteSubBot,
-  findUserByEmail,
-  getCoinItem,
-  getCoins,
   getPlatformCounts,
   getPlatformMetrics,
   getServer,
   getSetting,
   getSubBot,
   getTokenByCode,
-  lastDailyClaim,
   listCatalogItems,
   listCatalogUses,
-  listCoinItems,
-  listLedger,
-  listMissionClaims,
   listPurchases,
   listReports,
   listServers,
@@ -69,6 +58,7 @@ import {
   authMe,
   authRegister,
   BOT_TIERS,
+  PLAN_RANK,
   PLANS,
   googleCallback,
   googleStart,
@@ -79,12 +69,11 @@ import {
   toSafeUser,
 } from './auth.js';
 import {
-  COIN,
   INSTANCE_TYPES,
-  MISSIONS,
   PREFIX_CHOICES,
   catalogBotBySlug,
 } from './platform-data.js';
+import { notifyTicket } from '../services/tickets.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const startedAt = new Date();
@@ -127,6 +116,8 @@ function formatPairingCode(raw: string): string {
 
 const AVAILABLE_BOT_TYPES = [
   { id: 'versova', name: 'VÉRSOVA', description: 'Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.', recommended: true },
+  { id: 'raiden', name: 'Raiden WaBot', description: 'Bot anime abierto en GitHub: descargas (IG, YouTube, Spotify, TikTok), stickers, IA, reacciones y logos.' },
+  { id: 'yae-miku', name: 'Yae Miku Bot', description: 'Bot de rol y moderación abierto en GitHub: matrimonio/divorcio, antilink y sub-bots persistentes.' },
 ];
 
 function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
@@ -152,44 +143,6 @@ function cleanPrefixes(value: unknown): string[] | null {
   const allowed = new Set<string>(PREFIX_CHOICES);
   const list = [...new Set(value.map((item) => String(item).slice(0, 2)))].filter((item) => allowed.has(item));
   return list.slice(0, 8);
-}
-
-/** Estado del saldo y las misiones del usuario, tal como lo ve la web. */
-async function economyFor(userId: number, botCount: number, uses: number, purchases: number) {
-  const [coins, ledger, items, claimed, daily] = await Promise.all([
-    getCoins(userId),
-    listLedger(userId, 40),
-    listCoinItems(),
-    listMissionClaims(userId),
-    lastDailyClaim(userId),
-  ]);
-  const dailyAvailable = !daily || Date.now() - new Date(daily).getTime() >= 24 * 60 * 60 * 1000;
-  const progress: Record<string, boolean> = {
-    daily: dailyAvailable,
-    profile: false,
-    'first-bot': botCount > 0,
-    'first-catalog': uses > 0,
-    'first-purchase': purchases > 0,
-    'three-bots': botCount >= 3,
-  };
-  return {
-    coin: COIN,
-    coins,
-    ledger,
-    items,
-    daily: {
-      available: dailyAvailable,
-      lastClaimAt: daily ? new Date(daily).toISOString() : null,
-      nextAt: daily ? new Date(new Date(daily).getTime() + 24 * 60 * 60 * 1000).toISOString() : null,
-      reward: MISSIONS.find((mission) => mission.id === 'daily')?.reward ?? 25,
-    },
-    missions: MISSIONS.map((mission) => ({
-      ...mission,
-      claimed: claimed.includes(mission.id),
-      ready: Boolean(progress[mission.id]) && !claimed.includes(mission.id),
-      available: mission.id === 'daily' ? true : Boolean(progress[mission.id]),
-    })),
-  };
 }
 
 export function startWeb(): HttpServer {
@@ -267,6 +220,10 @@ export function startWeb(): HttpServer {
       tiers: BOT_TIERS,
       instances: INSTANCE_TYPES,
       googleEnabled: Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()),
+      support: {
+        whatsapp: config.owners[0] ?? '',
+        email: config.ownerEmail,
+      },
     });
   });
 
@@ -289,7 +246,7 @@ export function startWeb(): HttpServer {
     });
   });
 
-  // Activar un bot del catálogo: gratis, con monedas o canjeando un token.
+  // Activar un bot del catálogo: todo es gratis (0 $), se activa al instante.
   app.post('/api/catalog/:slug/use', limitWrites, requireUser, async (req, res) => {
     const user = req.webUser!;
     const slug = String(req.params.slug);
@@ -301,135 +258,13 @@ export function startWeb(): HttpServer {
       return void res.status(409).json({ error: `Ya tienes «${bot.name}» activo en tu cuenta.` });
     }
 
-    const wantsCoins = bot.pricing === 'coins' || bot.pricing === 'usd';
-    if (wantsCoins) {
-      const coins = await getCoins(user.id);
-      if (coins < bot.priceCoins) {
-        return void res.status(402).json({
-          error: `«${bot.name}» cuesta ${bot.priceCoins} ${COIN.name} y tienes ${coins}. Compra monedas o gana con las misiones.`,
-          priceCoins: bot.priceCoins,
-          coins,
-          shortfall: bot.priceCoins - coins,
-        });
-      }
-    }
-
-    if (wantsCoins) {
-      const charged = await addCoins(user.id, -bot.priceCoins, 'catalog', `Activación de ${bot.name}`, { slug });
-      if (!charged.ok) return void res.status(402).json({ error: 'Saldo insuficiente para activar ese bot.' });
-    }
-
-    const use = await createCatalogUse({ userId: user.id, slug, subbotId: null, paidCoins: wantsCoins ? bot.priceCoins : 0 });
-    logger.info('catalogo', `${user.email} activó «${bot.name}» (${bot.pricing}${wantsCoins ? ` · ${bot.priceCoins} V-Coin` : ''}).`);
+    const use = await createCatalogUse({ userId: user.id, slug, subbotId: null, paidCoins: 0 });
+    logger.info('catalogo', `${user.email} activó «${bot.name}» (gratis).`);
     res.status(201).json({
       ok: true,
       use: { slug, subbotId: use.subbot_id, paidCoins: use.paid_coins },
-      coins: await getCoins(user.id),
-      message: wantsCoins
-        ? `«${bot.name}» activado. Se descontaron ${bot.priceCoins} ${COIN.name}.`
-        : `«${bot.name}» activado gratis en tu cuenta.`,
+      message: `«${bot.name}» activado gratis en tu cuenta.`,
     });
-  });
-
-  // --------------------------------- economía --------------------------------
-  app.get('/api/economy', requireUser, async (req, res) => {
-    const user = req.webUser!;
-    const [bots, uses, purchases] = await Promise.all([
-      countSubBots(user.id),
-      listCatalogUses(user.id),
-      listPurchases(user.id, 5),
-    ]);
-    res.json({
-      ...(await economyFor(user.id, bots, uses.length, purchases.length)),
-      purchases,
-    });
-  });
-
-  app.post('/api/economy/daily', limitWrites, requireUser, async (req, res) => {
-    const user = req.webUser!;
-    const daily = await lastDailyClaim(user.id);
-    if (daily && Date.now() - new Date(daily).getTime() < 24 * 60 * 60 * 1000) {
-      const next = new Date(new Date(daily).getTime() + 24 * 60 * 60 * 1000);
-      return void res.status(429).json({ error: 'Ya reclamaste el bono diario. Vuelve más tarde.', nextAt: next.toISOString() });
-    }
-    const reward = MISSIONS.find((mission) => mission.id === 'daily')?.reward ?? 25;
-    const result = await addCoins(user.id, reward, 'daily', 'Bono diario', {});
-    logger.info('economia', `${user.email} reclamó el bono diario (+${reward}).`);
-    res.json({ ok: true, reward, coins: result.coins });
-  });
-
-  app.post('/api/economy/mission', limitWrites, requireUser, async (req, res) => {
-    const user = req.webUser!;
-    const missionId = str(req.body?.missionId, 40);
-    const mission = MISSIONS.find((entry) => entry.id === missionId);
-    if (!mission) return void res.status(404).json({ error: 'Esa misión no existe.' });
-    if (missionId === 'daily') return void res.status(400).json({ error: 'El bono diario se reclama en su propio botón.' });
-
-    const [bots, uses, purchases] = await Promise.all([
-      countSubBots(user.id),
-      listCatalogUses(user.id),
-      listPurchases(user.id, 5),
-    ]);
-    const ready =
-      (missionId === 'first-bot' && bots > 0) ||
-      (missionId === 'first-catalog' && uses.length > 0) ||
-      (missionId === 'first-purchase' && purchases.length > 0) ||
-      (missionId === 'three-bots' && bots >= 3);
-    if (!ready) return void res.status(400).json({ error: 'Todavía no completaste esa misión.' });
-
-    const first = await claimMission(user.id, missionId, mission.reward);
-    if (!first) return void res.status(409).json({ error: 'Ya reclamaste esta misión.' });
-    const result = await addCoins(user.id, mission.reward, 'mission', `Misión: ${mission.name}`, { missionId });
-    res.json({ ok: true, reward: mission.reward, coins: result.coins });
-  });
-
-  app.post('/api/economy/buy', limitCheckout, requireUser, async (req, res) => {
-    const user = req.webUser!;
-    const itemId = str(req.body?.itemId, 60);
-    const item = await getCoinItem(itemId);
-    if (!item) return void res.status(404).json({ error: 'Ese producto no existe en la tienda de monedas.' });
-
-    const charge = await addCoins(user.id, -item.price_coins, 'shop', `Compra: ${item.name}`, { itemId });
-    if (!charge.ok) {
-      return void res.status(402).json({
-        error: `Necesitas ${item.price_coins} ${COIN.name} y tienes ${charge.coins}.`,
-      });
-    }
-
-    const payload = item.payload ?? {};
-    const receipt: Record<string, unknown> = { itemId: item.id, name: item.name, priceCoins: item.price_coins };
-
-    if (item.kind === 'space') {
-      const gb = Number(payload.spaceGb ?? 1);
-      await addExtraSpace(user.id, gb);
-      receipt.spaceGb = gb;
-      receipt.message = `Se añadieron ${gb} GB a tu pool de espacio.`;
-    } else if (item.kind === 'plan') {
-      const plan = String(payload.plan ?? 'premium') as WebPlan;
-      await updateUserPlan(user.id, plan);
-      receipt.plan = plan;
-      receipt.message = `Plan ${PLANS[plan].name} activo: hasta ${PLANS[plan].maxBots} bots con ${PLANS[plan].spacePerBotGb} GB por bot.`;
-    } else if (item.kind === 'token') {
-      const tier = String(payload.tier ?? 'premium') as 'premium' | 'vip';
-      const created = await createTokens([
-        { code: generateTokenCode(tier), type: tier, spaceGb: Number(payload.spaceGb ?? 2), ownerId: user.id },
-      ]);
-      receipt.tokens = created.map((token) => ({ code: token.code, type: token.type, spaceGb: token.space_gb }));
-      receipt.message = `Token ${tier.toUpperCase()} creado. Úsalo al registrar un bot ${tier.toUpperCase()}.`;
-    } else {
-      receipt.message = 'Mejora activada en tu cuenta.';
-    }
-
-    await recordPurchase({
-      userId: user.id,
-      itemId: item.id,
-      itemName: item.name,
-      quantity: 1,
-      priceUsd: 0,
-      details: { paidWithCoins: item.price_coins, ...receipt },
-    });
-    logger.info('economia', `${user.email} compró ${item.name} por ${item.price_coins} V-Coin.`);
-    res.json({ ok: true, receipt, coins: await getCoins(user.id) });
   });
 
   // ---------------------------------- tienda ---------------------------------
@@ -446,7 +281,6 @@ export function startWeb(): HttpServer {
       plans: PLANS,
       tiers: BOT_TIERS,
       user: toSafeUser(user),
-      coins: await getCoins(user.id),
       usage: {
         botsUsed: subBots,
         botsMax: PLANS[user.plan].maxBots,
@@ -468,8 +302,8 @@ export function startWeb(): HttpServer {
     if (!item) return void res.status(404).json({ error: 'Ese producto no existe.' });
     if (!item.available) return void res.status(400).json({ error: `${item.name} todavía no está disponible.` });
 
-    // Los planes se pueden "recomprar" para ampliar; los tokens y el espacio admiten cantidad.
-    if (item.kind === 'plan' && item.plan && PLANS[item.plan].priceUsd <= PLANS[user.plan].priceUsd) {
+    // Todo vale 0 $: los planes se comparan por nivel (un downgrade no tiene sentido).
+    if (item.kind === 'plan' && item.plan && PLAN_RANK[item.plan] <= PLAN_RANK[user.plan]) {
       return void res.status(400).json({ error: `Ya tienes el plan ${PLANS[user.plan].name} o uno igual o superior.` });
     }
 
@@ -498,12 +332,6 @@ export function startWeb(): HttpServer {
         quantity === 1
           ? `Tu token ${item.name} está listo. Úsalo al crear un sub-bot ${item.tier!.toUpperCase()}.`
           : `${quantity} tokens ${item.name} están listos.`;
-    } else if (item.kind === 'coins') {
-      const coins = (item.coins ?? 0) * quantity;
-      const result = await addCoins(user.id, coins, 'purchase', `Compra de ${coins} ${COIN.name}`, { itemId: item.id });
-      receipt.coins = coins;
-      receipt.total = result.coins;
-      receipt.message = `Se acreditaron ${coins} ${COIN.name} en tu cuenta.`;
     } else if (item.kind === 'catalog') {
       const slug = item.catalogSlug!;
       const bot = catalogBotBySlug(slug);
@@ -579,7 +407,6 @@ export function startWeb(): HttpServer {
         extraSpaceGb: user.extra_space_gb,
         extraSpaceFree: Math.max(0, user.extra_space_gb - allocated),
       },
-      economy: await economyFor(user.id, used, uses.length, (await listPurchases(user.id, 5)).length),
       tokens: tokens.filter((token) => token.status === 'unused'),
     });
   });
@@ -893,6 +720,10 @@ export function startWeb(): HttpServer {
       text,
     });
     logger.info('reportes', `${user.email} envió ${kind === 'report' ? 'un reporte' : 'una sugerencia'}.`);
+    // El ticket se manda al owner (WhatsApp y email) sin bloquear la respuesta.
+    void notifyTicket(report).catch((err) =>
+      logger.error('tickets', `No se pudo notificar al owner: ${(err as Error).message}`),
+    );
     res.status(201).json({ ok: true, report });
   });
 

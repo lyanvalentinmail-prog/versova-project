@@ -28,23 +28,26 @@ export interface PlanInfo {
   color: string;
 }
 
-/** Planes de la plataforma: precio, espacio por bot y máximo de bots. */
+/** Planes de la plataforma: espacio por bot y máximo de bots. Todo es gratuito (0 $). */
 export const PLANS: Record<WebPlan, PlanInfo> = {
   free: { id: 'free', name: 'Free', priceUsd: 0, spacePerBotGb: 1, maxBots: 3, color: 'free' },
-  premium: { id: 'premium', name: 'Premium', priceUsd: 1, spacePerBotGb: 2, maxBots: 5, color: 'premium' },
-  vip: { id: 'vip', name: 'VIP', priceUsd: 5, spacePerBotGb: 5, maxBots: 10, color: 'vip' },
+  premium: { id: 'premium', name: 'Premium', priceUsd: 0, spacePerBotGb: 2, maxBots: 5, color: 'premium' },
+  vip: { id: 'vip', name: 'VIP', priceUsd: 0, spacePerBotGb: 5, maxBots: 10, color: 'vip' },
 };
 
-/** Espacio base de cada sub-bot según su tipo. */
+/** Orden de los planes para comparar upgrades (todo cuesta 0 $, se compara por nivel). */
+export const PLAN_RANK: Record<WebPlan, number> = { free: 0, premium: 1, vip: 2 };
+
+/** Espacio base de cada sub-bot según su tipo. Todo es gratuito (0 $). */
 export const BOT_TIERS: Record<'free' | 'premium' | 'vip', { name: string; spaceGb: number; requiresToken: boolean; priceUsd: number }> = {
   free: { name: 'Free', spaceGb: 1, requiresToken: false, priceUsd: 0 },
-  premium: { name: 'Premium', spaceGb: 2, requiresToken: true, priceUsd: 1 },
-  vip: { name: 'VIP', spaceGb: 4, requiresToken: true, priceUsd: 5 },
+  premium: { name: 'Premium', spaceGb: 2, requiresToken: true, priceUsd: 0 },
+  vip: { name: 'VIP', spaceGb: 4, requiresToken: true, priceUsd: 0 },
 };
 
 export interface StoreItem {
   id: string;
-  kind: 'token' | 'space' | 'plan' | 'bot' | 'coins' | 'catalog';
+  kind: 'token' | 'space' | 'plan' | 'bot' | 'catalog';
   name: string;
   description: string;
   priceUsd: number;
@@ -53,38 +56,42 @@ export interface StoreItem {
   spaceGb?: number;
   plan?: WebPlan;
   badge?: string;
-  coins?: number;
   catalogSlug?: string;
 }
 
-/** Catálogo de la tienda. Los sub-bots «próximamente» no se pueden comprar todavía. */
+/**
+ * Catálogo de la tienda. Todo vale 0 $: la entrega es instantánea y el cobro es
+ * de demostración (no se cobra dinero real).
+ */
 export const STORE_ITEMS: StoreItem[] = [
   {
     id: 'token-premium',
     kind: 'token',
     name: 'Token Premium',
-    description: 'Canjeable al crear un sub-bot Premium (2 GB). Se entrega al instante tras la compra.',
-    priceUsd: 1,
+    description: 'Canjeable al crear un sub-bot Premium (2 GB). Se entrega al instante.',
+    priceUsd: 0,
     available: true,
     tier: 'premium',
     spaceGb: 2,
+    badge: 'GRATIS',
   },
   {
     id: 'token-vip',
     kind: 'token',
     name: 'Token VIP',
-    description: 'Canjeable al crear un sub-bot VIP (4 GB). Se entrega al instante tras la compra.',
-    priceUsd: 5,
+    description: 'Canjeable al crear un sub-bot VIP (4 GB). Se entrega al instante.',
+    priceUsd: 0,
     available: true,
     tier: 'vip',
     spaceGb: 4,
+    badge: 'GRATIS',
   },
   {
     id: 'space-1gb',
     kind: 'space',
     name: '1 GB extra',
     description: 'Espacio adicional en el pool de tu cuenta. Repártelo entre tus sub-bots como quieras.',
-    priceUsd: 1,
+    priceUsd: 0,
     available: true,
     spaceGb: 1,
   },
@@ -93,7 +100,7 @@ export const STORE_ITEMS: StoreItem[] = [
     kind: 'plan',
     name: 'Plan Premium',
     description: 'Hasta 5 sub-bots con 2 GB por bot. Actívalo al instante.',
-    priceUsd: 1,
+    priceUsd: 0,
     available: true,
     plan: 'premium',
   },
@@ -102,39 +109,10 @@ export const STORE_ITEMS: StoreItem[] = [
     kind: 'plan',
     name: 'Plan VIP',
     description: 'Hasta 10 sub-bots con 5 GB por bot. Actívalo al instante.',
-    priceUsd: 5,
+    priceUsd: 0,
     available: true,
     plan: 'vip',
-  },
-  {
-    id: 'coins-500',
-    kind: 'coins',
-    name: '500 V-Coins',
-    description: 'Monedas de la plataforma para activar bots del catálogo y comprar mejoras.',
-    priceUsd: 2,
-    available: true,
-    coins: 500,
-    badge: 'ECONOMÍA',
-  },
-  {
-    id: 'coins-1600',
-    kind: 'coins',
-    name: '1600 V-Coins',
-    description: '1600 monedas (100 de regalo) para el catálogo y la tienda interna.',
-    priceUsd: 5,
-    available: true,
-    coins: 1600,
-    badge: '+100 BONUS',
-  },
-  {
-    id: 'coins-4500',
-    kind: 'coins',
-    name: '4500 V-Coins',
-    description: '4500 monedas (500 de regalo) para desbloquear los bots PRO.',
-    priceUsd: 10,
-    available: true,
-    coins: 4500,
-    badge: '+500 BONUS',
+    badge: 'TOP',
   },
 ];
 
@@ -168,7 +146,6 @@ export type SafeUser = {
   plan: WebPlan;
   planInfo: PlanInfo;
   extraSpaceGb: number;
-  coins: number;
   handle: string | null;
   avatarUrl: string | null;
   theme: string;
@@ -184,7 +161,6 @@ export function toSafeUser(user: WebUser): SafeUser {
     plan: user.plan,
     planInfo: PLANS[user.plan],
     extraSpaceGb: user.extra_space_gb,
-    coins: user.coins ?? 0,
     handle: user.handle ?? null,
     avatarUrl: user.avatar_url ?? null,
     theme: user.theme ?? 'dark',
@@ -338,9 +314,35 @@ export async function authLogout(req: Request, res: Response): Promise<void> {
 
 /* ------------------------------ Google OAuth ----------------------------- */
 
+const OAUTH_NEXT_COOKIE = 'versova_oauth_next';
+
+/** Páginas internas a las que se puede volver tras iniciar sesión con Google. */
+const OAUTH_NEXT_PATHS = new Set(['/', '/registrar', '/bots', '/metrics', '/store', '/catalog', '/ticket']);
+
+function sanitizeNextPath(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//')) return null;
+  const path = raw.split('?')[0].split('#')[0];
+  return OAUTH_NEXT_PATHS.has(path) ? path : null;
+}
+
+/**
+ * Construye la redirect URI con el host/protocolo reales de la petición
+ * (`trust proxy` ya aplica): así funciona igual en local que tras un proxy HTTPS.
+ */
 function googleRedirectUri(req: Request): string {
   const host = req.get('host') ?? `localhost:${process.env.PORT ?? 3000}`;
   return `${req.protocol}://${host}/api/auth/google/callback`;
+}
+
+function clearOauthCookies(req: Request, res: Response): void {
+  const secure = req.secure ? '; Secure' : '';
+  res.setHeader(
+    'Set-Cookie',
+    [
+      `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`,
+      `${OAUTH_NEXT_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secure}`,
+    ],
+  );
 }
 
 export function googleStart(req: Request, res: Response): void {
@@ -349,10 +351,13 @@ export function googleStart(req: Request, res: Response): void {
     return;
   }
   const state = randomUUID();
-  res.setHeader(
-    'Set-Cookie',
-    `${OAUTH_STATE_COOKIE}=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600${req.secure ? '; Secure' : ''}`,
-  );
+  const secure = req.secure ? '; Secure' : '';
+  const cookies = [
+    `${OAUTH_STATE_COOKIE}=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600${secure}`,
+  ];
+  const next = sanitizeNextPath(req.query.next);
+  if (next) cookies.push(`${OAUTH_NEXT_COOKIE}=${encodeURIComponent(next)}; Path=/; SameSite=Lax; Max-Age=600${secure}`);
+  res.setHeader('Set-Cookie', cookies);
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!.trim(),
     redirect_uri: googleRedirectUri(req),
@@ -372,16 +377,39 @@ interface GoogleProfile {
   picture?: string;
 }
 
+/** Traduce los errores que Google devuelve en la redirect URI. */
+function googleErrorReason(raw: string): string {
+  switch (raw) {
+    case 'access_denied':
+      return 'Cancelaste el acceso de Google. Inténtalo otra vez cuando quieras.';
+    case 'invalid_scope':
+      return 'Google rechazó los permisos solicitados. Inténtalo otra vez.';
+    case 'unsupported_response_type':
+      return 'El flujo de Google no está configurado correctamente en el servidor.';
+    default:
+      return `Google devolvió un error (${raw}). Inténtalo otra vez.`;
+  }
+}
+
 export async function googleCallback(req: Request, res: Response): Promise<void> {
-  const origin = `${req.protocol}://${req.get('host') ?? ''}`;
-  const fail = (reason: string) => res.redirect(302, `/?login=1&error=${encodeURIComponent(reason)}`);
+  const cookies = parseCookies(req.headers.cookie);
+  const nextPath = sanitizeNextPath(cookies[OAUTH_NEXT_COOKIE] ?? req.query.next);
+  const fail = (reason: string) =>
+    res.redirect(302, `/?login=1&error=${encodeURIComponent(reason)}${nextPath && nextPath !== '/' ? `&next=${encodeURIComponent(nextPath)}` : ''}`);
 
   try {
     if (!googleConfigured()) return void fail('El acceso con Google no está configurado en este servidor.');
+
+    // Google redirige con ?error=... cuando el usuario cancela o algo falla en su lado.
+    const oauthError = typeof req.query.error === 'string' ? req.query.error : '';
+    if (oauthError) return void fail(googleErrorReason(oauthError));
+
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : '';
-    const expectedState = parseCookies(req.headers.cookie)[OAUTH_STATE_COOKIE];
-    if (!code || !state || state !== expectedState) return void fail('La validación de Google falló. Inténtalo otra vez.');
+    const expectedState = cookies[OAUTH_STATE_COOKIE];
+    if (!code || !state || !expectedState || state !== expectedState) {
+      return void fail('La validación de Google falló. Inténtalo otra vez.');
+    }
 
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -394,7 +422,10 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
         grant_type: 'authorization_code',
       }),
     });
-    if (!tokenResponse.ok) return void fail('Google rechazó el inicio de sesión.');
+    if (!tokenResponse.ok) {
+      logger.warn('auth', `Google token endpoint respondió ${tokenResponse.status}.`);
+      return void fail('Google rechazó el inicio de sesión. Inténtalo otra vez.');
+    }
     const tokens = (await tokenResponse.json()) as { access_token?: string };
     if (!tokens.access_token) return void fail('Google no devolvió un token válido.');
 
@@ -421,8 +452,9 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
     }
 
     await startSession(req, res, user);
+    clearOauthCookies(req, res);
     logger.info('auth', `Inicio de sesión con Google: ${user.email}`);
-    res.redirect(302, `${origin}/home`);
+    res.redirect(302, nextPath ?? '/');
   } catch (err) {
     logger.error('auth', `Google OAuth falló: ${(err as Error).message}`);
     fail('No se pudo completar el inicio de sesión con Google.');

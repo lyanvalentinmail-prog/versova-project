@@ -1,8 +1,9 @@
 # VÉRSOVA · plataforma de bots para WhatsApp
 
 VÉRSOVA es una **plataforma** con panel web propio donde cada persona crea, configura y usa sus
-bots de WhatsApp (SubBots). Incluye catálogo de bots **gratis y de pago**, economía interna con
-**V-Coins**, tienda, métricas y reportes. El bot de WhatsApp ejecuta **41 comandos** con prefijo `.`.
+bots de WhatsApp (SubBots). Incluye catálogo de bots **100 % gratis** (con repos abiertos en
+GitHub), tienda sin costo, métricas y reportes que llegan al owner. El bot de WhatsApp ejecuta
+**34 comandos** con prefijo `.`.
 
 - Prefijo: `.` (configurable en el panel)
 - Idioma: español
@@ -15,14 +16,13 @@ bots de WhatsApp (SubBots). Incluye catálogo de bots **gratis y de pago**, econ
 
 - **Cuentas**: registro y acceso con email (demo) o **Google** (OAuth 2.0). Sesiones con cookie
   `HttpOnly` (`versova_session`, 30 días).
-- **Catálogo de bots** (`/store`): por ahora solo **VÉRSOVA** (gratis). El resto de bots se retiró del
-  catálogo; al arrancar, el seed desactiva en la base de datos los que ya no están en `platform-data.ts`
-  (no los borra, para conservar las activaciones existentes). Activar un bot de catálogo lo deja ligado
-  a la cuenta y a uno de sus SubBots.
-- **Economía**: monedero de **V-Coins 🪙**, bono diario, 6 misiones con recompensa, tienda interna
-  (7 objetos) y compra de bots con monedas. Todo movimiento queda en el libro de movimientos.
-- **Tienda de tokens y espacio**: token Premium ($1), token VIP ($5), espacio extra (1 GB = $1),
-  planes y packs de monedas. El pago es demo: registra la compra, no cobra dinero real.
+- **Catálogo de bots** (`/store`): **VÉRSOVA**, **Raiden WaBot** y **Yae Miku Bot**, todos
+  **gratis (0 $)** y con enlace a su repo en GitHub. Activar un bot de catálogo lo deja ligado a la
+  cuenta; el resto de bots se desactiva en la base al arrancar (sin borrar las activaciones).
+- **Tienda de tokens, espacio y planes**: token Premium, token VIP, espacio extra (1 GB), plan
+  Premium y plan VIP — **todo a 0 $**. El pago es demo: registra la compra, no cobra dinero real.
+- **Soporte** (`/ticket`): los reportes se notifican al owner (WhatsApp +598 96 719 709 y
+  lyanvalentinmail@gmail.com, configurables) con bandeja «Mis Envíos».
 - **Registrar un SubBot** (`/registrar`): asistente de 6 pasos (token → instancia → servidor →
   vinculación → nombre → confirmación) con QR de WhatsApp y **código de 8 dígitos**.
 - **Mis Bots** (`/bots`): sesiones activas, estado del socket, «Opciones del bot», grupos, métricas
@@ -31,24 +31,23 @@ bots de WhatsApp (SubBots). Incluye catálogo de bots **gratis y de pago**, econ
   WhatsApp, prefijos (`/ # ! + - . * ~`), banner, usuario, estado, avatar e instancia.
 - **Monitor del sistema** (`/metrics`): CPU, memoria, disco, red, latencia y datos del proceso por
   servidor, con actualización en vivo.
-- **Reportes y sugerencias** (`/ticket`): envío y bandeja «Mis Envíos».
 - **Panel del bot**: banner, catálogo de comandos con categorías, alias, activar/desactivar y
   ocultar, vista previa del menú, telemetría y logs en vivo por SSE.
 - Tema claro/oscuro con preferencia guardada.
 
-**Comandos de WhatsApp (41, todos implementados)**
+**Comandos de WhatsApp (34, todos implementados)**
 
 | Categoría | Comandos |
 |---|---|
 | Registro | `.reg`, `.unreg`, `.editar`, `.ficha`, `.rol`, `.roles`, `.mirol`, `.cambiarol`, `.reservar`, `.liberar`, `.resetrol`, `.acceptrol`, `.denyrol` |
 | General | `.menu` |
-| Equipo | `.team`, `.miembros`, `.afk`, `.inactivos` |
-| Social | `.perfil`, `.pareja`, `.aceptar`, `.rechazar`, `.ship`, `.reglas`, `.admins` |
-| Administración | `.add`, `.expulsar`, `.ban`, `.unban`, `.warn`, `.unwarn`, `.anuncio`, `.close`, `.open` |
-| Economía | `.coins`, `.daily`, `.work`, `.robar`, `.rank`, `.tienda`, `.comprar` |
+| Gestión | `.team`, `.miembros`, `.afk`, `.inactivos`, `.reglas`, `.admins` |
+| Personajes | `.perfil`, `.pareja`, `.aceptar`, `.rechazar`, `.ship` |
+| Interacción | `.anuncio` |
+| Administración | `.add`, `.expulsar`, `.ban`, `.unban`, `.warn`, `.unwarn`, `.close`, `.open` |
 
-El menú (`.menu`) agrupa los comandos en seis bloques (𝟎𝟏 Registro → 𝟎𝟔 Economía). El panel los
-marca como **implementado**, permite desactivarlos, ocultarlos o crear alias.
+El menú (`.menu`) agrupa los comandos por bloques. El panel los marca como **implementado**,
+permite desactivarlos, ocultarlos o crear alias.
 
 ## Cuentas e inicio de sesión con Google
 
@@ -65,25 +64,28 @@ sesión o registrarse**.
   defecto para probar sin configurar Google; usa `DEMO_LOGIN=0` para desactivarla.
   La cuenta de demostración es `demo@versova.app` / `versova`.
 
-## Economía y catálogo
+## Catálogo de bots (todo gratis, 0 $)
 
-- **V-Coins**: se ganan con `.daily` (40–100 según racha), `.work` (cada 15 min), `.robar`
-  (45 % de éxito, con multa si falla) y en el panel con el bono diario y las misiones.
-- **Tienda interna** (`.tienda` / `.comprar <id>`): espacio extra 1 GB (300), token Premium (700),
-  token VIP (2500), plan Premium (1200), plan VIP (4000), pack de banners (150), pack de prefijos
-  (250).
-- **Catálogo de bots**: cada bot tiene precio, acento, popularidad y descripción. Los gratuitos se
-  activan al instante; los de V-Coins descuentan el saldo; los de USD pasan por la tienda.
-- **Compras en el panel**: los packs de monedas (`coins-500`, `coins-1600`, `coins-4500`) acreditan
-  V-Coins al instante.
+- **VÉRSOVA**: el bot de rol propio de la plataforma (menú, registro, personajes, advertencias y
+  todos los comandos). Enlace: [versova-project](https://github.com/lyanvalentinmail-prog/versova-project).
+- **Raiden WaBot**: bot anime abierto en GitHub — descargas (Instagram, YouTube, Spotify, TikTok),
+  stickers (estilo BRAT y Sticker.ly), más de 40 reacciones anime, IA conversacional y logos.
+  Enlace: [Raiden-WaBot](https://github.com/Ryuzei-Ts/Raiden-WaBot).
+- **Yae Miku Bot**: bot de rol y moderación abierto en GitHub (MIT) — matrimonio/divorcio con
+  pareja visible en el perfil, antilink y sub-bots persistentes. Enlace:
+  [Yae-Miku-Bot](https://github.com/Abrahan987/Yae-Miku-Bot).
+
+Activar un bot del catálogo (`/api/catalog/:slug/use`) lo liga a la cuenta sin costo. Desde
+«Registrar un SubBot» se elige el tipo de bot (VÉRSOVA, Raiden WaBot o Yae Miku Bot) y el resto del
+asistente es igual.
 
 ## Tienda, tokens y SubBots
 
 - Comprar un **token** entrega el código al instante (`VRSOV-PREM-XXXX-XXXX` / `VRSOV-VIP-…`), queda
   en «Mis tokens» y se canjea **una sola vez** al crear un SubBot de su mismo tipo.
-- El **espacio extra** (1 GB = $1) entra al pool de la cuenta y se reparte entre los bots.
-- Los planes son Free ($0 · 1 GB por bot · 3 bots), Premium ($1 · 2 GB · 5 bots) y VIP ($5 · 4 GB ·
-  10 bots).
+- El **espacio extra** (1 GB = 0 $) entra al pool de la cuenta y se reparte entre los bots.
+- Los planes son Free, Premium y VIP, **todos a 0 $**: Free (1 GB por bot · 3 bots), Premium
+  (2 GB · 5 bots) y VIP (4 GB · 10 bots).
 - Las **opciones del bot** (nombre corto/largo, moneda, dueño, enlace, canal, prefijos, banner,
   usuario, estado, avatar, instancia y servidor) se editan desde «Opciones del bot» y se guardan en
   `subbots`.
@@ -115,9 +117,12 @@ Variables:
 | `DATABASE_URL` | URL PostgreSQL (Neon pooled, con `sslmode=require`). Si falta, modo memoria. |
 | `DB_SSL` | `true` para Neon y otras bases con SSL; `false` en local. |
 | `OWNER_NUMBERS` | Números del propietario, con código de país, separados por coma. |
+| `OWNER_EMAIL` | Email del propietario; a él llegan los tickets. Por defecto `lyanvalentinmail@gmail.com`. |
 | `BOT_PHONE` | Opcional: número del bot para pedir un código de emparejamiento al arrancar. |
 | `GOOGLE_CLIENT_ID` | Opcional: activa «Continuar con Google» en el acceso. |
 | `GOOGLE_CLIENT_SECRET` | Opcional: secreto OAuth de Google (junto al ID). |
+| `MAIL_HOST` / `MAIL_USER` / `MAIL_PASS` | Opcional: SMTP para avisar al owner por email cuando llega un ticket. Sin él, solo WhatsApp. |
+| `MAIL_PORT` / `MAIL_SECURE` / `MAIL_FROM` | Ajustes opcionales del SMTP (587 / `false` / remitente). |
 | `DEMO_LOGIN` | `0` desactiva el acceso con email y deja solo Google. Por defecto activado. |
 | `PORT` | Puerto HTTP (Render asigna su propio valor). |
 
@@ -127,9 +132,9 @@ Rutas públicas: `/`, `/cmds`, `/links`, `/menu`, `/health`, `/api/platform`, `/
 `/api/servers`, `/api/status`, `/api/system`, `/api/metrics`, `/api/banner`, `/api/commands`,
 `/api/menu` y `/api/logs/stream` (SSE). `/home` redirige a `/` y `/status` a `/metrics`.
 
-Rutas con sesión: `/api/auth/*`, `/api/economy` (`/daily`, `/mission`, `/buy`), `/api/store/catalog`,
-`/api/store/checkout`, `/api/store/tokens`, `/api/subbots` (opciones, acciones, grupos,
-emparejamiento y confirmación), `/api/reports` y `/api/catalog/:slug/use`.
+Rutas con sesión: `/api/auth/*`, `/api/store/catalog`, `/api/store/checkout`, `/api/store/tokens`,
+`/api/subbots` (opciones, acciones, grupos, emparejamiento y confirmación), `/api/reports`
+(notifica al owner) y `/api/catalog/:slug/use`.
 
 ## Pruebas
 
@@ -140,7 +145,7 @@ TEST_DATABASE_URL=postgres://... npm test   # además, pruebas de PostgreSQL
 
 Además de las pruebas unitarias, la suite incluye tres verificaciones de conjunto:
 
-- **Prueba de humo de los 41 comandos** (`tests/commands-run.test.ts`): cada comando se ejecuta con
+- **Prueba de humo de los 34 comandos** (`tests/commands-run.test.ts`): cada comando se ejecuta con
   una base simulada y debe responder sin caer en el error genérico.
 - **Esquema y repositorios** (`tests/schema.test.ts`): aplica el esquema completo y siembra los
   catálogos sobre un emulador de PostgreSQL (pg-mem) y ejercita los repositorios reales.
@@ -152,10 +157,10 @@ datos: usa una base dedicada.
 
 ## Base de datos
 
-El esquema (`src/database/schema.ts`, versión 4) cubre cuentas y sesiones web, tokens, subbots con
-todas sus opciones, catálogo de bots y usos, economía (libro de movimientos, objetos, misiones),
-banco por grupo, servidores, grupos de cada subbot y reportes. Las migraciones se aplican al
-arrancar; en modo memoria se siembran los mismos datos en RAM.
+El esquema (`src/database/schema.ts`, versión 5) cubre cuentas y sesiones web, tokens, subbots con
+todas sus opciones, catálogo de bots (con enlace a GitHub) y usos, servidores, grupos de cada
+subbot y reportes. Las migraciones se aplican al arrancar; en modo memoria se siembran los mismos
+datos en RAM.
 
 ### Neon (plan gratuito)
 
@@ -168,7 +173,7 @@ variable secreta del despliegue. Revisa los límites vigentes: pueden cambiar.
 1. Crea la base en Neon y copia la URL.
 2. Crea un *Blueprint* o *Web Service* desde este repositorio (`render.yaml` ya define build, start
    y health check).
-3. Completa `DATABASE_URL`, `OWNER_NUMBERS` y, si quieres, `BOT_PHONE`.
+3. Completa `DATABASE_URL`, `OWNER_EMAIL` y, si quieres, `BOT_PHONE`.
 4. Abre la URL pública y vincula WhatsApp con QR o código.
 
 **Limitaciones del plan gratuito de Render**: el servicio se duerme tras 15 minutos sin tráfico (la

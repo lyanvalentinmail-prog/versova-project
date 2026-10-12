@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#050506" />
-  <meta name="description" content="VÉRSOVA · plataforma de bots para WhatsApp: catálogo de bots gratis y de pago, economía de V-Coins, sub-bots con panel propio y asistente de vinculación." />
+  <meta name="description" content="VÉRSOVA · plataforma de bots para WhatsApp: catálogo de bots gratis, tienda 100% gratuita, sub-bots con panel propio y asistente de vinculación por QR o código." />
   <title>VÉRSOVA — Plataforma de bots para WhatsApp</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
@@ -20,13 +20,13 @@
           <h1 class="greeting" id="greeting">Hola, bienvenido</h1>
           <p class="lead" id="homeIntro">
             Bienvenido a <strong>VÉRSOVA</strong>: activa tu bot desde el catálogo,
-            administra tus instancias y gana <strong>V-Coins</strong> para desbloquear mejoras.
+            administra tus instancias y usa toda la tienda sin pagar nada.
           </p>
         </div>
       </div>
       <div class="hero-note">
-        <span>✦ Catálogo de bots gratis y de pago</span>
-        <span>✦ Economía con V-Coins y misiones</span>
+        <span>✦ Catálogo de bots gratis (0 $)</span>
+        <span>✦ Tienda 100% gratuita</span>
         <span>✦ Bot con panel de opciones completo</span>
         <span id="platformMode" class="mono tiny">Modo memoria (sin base de datos)</span>
       </div>
@@ -44,26 +44,26 @@
         <span class="ico">🎧</span>
         <span class="card-title">Information</span>
       </div>
-      <h3>Sesión Premium</h3>
+      <h3>Todo es gratis</h3>
       <p class="lead" style="margin:8px 0 14px">
-        (˶ˆᗜˆ˵) Recuerda que puedes obtener una <strong>sesión premium</strong> a un precio accesible de
-        <strong>2 dólares (USD)</strong>.
+        (˶ˆᗜˆ˵) En VÉRSOVA no hay que pagar: <strong>toda la tienda vale 0 $</strong>, los bots del
+        catálogo se activan gratis y las instancias Premium y VIP se entregan con tokens gratuitos.
       </p>
       <div class="section-sep"><span class="label">❀ Beneficios ❀</span><hr /></div>
       <ul class="feature-list" style="margin-top:12px">
-        <li>₍^. .^₎⟆ Mayor velocidad de respuesta</li>
-        <li>₍^. .^₎⟆ Acceso anticipado a nuevos comandos</li>
-        <li>₍^. .^₎⟆ Todas las funciones de forma ilimitada</li>
+        <li>₍^. .^₎⟆ Catálogo de bots abierto en GitHub (VÉRSOVA, Raiden, Yae Miku…)</li>
+        <li>₍^. .^₎⟆ Tokens Premium y VIP gratis, con entrega instantánea</li>
+        <li>₍^. .^₎⟆ Planes, espacio extra y comandos sin costo</li>
       </ul>
       <p class="lead" style="margin-top:14px">
-        ✎ Para adquirirla, compra tu token directamente en la
-        <a href="/store" style="color:var(--accent-2);text-decoration:underline">Tienda</a> o también puedes
-        adquirir tu <strong>token</strong> en nuestro <a href="/links" style="color:var(--accent-2);text-decoration:underline">grupo de WhatsApp</a>.
+        ✎ Activa lo que necesites desde la
+        <a href="/store" style="color:var(--accent-2);text-decoration:underline">Tienda</a> o registra una
+        instancia nueva desde el <a href="/registrar" style="color:var(--accent-2);text-decoration:underline">asistente</a>.
       </p>
-      <p class="center tiny muted" style="margin-top:16px">© 2025-2026 Powered By VÉRSOVA! ≽^• ˕ • ྀི≼</p>
+      <p class="center tiny muted" style="margin-top:16px">© 2025-2026 Powered By VÉRSOVA! ≽^• ˕ • ྀི</p>
     </section>
 
-    <!-- Totales -->
+<!-- Totales -->
     <section class="grid grid-tiles" aria-label="Totales de la plataforma">
       <div class="stat-tile"><span class="label">🤖 Total bots</span><b id="statBots">0</b><span class="tiny">Activos en la red</span></div>
       <div class="stat-tile"><span class="label">👑 Main</span><b id="statMain">0</b><span class="tiny">Principales</span></div>
@@ -73,12 +73,6 @@
       <div class="stat-tile"><span class="label">⌘ Comandos</span><b id="statCommands">0</b><span class="tiny">Disponibles</span></div>
       <div class="stat-tile"><span class="label">🧩 Catálogo</span><b id="statCatalog">0</b><span class="tiny">Bots listos para usar</span></div>
       <div class="stat-tile"><span class="label">🌐 Servidores</span><b id="platformServers">0/0</b><span class="tiny">En línea</span></div>
-    </section>
-
-    <!-- Economía -->
-    <section class="card" id="economyWidget">
-      <div class="card-head"><span class="ico">🪙</span><span class="card-title">Economía V-Coin</span></div>
-      <p class="muted small">Inicia sesión para ver tu monedero, reclamar el bono diario y completar misiones.</p>
     </section>
 
     <!-- Vinculación del bot principal -->
@@ -112,8 +106,8 @@
     <!-- Compra de tokens -->
     <section class="card glow-top">
       <span class="label">Bot access</span>
-      <h2>Compra tu Token Premium</h2>
-      <p class="lead">Adquiere tu token para desbloquear instancias Premium y Moderador con beneficios exclusivos.</p>
+      <h2>Tu Token Premium es gratis</h2>
+      <p class="lead">Reclama tu token en la tienda y desbloquea instancias Premium y VIP con beneficios exclusivos.</p>
       <div class="row" style="margin-top:12px;flex-wrap:wrap">
         <a class="btn btn-primary" href="/store">Ir a la tienda</a>
         <a class="btn btn-ghost" href="/store#catalogo">Catálogo de bots</a>
@@ -159,7 +153,7 @@
           <button class="icon-btn" type="button" onclick="closeAuth()" aria-label="Cerrar">✕</button>
         </div>
         <h2 id="authTitle">Inicia sesión</h2>
-        <p class="muted small">Entra para administrar tus bots, tu economía y el catálogo completo.</p>
+        <p class="muted small">Entra para administrar tus bots, tu tienda y el catálogo completo.</p>
         <div class="field" id="authNameField" hidden>
           <label for="authName">Nombre</label>
           <input id="authName" type="text" placeholder="Tu nombre" autocomplete="name" />

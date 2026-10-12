@@ -1,11 +1,10 @@
 import { register, type Command } from '../../core/router.js';
-import { getBank, getCharacterById, getMember, getUser } from '../../database/repos.js';
+import { getCharacterById, getMember, getUser } from '../../database/repos.js';
 import { countWarnings } from '../../database/warnings.js';
 import { formatDate } from '../../utils/time.js';
 import { userPart } from '../../utils/text.js';
 import { mention } from '../../messages/design.js';
 import * as F from '../../messages/design-extra.js';
-import { config } from '../../config/index.js';
 
 const perfil: Command = {
   name: 'perfil',
@@ -17,7 +16,6 @@ const perfil: Command = {
     const target = ctx.mentions[0] ?? ctx.quotedId ?? ctx.sender;
     const user = await getUser(ctx.groupId, target);
     const member = await getMember(ctx.groupId, target);
-    const bank = await getBank(ctx.groupId, target);
     if (!user) {
       const push = member?.push_name || `@${userPart(target)}`;
       return void (await ctx.reply(
@@ -30,7 +28,6 @@ const perfil: Command = {
           afk: member?.afk_since ? `AFK (${member.afk_reason ?? 'sin motivo'})` : 'Activo',
           partner: 'Sin pareja',
           warnings: 0,
-          coins: bank.coins,
         }),
         [target],
       ));
@@ -48,7 +45,6 @@ const perfil: Command = {
         afk: member?.afk_since ? `AFK desde ${formatDate(member.afk_since)} (${member.afk_reason ?? 'sin motivo'})` : 'Activo',
         partner,
         warnings,
-        coins: bank.coins,
       }),
       [target, ...(user.partner_id ? [user.partner_id] : [])],
     );

@@ -12,7 +12,7 @@ describe('configuración del catálogo de comandos', () => {
     // Todos los comandos del menú tienen módulo propio: ninguno queda pendiente.
     expect(inventory.filter((command) => !command.implemented)).toEqual([]);
     expect(inventory.some((command) => command.name === 'menu' && command.implemented)).toBe(true);
-    expect(inventory.some((command) => command.name === 'comprar' && command.implemented)).toBe(true);
+    expect(inventory.some((command) => command.name === 'anuncio' && command.implemented)).toBe(true);
   });
 
   it('usa valores por defecto seguros para el formato del menú', () => {
