@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="es" data-page="home" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#05060f" />
+  <meta name="description" content="Panel público de control del bot VÉRSOVA: conexión, bots, comandos, identidad, telemetría y consola." />
+  <title>VÉRSOVA — Panel de control</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cff'/%3E%3Cstop offset='1' stop-color='%2326e0ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="VÉRSOVA, inicio">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span>
+          <span class="brand-name">VÉRSOVA</span>
+          <small>PANEL DE CONTROL</small>
+        </span>
+      </a>
+
+      <div>
+        <p class="side-nav-label">Principal</p>
+        <nav class="nav" aria-label="Secciones del panel">
+          <a href="#inicio" data-view="inicio" class="is-active"><span class="ico" aria-hidden="true">⌂</span> Inicio</a>
+          <a href="#conexion" data-view="conexion"><span class="ico" aria-hidden="true">⌁</span> Conexión</a>
+          <a href="#bots" data-view="bots"><span class="ico" aria-hidden="true">◈</span> Mis Bots</a>
+          <a href="#comandos" data-view="comandos"><span class="ico" aria-hidden="true">⌘</span> Comandos <span class="tag" id="navCommandCount">—</span></a>
+          <a href="#identidad" data-view="identidad"><span class="ico" aria-hidden="true">✎</span> Identidad</a>
+        </nav>
+      </div>
+
+      <div>
+        <p class="side-nav-label">Sistema</p>
+        <nav class="nav" aria-label="Sistema">
+          <a href="#monitor" data-view="monitor"><span class="ico" aria-hidden="true">◉</span> Monitor</a>
+          <a href="#links" data-view="links"><span class="ico" aria-hidden="true">🔗</span> Links</a>
+          <a href="#soporte" data-view="soporte"><span class="ico" aria-hidden="true">☎</span> Soporte</a>
+          <a href="/cmds"><span class="ico" aria-hidden="true">⇱</span> Catálogo</a>
+          <a href="/"><span class="ico" aria-hidden="true">↩</span> Página principal</a>
+        </nav>
+      </div>
+
+      <div class="card tight">
+        <p class="side-nav-label">Estado</p>
+        <div class="row" style="margin-top:10px">
+          <span class="status-badge" id="sideBadge"><span class="status-dot"></span><span>…</span></span>
+        </div>
+        <p class="muted small" style="margin-top:10px" id="sideDetail">Buscando estado…</p>
+      </div>
+
+      <p class="sidebar-foot">VÉRSOVA · v1.0<br />Panel público, sin contraseña.</p>
+    </aside>
+
+    <main class="main">
+      <div class="panel-top">
+        <span class="breadcrumb" id="viewName">Inicio</span>
+        <span class="pill accent">Plataforma oficial</span>
+        <span class="spacer"></span>
+        <span class="pill" id="statusPill"><span class="live-dot off"></span><span>Conectando…</span></span>
+        <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema" aria-pressed="true">
+          <span class="switch-track" aria-hidden="true">
+            <span class="switch-icon sun">☀</span>
+            <span class="switch-icon moon">☾</span>
+            <span class="switch-thumb"></span>
+          </span>
+        </button>
+      </div>
+
+      <!-- ------------------------------- INICIO ------------------------------ -->
+      <section class="view is-active" id="view-inicio">
+        <div class="hero-panel">
+          <div class="bot-line">
+            <span class="pill accent">BOT PRINCIPAL</span>
+            <span class="pill" id="heroStatusPill"><span class="live-dot off"></span><span>…</span></span>
+            <span class="pill" id="heroTeamPill">◢禍◣ Versova</span>
+          </div>
+          <h1 id="greeting">BUENAS NOCHES</h1>
+          <p class="hello">Hola, bienvenido al panel de <strong id="heroBotName">VÉRSOVA</strong>. Desde aquí vinculas el número, personalizas el menú y observas el servidor en vivo.</p>
+          <div class="row" style="margin-top:22px">
+            <a class="btn btn-primary" href="#conexion">Vincular dispositivo</a>
+            <a class="btn btn-ghost" href="#monitor">Ver telemetría</a>
+            <a class="btn btn-ghost" href="#comandos">Personalizar comandos</a>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat"><span>Comandos</span><b id="statCommands" data-count-to="0">0</b><small id="statCommandsNote">disponibles en el menú</small></div>
+          <div class="stat"><span>Registros</span><b id="statUsers" data-count-to="0">0</b><small>integrantes registrados</small></div>
+          <div class="stat"><span>Personajes</span><b id="statCharacters" data-count-to="0">0</b><small id="statCharactersNote">— ocupados</small></div>
+          <div class="stat"><span>Grupos</span><b id="statGroups" data-count-to="0">0</b><small>grupos con el bot</small></div>
+          <div class="stat"><span>Integrantes</span><b id="statMembers" data-count-to="0">0</b><small id="statMembersNote">— activos en 7 días</small></div>
+          <div class="stat"><span>Solicitudes</span><b id="statRequests" data-count-to="0">0</b><small>pendientes de aprobar</small></div>
+          <div class="stat"><span>Advertencias</span><b id="statWarns" data-count-to="0">0</b><small>emitidas por admins</small></div>
+          <div class="stat"><span>Uptime</span><b id="statUptime">—</b><small id="statUptimeNote">desde el arranque</small></div>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Información</p>
+                <h3 class="card-title">Estado de la sesión</h3>
+              </div>
+              <span id="statusBadge" class="status-badge"><span class="status-dot"></span><span>Conectando…</span></span>
+            </div>
+            <div class="status-card">
+              <p class="muted" id="statusDetail">Buscando estado…</p>
+              <div class="kv">
+                <div><span>Número vinculado</span><span id="infoNumber">—</span></div>
+                <div><span>Equipo</span><span id="infoTeam">—</span></div>
+                <div><span>Versión</span><span id="infoVersion">—</span></div>
+                <div><span>Uptime</span><span id="uptime">—</span></div>
+                <div><span>Sesión</span><span id="infoSession">—</span></div>
+              </div>
+              <div class="row">
+                <button id="logout" class="btn btn-sm btn-danger" type="button">Cerrar sesión de WhatsApp</button>
+                <a class="btn btn-sm btn-ghost" href="#monitor">Consola</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Accesos rápidos</p>
+                <h3 class="card-title">Recursos oficiales</h3>
+              </div>
+            </div>
+            <div class="link-grid" style="grid-template-columns:minmax(0,1fr)">
+              <a class="link-card card tight hoverable" href="#conexion">
+                <span class="icon" aria-hidden="true">⌁</span>
+                <b>Vincular dispositivo</b>
+                <p>QR o código de 8 dígitos para conectar el número del bot.</p>
+                <span class="go">Abrir sección →</span>
+              </a>
+              <a class="link-card card tight hoverable" href="/cmds">
+                <span class="icon" aria-hidden="true">⌘</span>
+                <b>Catálogo de comandos</b>
+                <p>Todo lo que el bot sabe hacer, con categorías y búsqueda.</p>
+                <span class="go">Ver catálogo →</span>
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Equipo de desarrollo</p>
+              <h3 class="card-title">Cómo está construido VÉRSOVA</h3>
+            </div>
+          </div>
+          <div class="team-rail">
+            <div class="team-card"><span class="avatar">⧉</span><b>Node.js 22</b><span>Runtime</span></div>
+            <div class="team-card"><span class="avatar">◈</span><b>Baileys</b><span>WhatsApp API</span></div>
+            <div class="team-card"><span class="avatar">⛁</span><b>PostgreSQL</b><span>Datos y sesión</span></div>
+            <div class="team-card"><span class="avatar">☁</span><b>Render</b><span>Despliegue</span></div>
+            <div class="team-card"><span class="avatar">⌘</span><b>Panel público</b><span>Sin autenticación</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ CONEXIÓN ----------------------------- -->
+      <section class="view" id="view-conexion">
+        <div class="wizard-steps" id="wizardSteps">
+          <span class="is-active">Paso 1 · Método</span>
+          <span>Paso 2 · Número</span>
+          <span>Paso 3 · Vinculación</span>
+          <span>Paso 4 · En línea</span>
+        </div>
+
+        <div class="hero-panel">
+          <span class="pill accent">Vinculación</span>
+          <h1 style="margin-top:14px">Vincula tu bot en 4 pasos</h1>
+          <p class="hello">Genera un código de 8 dígitos o escanea el QR desde el teléfono que será el bot. No necesitas servidor propio.</p>
+          <div class="connection-grid" style="margin-top:24px">
+            <div class="card inset">
+              <p class="field-label">Paso 3 · Escanea el código</p>
+              <p class="muted small">Si eliges QR, tendrás 120 segundos para escanearlo antes de que se renueve.</p>
+              <div class="qr-wrap">
+                <img id="qr" alt="Código QR para vincular el bot con WhatsApp" hidden />
+                <p id="qrEmpty" class="empty-state">No hay un QR pendiente.</p>
+              </div>
+            </div>
+
+            <div class="card inset">
+              <p class="field-label" for="phone">Paso 2 · Número del bot</p>
+              <p class="muted small">WhatsApp enviará el código a este número. Escríbelo con código de país, sin + ni espacios.</p>
+              <div class="input-action" style="margin-top:12px">
+                <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="59899999999" />
+                <button id="pair" class="btn btn-primary" type="button">Pedir código</button>
+              </div>
+              <p id="pairCode" class="pair-code" hidden></p>
+              <p id="pairCountdown" class="muted small" hidden></p>
+              <p id="pairHint" class="muted small" hidden></p>
+              <p id="pairError" class="form-message error" hidden></p>
+
+              <ol class="steps-mini">
+                <li>Abre WhatsApp en el teléfono del bot.</li>
+                <li>En Android toca <strong>Menú ⋮</strong>; en iPhone, <strong>Ajustes</strong>.</li>
+                <li>Entra en <strong>Dispositivos vinculados</strong> y toca <strong>Vincular dispositivo</strong>.</li>
+                <li>Toca <strong>Vincular con el número de teléfono</strong> e ingresa el código.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <aside class="public-notice">
+          <span class="notice-icon" aria-hidden="true">⚠</span>
+          <p><strong>Este panel no tiene contraseña.</strong> Cualquiera con el enlace puede editar el menú y el banner, ver la actividad, consultar QR o códigos activos y vincular o cerrar la sesión de WhatsApp.</p>
+        </aside>
+      </section>
+
+      <!-- -------------------------------- BOTS ------------------------------- -->
+      <section class="view" id="view-bots">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Sesiones</p>
+              <h2 class="card-title">Mis Bots</h2>
+              <p class="muted small">gestiona tus sesiones activas</p>
+            </div>
+            <span class="pill" id="botCount">SubBots registrados · 1</span>
+          </div>
+
+          <article class="bot-card card inset">
+            <div class="row">
+              <span class="bot-avatar">V</span>
+              <div>
+                <b id="botName">VÉRSOVA</b>
+                <p class="muted small" id="botNumber">Número —</p>
+              </div>
+              <span class="spacer"></span>
+              <span class="status-badge" id="botBadge"><span class="status-dot"></span><span>…</span></span>
+            </div>
+            <div class="kv">
+              <div><span>Prefijo</span><span id="botPrefix">.</span></div>
+              <div><span>Equipo</span><span id="botTeam">—</span></div>
+              <div><span>Grupos conectados</span><span id="botGroups">—</span></div>
+              <div><span>Registros</span><span id="botUsers">—</span></div>
+              <div><span>Personajes ocupados</span><span id="botCharacters">—</span></div>
+              <div><span>Última actividad</span><span id="botActivity">—</span></div>
+            </div>
+            <div class="bot-flags">
+              <span class="pill ok" id="botFlagSession">Sesión en PostgreSQL</span>
+              <span class="pill">Anti-duplicados</span>
+              <span class="pill">Límite por usuario</span>
+              <span class="pill">Auditoría de admins</span>
+            </div>
+            <div class="row">
+              <a class="btn btn-primary btn-sm" href="#conexion">Gestionar vinculación</a>
+              <a class="btn btn-sm btn-ghost" href="#comandos">Configurar comandos</a>
+              <a class="btn btn-sm btn-ghost" href="/cmds">Ver catálogo</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="grid three">
+          <div class="stat"><span>Grupos</span><b id="cardGroups">0</b><small>con el bot dentro</small></div>
+          <div class="stat"><span>Activos 7 días</span><b id="cardActive">0</b><small>integrantes con actividad</small></div>
+          <div class="stat"><span>Acciones auditadas</span><b id="cardActions">0</b><small>registradas por admins</small></div>
+        </div>
+      </section>
+
+      <!-- ------------------------------ COMANDOS ----------------------------- -->
+      <section class="view" id="view-comandos">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Personalización</p>
+              <h3 class="card-title">Todos los comandos</h3>
+              <p class="muted small" style="margin-top:6px">Administra qué comandos funcionan, cuáles aparecen en el menú y crea alias. Los que todavía no tienen código se marcan como pendientes.</p>
+            </div>
+            <span id="commandCount" class="count-pill">—</span>
+          </div>
+
+          <div class="decoration-setting">
+            <div class="decoration-copy">
+              <label class="field-label" for="commandDecoration">Texto antes del comando</label>
+              <p class="muted small">Solo cambia cómo se muestra en el menú; el prefijo real del bot sigue siendo «.».</p>
+            </div>
+            <div class="input-action decoration-input">
+              <input id="commandDecoration" maxlength="40" value="ㅤ୨ৎㅤ." aria-label="Texto de decoración antes del comando" />
+              <button id="saveDecoration" class="btn btn-sm" type="button">Guardar</button>
+            </div>
+          </div>
+
+          <div class="chips" id="commandCategories" style="margin-top:16px"></div>
+
+          <div class="command-toolbar">
+            <label class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="commandSearch" type="search" placeholder="Buscar por nombre o categoría" autocomplete="off" />
+            </label>
+            <span id="commandSaveState" class="muted small" aria-live="polite"></span>
+            <a class="btn btn-sm btn-ghost" href="/cmds">Catálogo completo</a>
+          </div>
+
+          <div id="commandList" class="command-list" aria-live="polite">
+            <p class="empty-state">Cargando comandos…</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ------------------------------ IDENTIDAD ---------------------------- -->
+      <section class="view" id="view-identidad">
+        <div class="grid two">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Identidad</p>
+                <h3 class="card-title">Personalizar el banner</h3>
+              </div>
+              <span class="count-pill">01</span>
+            </div>
+            <p class="muted small">Este texto aparece al inicio de <code>.menu</code>. Si lo dejas vacío, se restaura el diseño VÉRSOVA.</p>
+            <label class="sr-only" for="bannerText">Texto del banner</label>
+            <textarea id="bannerText" rows="6" maxlength="800" placeholder="Se usará el banner original de VÉRSOVA" style="margin-top:12px"></textarea>
+            <div class="file-row row" style="margin-top:12px">
+              <label class="btn btn-sm" for="bannerImage">
+                <span aria-hidden="true">＋</span> Añadir imagen
+                <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" />
+              </label>
+              <span id="bannerImageState" class="muted small">Sin imagen</span>
+              <span class="spacer"></span>
+              <button id="removeImage" class="text-button" type="button">Quitar imagen</button>
+            </div>
+            <div class="row" style="margin-top:14px">
+              <button id="saveBanner" class="btn btn-primary btn-sm" type="button">Guardar banner</button>
+              <span id="bannerMsg" class="form-message" aria-live="polite" hidden></span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Vista previa</p>
+                <h3 class="card-title">Así se verá el menú</h3>
+              </div>
+              <button id="refreshPreview" class="text-button" type="button">Actualizar</button>
+            </div>
+            <pre id="menuPreview" class="menu-preview">Cargando vista previa…</pre>
+          </article>
+        </div>
+      </section>
+
+      <!-- -------------------------------- MONITOR ---------------------------- -->
+      <section class="view" id="view-monitor">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Monitor del sistema</p>
+              <h2 class="card-title">Telemetría y rendimiento</h2>
+              <p class="muted small" style="margin-top:6px">Estado en tiempo real del servidor donde corre el bot: CPU, memoria, disco, red y sesión de WhatsApp.</p>
+            </div>
+            <span class="pill" id="monitorPill"><span class="live-dot off"></span><span>midiendo…</span></span>
+          </div>
+
+          <div class="telemetry">
+            <div class="card inset meter">
+              <div class="meter-head"><b>CPU</b><span class="value" id="cpuValue">—</span></div>
+              <div class="bar"><span id="cpuBar"></span></div>
+              <p class="muted small" id="cpuNote">—</p>
+            </div>
+            <div class="card inset meter">
+              <div class="meter-head"><b>Memoria RAM</b><span class="value" id="ramValue">—</span></div>
+              <div class="bar"><span id="ramBar"></span></div>
+              <p class="muted small" id="ramNote">—</p>
+            </div>
+            <div class="card inset meter">
+              <div class="meter-head"><b>Almacenamiento</b><span class="value" id="diskValue">—</span></div>
+              <div class="bar"><span id="diskBar"></span></div>
+              <p class="muted small" id="diskNote">—</p>
+            </div>
+            <div class="card inset meter">
+              <div class="meter-head"><b>Red / Latencia</b><span class="value" id="netValue">—</span></div>
+              <div class="bar ok"><span id="netBar"></span></div>
+              <p class="muted small" id="netNote">—</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <p class="eyebrow">Detalles del servidor</p>
+            <div class="kv">
+              <div><span>Hostname</span><span id="sysHost">—</span></div>
+              <div><span>PID</span><span id="sysPid">—</span></div>
+              <div><span>Node.js</span><span id="sysNode">—</span></div>
+              <div><span>Plataforma</span><span id="sysPlatform">—</span></div>
+              <div><span>CPU</span><span id="sysCpuModel">—</span></div>
+              <div><span>Carga (1/5/15 min)</span><span id="sysLoad">—</span></div>
+              <div><span>Uptime del sistema</span><span id="sysUptime">—</span></div>
+              <div><span>Última medición</span><span id="sysTime">—</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <p class="eyebrow">Uso de la plataforma</p>
+            <div class="kv">
+              <div><span>Grupos</span><span id="monGroups">—</span></div>
+              <div><span>Integrantes</span><span id="monMembers">—</span></div>
+              <div><span>Registrados</span><span id="monUsers">—</span></div>
+              <div><span>Personajes</span><span id="monCharacters">—</span></div>
+              <div><span>Solicitudes pendientes</span><span id="monRequests">—</span></div>
+              <div><span>Advertencias</span><span id="monWarns">—</span></div>
+              <div><span>Acciones auditadas</span><span id="monActions">—</span></div>
+              <div><span>Última actividad</span><span id="monLastActivity">—</span></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Actividad reciente</p>
+              <h3 class="card-title">Consola</h3>
+            </div>
+            <label class="toggle-label"><input type="checkbox" id="autoscroll" checked /><span class="checkmark"></span> Auto-desplazar</label>
+          </div>
+          <pre id="console" class="console" aria-live="polite"></pre>
+        </article>
+      </section>
+
+      <!-- --------------------------------- LINKS ----------------------------- -->
+      <section class="view" id="view-links">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">VÉRSOVA</p>
+              <h2 class="card-title">Links oficiales</h2>
+              <p class="muted small" style="margin-top:6px">Todos los accesos del proyecto, en un solo lugar.</p>
+            </div>
+          </div>
+          <div class="link-grid">
+            <a class="link-card card tight hoverable" href="/">
+              <span class="icon" aria-hidden="true">⌂</span>
+              <b>Página principal</b>
+              <p>Presentación del bot, ventajas y preguntas frecuentes.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="/cmds">
+              <span class="icon" aria-hidden="true">⌘</span>
+              <b>Catálogo de comandos</b>
+              <p>Busca, filtra por categoría y copia cualquier comando.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="#conexion">
+              <span class="icon" aria-hidden="true">⌁</span>
+              <b>Vinculación</b>
+              <p>QR y código de 8 dígitos para conectar el número.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="#monitor">
+              <span class="icon" aria-hidden="true">◉</span>
+              <b>Monitor</b>
+              <p>CPU, memoria, disco, latencia y consola en vivo.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="https://github.com/lyanvalentinmail-prog/versova-project" target="_blank" rel="noreferrer">
+              <span class="icon" aria-hidden="true">⧉</span>
+              <b>Repositorio</b>
+              <p>Código fuente, guía de despliegue y registro de cambios.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="/health">
+              <span class="icon" aria-hidden="true">♥</span>
+              <b>Salud del servicio</b>
+              <p>Respuesta JSON con el estado de la base y de WhatsApp.</p>
+              <span class="go">Consultar →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------- SOPORTE ---------------------------- -->
+      <section class="view" id="view-soporte">
+        <div class="grid two">
+          <article class="card">
+            <p class="eyebrow">Soporte</p>
+            <h3 class="card-title">¿Algo no funciona?</h3>
+            <p class="muted" style="margin-top:10px">Revisa primero la consola del sistema: casi todos los avisos (reconexiones, emparejamientos rechazados, errores de base de datos) quedan registrados ahí con su hora y código.</p>
+            <ol class="steps-mini">
+              <li>Comprueba el estado de WhatsApp en la sección <a href="#conexion">Conexión</a>.</li>
+              <li>Mira la telemetría en <a href="#monitor">Monitor</a> para descartar caídas del servidor.</li>
+              <li>Si el bot no responde, ciérrale la sesión y vuelve a vincularlo.</li>
+              <li>Revisa las variables del servicio (DATABASE_URL, OWNER_NUMBERS) en el panel de Render.</li>
+            </ol>
+            <div class="row" style="margin-top:18px">
+              <a class="btn btn-primary btn-sm" href="#monitor">Abrir consola</a>
+              <a class="btn btn-sm btn-ghost" href="/health">Ver /health</a>
+            </div>
+          </article>
+
+          <article class="card">
+            <p class="eyebrow">Antes de escribir</p>
+            <h3 class="card-title">Preguntas rápidas</h3>
+            <div class="faq" style="margin-top:14px">
+              <details open><summary>¿El panel es privado?</summary><p>No. No pide contraseña ni autentica visitantes: quien tenga la URL puede administrar el bot. Los cambios se limitan por IP para evitar abusos.</p></details>
+              <details><summary>¿Cuánto dura el código de vinculación?</summary><p>Unos 60 segundos. El panel lo retira al expirar para que no ingreses un código que WhatsApp rechazaría.</p></details>
+              <details><summary>¿Por qué el botón de código está deshabilitado?</summary><p>WhatsApp solo acepta un código por teléfono cuando la conexión está en modo vinculación (el mismo momento en que aparece el QR).</p></details>
+              <details><summary>¿Se pierde la sesión al reiniciar?</summary><p>No. La sesión se guarda en PostgreSQL y el bot la recupera al arrancar de nuevo.</p></details>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>VÉRSOVA · est. 2026</span>
+        <span>Panel público · sin autenticación</span>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

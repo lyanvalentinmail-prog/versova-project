@@ -7,7 +7,8 @@ Bot de WhatsApp para administrar teams de rol. Prefijo `.` · Versión 1.0 · Id
 **Implementado**
 
 - Conexión con WhatsApp (QR y código de emparejamiento), reconexión automática y sesión guardada en PostgreSQL.
-- Panel web público, sin clave: estado del bot, QR, emparejamiento, cerrar sesión, banner, lista de comandos, alias, activación/desactivación, vista previa del menú y logs en vivo.
+- Interfaz web de tres rutas (`/` presentación, `/home` panel, `/cmds` catálogo) con estética oscura tipo plataforma de SubBots: portada con hero y contadores en vivo, secciones de conexión, Mis Bots, Comandos, Identidad, Monitor y Links.
+- Panel público, sin clave: estado del bot, QR, emparejamiento en 4 pasos, cerrar sesión, banner, lista de comandos con categorías, alias, activación/desactivación, vista previa del menú, telemetría real del servidor (CPU, RAM, disco, latencia de PostgreSQL) y logs en vivo por SSE.
 - Tema claro/oscuro con selector animado y preferencia guardada en el navegador.
 - Registro: `.reg`, `.unreg`, `.editar`, `.ficha`.
 - Personajes: `.rol`, `.roles`, `.mirol`, `.cambiarol`, `.reservar`, `.liberar`.
@@ -43,7 +44,7 @@ npm run build
 npm start
 ```
 
-Panel: `http://localhost:3000`. No hay inicio de sesión.
+Panel: `http://localhost:3000/home`. Portada: `http://localhost:3000`. No hay inicio de sesión.
 
 Variables:
 
@@ -88,6 +89,18 @@ Neon no se crea automáticamente desde este repositorio: hace falta crear el pro
 - El servicio web se duerme tras 15 minutos sin tráfico entrante; la conexión de WhatsApp se interrumpe cuando Render lo suspende.
 - El disco es efímero. Por eso la sesión y los datos viven en PostgreSQL externo.
 
+## Rutas de la interfaz web
+
+| Ruta | Contenido |
+|---|---|
+| `/` | Portada: hero, tres pasos de inicio, ventajas, contadores en vivo, vista previa del menú, stack y preguntas frecuentes. |
+| `/home` | Panel de control en secciones: Inicio, Conexión, Mis Bots, Comandos, Identidad, Monitor, Links y Soporte. |
+| `/cmds` | Catálogo completo de comandos, con filtros por categoría, búsqueda (atajo `/`) y copia al tocar. |
+| `/status` | Redirección a `/home#monitor`. |
+| `/health` | JSON con el estado de la base de datos y de WhatsApp (para monitores externos). |
+
+Endpoints que alimentan esas vistas: `/api/status`, `/api/pair`, `/api/logout`, `/api/banner`, `/api/commands`, `/api/menu`, `/api/system` (telemetría del servidor), `/api/metrics` (totales reales de la base) y `/api/logs/stream` (SSE). Todos son de lectura pública; los de escritura se limitan por IP.
+
 ## Personalización desde el panel
 
 - Cambiar texto e imagen del banner que aparece antes del menú.
@@ -127,6 +140,6 @@ src/
   services/      reglas compartidas (desregistro, sincronización)
   messages/      diseño de mensajes de VÉRSOVA
   utils/         texto, tiempo, logs, límites de uso
-  web/           servidor público y panel claro/oscuro
+  web/           servidor público, telemetría y panel web (index, home, cmds)
  tests/
 ```

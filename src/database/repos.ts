@@ -298,3 +298,58 @@ export async function getActiveReservationOf(groupId: string, waId: string, q: Q
   );
   return r.rows[0] ?? null;
 }
+
+// ---------- métricas de la plataforma (panel web) ----------
+export interface PlatformMetrics {
+  groups: number;
+  members: number;
+  activeMembers: number;
+  users: number;
+  characters: number;
+  charactersOccupied: number;
+  pendingRequests: number;
+  warnings: number;
+  actions: number;
+  lastActivityAt: string | null;
+}
+
+/** Totales reales de la base, para las tarjetas del panel. */
+export async function getPlatformMetrics(): Promise<PlatformMetrics> {
+  const r = await pool.query<{
+    groups: number;
+    members: number;
+    active_members: number;
+    users: number;
+    characters: number;
+    characters_occupied: number;
+    pending_requests: number;
+    warnings: number;
+    actions: number;
+    last_activity_at: Date | null;
+  }>(`
+    SELECT
+      (SELECT count(*)::int FROM groups) AS groups,
+      (SELECT count(*)::int FROM members) AS members,
+      (SELECT count(*)::int FROM members WHERE last_activity_at > now() - interval '7 days') AS active_members,
+      (SELECT count(*)::int FROM users) AS users,
+      (SELECT count(*)::int FROM characters) AS characters,
+      (SELECT count(*)::int FROM characters WHERE status = 'occupied') AS characters_occupied,
+      (SELECT count(*)::int FROM requests WHERE status = 'pending') AS pending_requests,
+      (SELECT count(*)::int FROM warnings) AS warnings,
+      (SELECT count(*)::int FROM audit_log) AS actions,
+      (SELECT max(last_activity_at) FROM members) AS last_activity_at
+  `);
+  const row = r.rows[0];
+  return {
+    groups: row?.groups ?? 0,
+    members: row?.members ?? 0,
+    activeMembers: row?.active_members ?? 0,
+    users: row?.users ?? 0,
+    characters: row?.characters ?? 0,
+    charactersOccupied: row?.characters_occupied ?? 0,
+    pendingRequests: row?.pending_requests ?? 0,
+    warnings: row?.warnings ?? 0,
+    actions: row?.actions ?? 0,
+    lastActivityAt: row?.last_activity_at ? new Date(row.last_activity_at).toISOString() : null,
+  };
+}

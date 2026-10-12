@@ -1,179 +1,267 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-page="landing" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f7f6f8" />
-  <meta name="description" content="Panel público de configuración del bot VÉRSOVA." />
-  <title>VÉRSOVA · Panel</title>
+  <meta name="theme-color" content="#05060f" />
+  <meta name="description" content="VÉRSOVA · Plataforma de gestión del bot de WhatsApp para teams de rol: vinculación con QR o código, menú personalizable y telemetría en vivo." />
+  <title>VÉRSOVA — Plataforma de gestión para WhatsApp</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cff'/%3E%3Cstop offset='1' stop-color='%2326e0ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="shell">
-    <header class="hero">
-      <div class="topbar">
-        <a class="brand" href="#top" aria-label="VÉRSOVA, inicio">
-          <span class="brand-mark" aria-hidden="true">𓆩 禊 𓆪</span>
-          <span class="brand-name">VÉRSOVA</span>
-        </a>
-        <div class="top-actions">
-          <span class="public-pill"><span class="live-dot"></span> Panel público</span>
-          <button id="themeToggle" class="theme-switch" type="button" aria-label="Activar modo oscuro" aria-pressed="false">
-            <span class="switch-track" aria-hidden="true">
-              <span class="switch-icon sun">☼</span>
-              <span class="switch-icon moon">☾</span>
-              <span class="switch-thumb"></span>
-            </span>
-          </button>
-        </div>
-      </div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="VÉRSOVA, inicio">
+      <span class="brand-mark" aria-hidden="true">V</span>
+      <span>
+        <span class="brand-name">VÉRSOVA</span>
+        <small>BOT SYSTEM</small>
+      </span>
+    </a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#inicio" class="is-active">Inicio</a>
+      <a href="#pasos">Cómo empezar</a>
+      <a href="#features">Ventajas</a>
+      <a href="/cmds">Comandos</a>
+      <a href="/home">Panel</a>
+    </nav>
+    <div class="top-actions">
+      <span class="pill" id="navStatus"><span class="live-dot off"></span><span>Comprobando…</span></span>
+      <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema" aria-pressed="true">
+        <span class="switch-track" aria-hidden="true">
+          <span class="switch-icon sun">☀</span>
+          <span class="switch-icon moon">☾</span>
+          <span class="switch-thumb"></span>
+        </span>
+      </button>
+      <a class="btn btn-primary btn-sm" href="/home">Ir al Panel</a>
+    </div>
+  </header>
 
-      <div class="hero-copy" id="top">
-        <p class="eyebrow">BOT SYSTEM <span>·</span> PANEL DE CONTROL</p>
-        <h1>VÉRSOVA</h1>
-        <p class="hero-subtitle">Una consola tranquila para cuidar cada detalle del bot.</p>
-      </div>
-    </header>
-
-    <main>
-      <aside class="public-notice" aria-label="Aviso de privacidad">
-        <span class="notice-icon" aria-hidden="true">◌</span>
-        <p><strong>Este panel no tiene contraseña.</strong> Cualquiera con el enlace puede editar el menú y el banner, ver la actividad, consultar QR/códigos activos y vincular o cerrar la sesión de WhatsApp.</p>
-      </aside>
-
-      <section class="panel status-panel" aria-labelledby="statusTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">EN VIVO</p>
-            <h2 id="statusTitle">Estado del bot</h2>
+  <main class="shell" id="inicio">
+    <section class="hero">
+      <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="hero-inner">
+        <div>
+          <span class="pill accent">Plataforma oficial · v1.0</span>
+          <h1 style="margin-top:18px">Automatiza WhatsApp con <span class="gradient-text">VÉRSOVA</span> Intelligence</h1>
+          <p class="hero-lead">
+            Plataforma de gestión para tu bot de WhatsApp: vinculación con QR o código de 8 dígitos, menú
+            personalizable, sistema de roles para teams y telemetría del servidor en tiempo real.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="/home">Ir al Panel</a>
+            <a class="btn btn-ghost" href="/cmds">Ver comandos</a>
           </div>
-          <span id="statusBadge" class="status-badge"><span class="status-dot"></span><span>Conectando…</span></span>
-        </div>
-        <p id="statusDetail" class="muted status-detail">Buscando estado…</p>
-        <div class="status-footer">
-          <span id="uptime" class="muted small">—</span>
-          <button id="logout" class="text-button danger-text" type="button">Cerrar sesión de WhatsApp</button>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="pairTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">CONEXIÓN</p>
-            <h2 id="pairTitle">Vincular dispositivo</h2>
+          <div class="hero-note">
+            <span>✦ Sin contraseña, panel abierto</span>
+            <span>✦ Sesión guardada en base de datos</span>
+            <span>✦ Reconexión automática</span>
           </div>
         </div>
-        <div class="connection-grid">
-          <div class="connection-method">
-            <p class="field-label">Escanea el código QR</p>
-            <p class="muted small">WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
-            <div class="qr-wrap">
-              <img id="qr" alt="Código QR para vincular el bot con WhatsApp" hidden />
-              <p id="qrEmpty" class="empty-state">No hay un QR pendiente.</p>
+
+        <div class="hero-card">
+          <div class="card">
+            <div class="hero-status">
+              <div>
+                <strong id="heroBot">VÉRSOVA</strong>
+                <p class="muted small" id="heroTeam">Cargando estado…</p>
+              </div>
+              <span class="pill" id="heroPill"><span class="live-dot off"></span><span>…</span></span>
+            </div>
+            <div class="total-bots">
+              <b data-count-to="0" id="heroCount">0</b>
+              <span id="heroCountLabel">Comandos disponibles</span>
+            </div>
+            <div class="kv" style="margin-top:16px">
+              <div><span>Prefijo</span><span id="heroPrefix">.</span></div>
+              <div><span>Versión</span><span id="heroVersion">—</span></div>
+              <div><span>En línea desde</span><span id="heroUptime">—</span></div>
+              <div><span>Base de datos</span><span id="heroDb">—</span></div>
+            </div>
+            <div class="row" style="margin-top:16px">
+              <a class="btn btn-sm" href="/home#conexion">Vincular dispositivo</a>
+              <a class="btn btn-sm btn-ghost" href="/home#monitor">Ver telemetría</a>
             </div>
           </div>
-          <div class="connection-method">
-            <label class="field-label" for="phone">O usa un código de emparejamiento</label>
-            <p class="muted small">Escribe tu número con código de país, sin + ni espacios.</p>
-            <div class="input-action">
-              <input id="phone" inputmode="numeric" autocomplete="tel" placeholder="59899999999" />
-              <button id="pair" class="button" type="button">Pedir código</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-strip" aria-label="Datos de la plataforma">
+      <div><b id="landCommands" data-count-to="0">0</b><span>Comandos</span></div>
+      <div><b id="landImplemented" data-count-to="0">0</b><span>Implementados</span></div>
+      <div><b id="landGroups" data-count-to="0">0</b><span>Grupos</span></div>
+      <div><b id="landUsers" data-count-to="0">0</b><span>Registros</span></div>
+      <div><b id="landCharacters" data-count-to="0">0</b><span>Personajes</span></div>
+      <div><b id="landCategories" data-count-to="0">0</b><span>Categorías</span></div>
+      <div><b id="landStatus">—</b><span>WhatsApp</span></div>
+    </section>
+
+    <section class="section" id="pasos">
+      <div class="section-head">
+        <p class="eyebrow">Primeros pasos</p>
+        <h2>Cómo empezar en 3 pasos</h2>
+        <p>Sin servidores propios ni configuración compleja: el bot corre en nuestra nube y se administra desde el panel.</p>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <h3>Vincula tu número</h3>
+          <p class="step-body">Genera un <code>código de 8 dígitos</code> o un <strong>QR</strong> desde el panel y escanéalo con WhatsApp en el dispositivo que será el bot.</p>
+        </article>
+        <article class="step">
+          <h3>Personaliza tu bot</h3>
+          <p class="step-body">Configura <strong>banner, prefijo, decoración y menú</strong> desde la sección Identidad. Los cambios se aplican sin reiniciar nada.</p>
+        </article>
+        <article class="step">
+          <h3>Usa comandos en tus grupos</h3>
+          <p class="step-body">Explora el catálogo completo en <a class="gradient-text" href="/cmds">/cmds</a>. Escribe <code>.menu</code> en cualquier grupo donde esté el bot.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="section-head">
+        <p class="eyebrow">Ventajas</p>
+        <h2>¿Por qué elegir VÉRSOVA?</h2>
+        <p>Un panel claro para administrar tu bot y tu team de rol sin perder el control de nada.</p>
+      </div>
+      <div class="grid three">
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">◉</span>
+          <h3>Panel sin clave</h3>
+          <p>Entra desde cualquier dispositivo y administra el bot al instante, sin cuentas ni inicios de sesión.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">↻</span>
+          <h3>Reconexión automática</h3>
+          <p>Si la conexión cae, el bot se reconecta solo y recupera la sesión guardada en PostgreSQL.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">◍</span>
+          <h3>Telemetría en vivo</h3>
+          <p>Uptime, CPU, memoria, disco y latencia de la base de datos, medidos en tiempo real desde el servidor.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">✎</span>
+          <h3>Menú a tu medida</h3>
+          <p>Activa, oculta o renombra comandos, crea alias y mira la vista previa exacta del menú antes de publicarlo.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">♱</span>
+          <h3>Roles y personajes</h3>
+          <p>Registro, fichas, reservas de personajes, solicitudes de cambio y parejas, todo separado por grupo.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">⛨</span>
+          <h3>Control anti-abuso</h3>
+          <p>Límite de uso por usuario, deduplicación de mensajes, advertencias y auditoría de acciones administrativas.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <p class="eyebrow">Sistema de rol</p>
+        <h2>Todo el team, dentro del mismo bot</h2>
+        <p>El menú mantiene el diseño VÉRSOVA y cada comando tiene su propia marca, rostro y mensaje.</p>
+      </div>
+      <div class="premium">
+        <div class="card premium-card">
+          <span class="pill accent">VÉRSOVA ROL SYSTEM</span>
+          <div class="price"><b>9</b><span class="muted">secciones de comandos</span></div>
+          <ul class="checklist">
+            <li><span><strong>Registro</strong> con nombre, edad y validaciones por grupo.</span></li>
+            <li><span><strong>Personajes</strong> con reservas temporales y liberación automática.</span></li>
+            <li><span><strong>Solicitudes</strong> aprobadas o rechazadas por los administradores.</span></li>
+            <li><span><strong>Actividad y AFK</strong> para saber quién está y quién no.</span></li>
+            <li><span><strong>Advertencias</strong> con límite y expulsión automática.</span></li>
+          </ul>
+          <div class="row" style="margin-top:20px">
+            <a class="btn btn-primary" href="/cmds">Explorar comandos</a>
+            <a class="btn btn-ghost" href="/home#comandos">Personalizar menú</a>
+          </div>
+        </div>
+        <div class="phone" aria-label="Vista previa del menú del bot">
+          <div class="phone-head">
+            <span class="avatar">V</span>
+            <div>
+              <strong style="display:block;font-size:0.92rem">VÉRSOVA</strong>
+              <span class="muted small" id="menuState">cargando menú…</span>
             </div>
-            <p id="pairCode" class="pair-code" hidden></p>
-            <p id="pairCountdown" class="muted small" hidden></p>
-            <p id="pairHint" class="muted small" hidden></p>
-            <p id="pairError" class="form-message error" hidden></p>
+            <span class="spacer"></span>
+            <button class="text-button" id="refreshPreview" type="button">Actualizar</button>
           </div>
+          <pre class="menu-preview" id="menuPreview">Cargando vista previa…</pre>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="panel" aria-labelledby="bannerTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">IDENTIDAD</p>
-            <h2 id="bannerTitle">Personalizar el banner</h2>
-          </div>
-          <span class="section-index">01</span>
-        </div>
-        <p class="muted">Este texto aparece al inicio de <code>.menu</code>. Si lo dejas vacío, se restaura el diseño VÉRSOVA.</p>
-        <label class="sr-only" for="bannerText">Texto del banner</label>
-        <textarea id="bannerText" rows="6" maxlength="800" placeholder="Se usará el banner original de VÉRSOVA"></textarea>
-        <div class="file-row">
-          <label class="file-picker" for="bannerImage">
-            <span aria-hidden="true">＋</span> Añadir imagen
-            <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" />
-          </label>
-          <span id="bannerImageState" class="muted small">Sin imagen</span>
-          <span class="spacer"></span>
-          <button id="removeImage" class="text-button" type="button">Quitar imagen</button>
-        </div>
-        <div class="action-row">
-          <button id="saveBanner" class="button" type="button">Guardar banner</button>
-          <span id="bannerMsg" class="form-message" aria-live="polite" hidden></span>
-        </div>
-      </section>
+    <section class="section">
+      <div class="section-head">
+        <p class="eyebrow">Infraestructura</p>
+        <h2>Stack técnico</h2>
+        <p>Tecnología detrás de VÉRSOVA: estable, persistente y lista para desplegar gratis.</p>
+      </div>
+      <div class="stack-cards">
+        <article class="card"><b>Node.js 22</b><span>Runtime</span></article>
+        <article class="card"><b>Baileys</b><span>WhatsApp API</span></article>
+        <article class="card"><b>PostgreSQL</b><span>Neon · datos y sesión</span></article>
+        <article class="card"><b>Render</b><span>Despliegue cloud</span></article>
+      </div>
+    </section>
 
-      <section class="panel" aria-labelledby="commandsTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">PERSONALIZACIÓN</p>
-            <h2 id="commandsTitle">Todos los comandos</h2>
-          </div>
-          <span id="commandCount" class="count-pill">—</span>
-        </div>
-        <p class="muted">Administra qué comandos funcionan, cuáles aparecen en el menú y crea alias. Los que todavía no tienen código se marcan como pendientes.</p>
+    <section class="section">
+      <div class="section-head">
+        <p class="eyebrow">Dudas frecuentes</p>
+        <h2>Preguntas frecuentes</h2>
+        <p>Respuestas rápidas sobre la vinculación, la sesión y el panel.</p>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>¿Es seguro vincular mi número?</summary>
+          <p>Sí. Se usa el protocolo oficial <strong>WhatsApp Multi-Device</strong>. La sesión se guarda cifrada en la base de datos y el bot solo responde a los comandos con el prefijo configurado.</p>
+        </details>
+        <details>
+          <summary>¿Necesito un servidor propio?</summary>
+          <p>No. Todo corre en la infraestructura del proyecto y se administra desde este panel. Solo vinculas el número y usas los comandos.</p>
+        </details>
+        <details>
+          <summary>¿Cómo vinculo el bot?</summary>
+          <p>Desde <a href="/home#conexion">Conexión</a> puedes escanear el <strong>QR</strong> o pedir un <strong>código de 8 dígitos</strong>. El código vive unos 60 segundos y el panel lo retira al expirar.</p>
+        </details>
+        <details>
+          <summary>¿Puedo personalizar el menú?</summary>
+          <p>Sí. En la sección <a href="/home#comandos">Comandos</a> puedes activar, ocultar, renombrar con alias y cambiar el texto que decora cada comando, con vista previa en vivo.</p>
+        </details>
+        <details>
+          <summary>¿Qué pasa si el bot se desconecta?</summary>
+          <p>El sistema detecta la caída y <strong>reconecta automáticamente</strong>. Puedes revisar el estado del servidor en la sección <a href="/home#monitor">Monitor</a> del panel.</p>
+        </details>
+        <details>
+          <summary>¿El panel pide contraseña?</summary>
+          <p>No: el panel es público y no autentica visitantes. Cualquiera con el enlace puede editar el menú, ver la actividad y usar los controles de WhatsApp. No compartas la URL si no quieres conceder ese acceso.</p>
+        </details>
+      </div>
+    </section>
 
-        <div class="decoration-setting">
-          <div class="decoration-copy">
-            <label class="field-label" for="commandDecoration">Texto antes del comando</label>
-            <p class="muted small">Solo cambia cómo se muestra en el menú; el prefijo real del bot sigue siendo «.».</p>
-          </div>
-          <div class="input-action decoration-input">
-            <input id="commandDecoration" maxlength="40" value="ㅤ୨ৎㅤ." aria-label="Texto de decoración antes del comando" />
-            <button id="saveDecoration" class="button secondary-button" type="button">Guardar</button>
-          </div>
-        </div>
+    <section class="cta-band">
+      <h2>Empieza a automatizar tu team hoy mismo</h2>
+      <p class="muted">Vincula tu número, personaliza el menú y ejecuta comandos en tus grupos en menos de un minuto.</p>
+      <div class="row">
+        <a class="btn btn-primary" href="/home">Ir al Panel</a>
+        <a class="btn btn-ghost" href="/cmds">Ver comandos</a>
+        <a class="btn btn-ghost" href="https://github.com/lyanvalentinmail-prog/versova-project" rel="noreferrer" target="_blank">Repositorio</a>
+      </div>
+    </section>
 
-        <div class="command-toolbar">
-          <label class="search-box">
-            <span aria-hidden="true">⌕</span>
-            <input id="commandSearch" type="search" placeholder="Buscar por nombre o categoría" autocomplete="off" />
-          </label>
-          <span id="commandSaveState" class="muted small" aria-live="polite"></span>
-        </div>
-        <div id="commandList" class="command-list" aria-live="polite">
-          <p class="empty-state">Cargando comandos…</p>
-        </div>
-      </section>
+    <footer class="footer">
+      <span>VÉRSOVA · est. 2026</span>
+      <span>Panel público · sin autenticación</span>
+    </footer>
+  </main>
 
-      <section class="panel" aria-labelledby="previewTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">VISTA PREVIA</p>
-            <h2 id="previewTitle">Así se verá el menú</h2>
-          </div>
-          <button id="refreshPreview" class="text-button" type="button">Actualizar</button>
-        </div>
-        <pre id="menuPreview" class="menu-preview">Cargando vista previa…</pre>
-      </section>
-
-      <section class="panel" aria-labelledby="consoleTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">ACTIVIDAD RECIENTE</p>
-            <h2 id="consoleTitle">Consola</h2>
-          </div>
-          <label class="toggle-label"><input type="checkbox" id="autoscroll" checked /><span class="checkmark"></span> Auto-desplazar</label>
-        </div>
-        <pre id="console" class="console" aria-live="polite"></pre>
-      </section>
-
-      <footer class="footer">
-        <span>𓆩 禊 𓆪</span>
-        <p>VÉRSOVA <span>·</span> EST. 2026</p>
-      </footer>
-    </main>
-  </div>
-  <script src="app.js" type="module"></script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
 </body>
 </html>

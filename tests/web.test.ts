@@ -160,3 +160,50 @@ describe('panel web: emparejamiento', () => {
     expect(status.pairingExpiresAt).toBeNull();
   });
 });
+
+describe('panel web: páginas y telemetría', () => {
+  it('sirve la portada, el panel y el catálogo de comandos', async () => {
+    await boot();
+
+    const landing = await fetch(`${BASE}/`);
+    expect(landing.status).toBe(200);
+    expect(await landing.text()).toContain('Automatiza WhatsApp');
+
+    const panel = await fetch(`${BASE}/home`);
+    expect(panel.status).toBe(200);
+    expect(await panel.text()).toContain('Vincula tu bot en 4 pasos');
+
+    const catalog = await fetch(`${BASE}/cmds`);
+    expect(catalog.status).toBe(200);
+    expect(await catalog.text()).toContain('Catálogo completo');
+  });
+
+  it('redirige /status al monitor del panel', async () => {
+    await boot();
+
+    const response = await fetch(`${BASE}/status`, { redirect: 'manual' });
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toBe('/home#monitor');
+  });
+
+  it('publica la telemetría real del servidor', async () => {
+    await boot();
+
+    const system = await (await fetch(`${BASE}/api/system`)).json();
+    expect(system.node).toBe(process.version);
+    expect(system.cpuCores).toBeGreaterThan(0);
+    expect(system.memory.totalGb).toBeGreaterThan(0);
+    expect(typeof system.uptimeSec).toBe('number');
+    expect(system.hostname).toBeTruthy();
+  });
+
+  it('responde las métricas aunque la base no esté disponible', async () => {
+    await boot();
+
+    const response = await fetch(`${BASE}/api/metrics`);
+    expect([200, 503]).toContain(response.status);
+    const body = await response.json();
+    if (response.status === 200) expect(body.metrics.groups).toBeGreaterThanOrEqual(0);
+    else expect(body.error).toBeTruthy();
+  });
+});
