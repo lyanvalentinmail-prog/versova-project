@@ -1,0 +1,26 @@
+# Despliegue en Render (plan gratuito).
+# El plan gratuito NO tiene disco persistente: por eso la base de datos (PostgreSQL)
+# y la sesión de WhatsApp viven en una base externa gratuita (p. ej. Neon),
+# indicada en DATABASE_URL.
+services:
+  - type: web
+    name: versova-bot
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DB_SSL
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: CONSOLE_KEY
+        sync: false
+      - key: OWNER_NUMBERS
+        sync: false
+      - key: BOT_PHONE
+        sync: false
