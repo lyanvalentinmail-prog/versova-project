@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VÉRSOVA · Consola</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <p class="sign">𓆩 禊 𓆪</p>
+      <h1>𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨</h1>
+      <p class="muted">◢禍◣ Versova ࿙☕࿚ · consola</p>
+    </header>
+
+    <section id="login" class="card">
+      <label for="key">Clave de consola</label>
+      <div class="row">
+        <input id="key" type="password" autocomplete="current-password" placeholder="CONSOLE_KEY" />
+        <button id="enter">Entrar</button>
+      </div>
+      <p id="loginError" class="error" hidden></p>
+    </section>
+
+    <section id="app" hidden>
+      <div class="card" id="statusCard">
+        <div class="row between">
+          <span>Estado</span>
+          <span id="statusBadge" class="badge">—</span>
+        </div>
+        <p class="muted small" id="statusDetail"></p>
+        <div class="row">
+          <button id="logout" class="ghost">Cerrar sesión de WhatsApp</button>
+          <button id="lock" class="ghost">Salir</button>
+        </div>
+      </div>
+
+      <div class="card" id="linkCard">
+        <h2>Vincular</h2>
+        <div class="grid">
+          <div>
+            <p class="muted small">QR (WhatsApp → Dispositivos vinculados → Vincular dispositivo)</p>
+            <img id="qr" alt="Código QR" hidden />
+            <p id="qrEmpty" class="muted small">Sin QR pendiente.</p>
+          </div>
+          <div>
+            <p class="muted small">Código de emparejamiento (número con código de país, sin +)</p>
+            <div class="row">
+              <input id="phone" inputmode="numeric" placeholder="59899999999" />
+              <button id="pair">Pedir código</button>
+            </div>
+            <p id="pairCode" class="code" hidden></p>
+            <p id="pairError" class="error" hidden></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Banner</h2>
+        <p class="muted small">Aparece arriba del menú <code>.menu</code>. Si subes imagen, se envía como foto con el texto como pie.</p>
+        <textarea id="bannerText" rows="5" maxlength="800" placeholder="Déjalo vacío para usar el banner por defecto"></textarea>
+        <div class="row between">
+          <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" />
+          <span class="muted small" id="bannerImageState"></span>
+        </div>
+        <div class="row">
+          <button id="saveBanner">Guardar banner</button>
+          <button id="removeImage" class="ghost">Quitar imagen</button>
+        </div>
+        <p id="bannerMsg" class="small" hidden></p>
+      </div>
+
+      <div class="card">
+        <div class="row between">
+          <h2>Consola</h2>
+          <label class="small"><input type="checkbox" id="autoscroll" checked /> auto-desplazar</label>
+        </div>
+        <pre id="console" class="console"></pre>
+      </div>
+    </section>
+  </main>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

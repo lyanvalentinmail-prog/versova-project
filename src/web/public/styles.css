@@ -1,0 +1,51 @@
+:root {
+  --bg: #0b0a0c;
+  --panel: #151317;
+  --line: #2a2630;
+  --text: #e9e4ee;
+  --muted: #8d8496;
+  --accent: #c9a7ff;
+  --ok: #8fd6a4;
+  --bad: #ff8fa3;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+main { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+header { text-align: center; margin-bottom: 24px; }
+h1 { font-weight: 300; letter-spacing: 6px; margin: 4px 0; font-size: 1.6rem; }
+h2 { font-weight: 400; font-size: 1.05rem; margin: 0 0 12px; color: var(--accent); }
+.sign { color: var(--accent); margin: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.between { justify-content: space-between; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+input, textarea {
+  background: var(--bg); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 11px; font: inherit; flex: 1; min-width: 0;
+}
+textarea { width: 100%; resize: vertical; }
+button {
+  background: var(--accent); color: #17121f; border: 0; border-radius: 8px;
+  padding: 9px 14px; font: inherit; cursor: pointer;
+}
+button:disabled { opacity: .5; cursor: default; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.badge { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; }
+.badge.open { color: var(--ok); border-color: var(--ok); }
+.badge.bad { color: var(--bad); border-color: var(--bad); }
+.muted { color: var(--muted); margin: 4px 0; }
+.small { font-size: .85rem; }
+.error { color: var(--bad); }
+img#qr { width: 220px; height: 220px; background: #fff; border-radius: 10px; padding: 8px; }
+.code { font-family: ui-monospace, monospace; font-size: 1.6rem; letter-spacing: 4px; color: var(--ok); margin: 10px 0; }
+.console {
+  background: #08070a; border: 1px solid var(--line); border-radius: 10px; height: 320px;
+  overflow: auto; padding: 12px; font-size: .8rem; line-height: 1.45; margin: 0; white-space: pre-wrap;
+}
+.lvl-warn { color: #f6d58e; }
+.lvl-error { color: var(--bad); }
+.lvl-info { color: var(--text); }
+.lvl-debug { color: var(--muted); }
+code { color: var(--accent); }

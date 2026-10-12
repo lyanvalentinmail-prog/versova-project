@@ -1,0 +1,34 @@
+{
+  "name": "versova-bot",
+  "version": "1.0.0",
+  "description": "VÉRSOVA — bot de WhatsApp para administrar teams de rol",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-public.mjs",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node --env-file-if-exists=.env dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "@types/qrcode": "1.5.6",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "express": "5.3.0",
+    "pg": "8.23.1",
+    "pino": "10.4.0",
+    "qrcode": "1.5.4",
+    "zod": "4.6.6"
+  }
+}
