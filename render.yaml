@@ -20,3 +20,9 @@ services:
         sync: false
       - key: BOT_PHONE
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: DEMO_LOGIN
+        value: "1"

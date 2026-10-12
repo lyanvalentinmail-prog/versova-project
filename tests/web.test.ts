@@ -162,14 +162,28 @@ describe('panel web: emparejamiento', () => {
 });
 
 describe('panel web: páginas y telemetría', () => {
-  it('sirve la portada, el panel y el catálogo de comandos', async () => {
+  it('sirve la portada, el panel y el catálogo de comandos con una sesión activa', async () => {
     await boot();
 
     const landing = await fetch(`${BASE}/`);
     expect(landing.status).toBe(200);
     expect(await landing.text()).toContain('Automatiza WhatsApp');
 
-    const panel = await fetch(`${BASE}/home`);
+    // Sin sesión, el panel redirige a la portada a iniciar sesión.
+    const blocked = await fetch(`${BASE}/home`, { redirect: 'manual' });
+    expect(blocked.status).toBe(302);
+    expect(blocked.headers.get('location')).toBe('/?login=1');
+
+    // Inicia sesión (acceso demo) y vuelve a pedir el panel con la cookie.
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: `panel-test-${Date.now()}@versova.dev`, password: 'secreto-123', name: 'Panel Test' }),
+    });
+    expect(register.status).toBe(201);
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+
+    const panel = await fetch(`${BASE}/home`, { headers: { cookie } });
     expect(panel.status).toBe(200);
     expect(await panel.text()).toContain('Vincula tu bot en 4 pasos');
 

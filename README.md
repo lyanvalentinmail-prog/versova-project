@@ -7,8 +7,14 @@ Bot de WhatsApp para administrar teams de rol. Prefijo `.` · Versión 1.0 · Id
 **Implementado**
 
 - Conexión con WhatsApp (QR y código de emparejamiento), reconexión automática y sesión guardada en PostgreSQL.
-- Interfaz web de tres rutas (`/` presentación, `/home` panel, `/cmds` catálogo) con estética oscura tipo plataforma de SubBots: portada con hero y contadores en vivo, secciones de conexión, Mis Bots, Comandos, Identidad, Monitor y Links.
-- Panel público, sin clave: estado del bot, QR, emparejamiento en 4 pasos, cerrar sesión, banner, lista de comandos con categorías, alias, activación/desactivación, vista previa del menú, telemetría real del servidor (CPU, RAM, disco, latencia de PostgreSQL) y logs en vivo por SSE.
+- Interfaz web de cuatro rutas (`/` presentación, `/home` panel, `/store` tienda, `/cmds` catálogo) con estética oscura tipo plataforma de SubBots.
+- **Cuentas de usuario**: inicio de sesión o registro obligatorio para entrar al panel y a la tienda. Acceso con **Google** (OAuth 2.0) o con email y contraseña (acceso demo, se puede desactivar). Sesiones con cookie httpOnly guardadas en PostgreSQL.
+- **Menú de pestañas con 3 líneas**: en la portada, la tienda y el catálogo, un botón de 3 líneas (hamburguesa) abre las pestañas del sitio; en el panel abre el cajón lateral con todas las secciones.
+- **Tienda** (`/store`): tokens **Premium ($1)** y **VIP ($5)** con entrega instantánea del código, **espacio extra (1 GB = $1)** para repartir entre bots, activación de **planes** y otros tipos de bots marcados como *Próximamente*. El pago es demo: no se cobra nada real.
+- **Sub-bots**: cada usuario crea y edita sus sub-bots por tipo — **Free (1 GB)**, **Premium (2 GB)** y **VIP (4 GB)**; los premium/vip exigen canjear el código de un token de la tienda (un solo uso). El espacio por bot es el mayor entre el tipo y el plan, y se le suma el espacio extra comprado que asignes.
+- **Planes**: Free ($0 · 1 GB por bot · hasta 3 bots), Premium ($1 · 2 GB por bot · hasta 5 bots) y VIP ($5 · 5 GB por bot · hasta 10 bots).
+- **Pestaña «Mis Sub-Bots»** en el panel: crear, editar (nombre, número, descripción, espacio extra asignado, pausar/activar) y eliminar bots, con el límite y el plan de la cuenta siempre visibles.
+- Panel: estado del bot, QR, emparejamiento en 4 pasos, cerrar sesión de WhatsApp, banner, lista de comandos con categorías, alias, activación/desactivación, vista previa del menú, telemetría real del servidor (CPU, RAM, disco, latencia de PostgreSQL) y logs en vivo por SSE.
 - Tema claro/oscuro con selector animado y preferencia guardada en el navegador.
 - Registro: `.reg`, `.unreg`, `.editar`, `.ficha`.
 - Personajes: `.rol`, `.roles`, `.mirol`, `.cambiarol`, `.reservar`, `.liberar`.
@@ -23,11 +29,26 @@ Bot de WhatsApp para administrar teams de rol. Prefijo `.` · Versión 1.0 · Id
 
 El menú mantiene esas entradas porque forman parte del diseño pedido, pero el panel las marca como **Pendiente**. Los alias solo se pueden crear para comandos con implementación. Las secciones de código se organizan en archivos dentro de `src/commands/`.
 
-## Aviso importante: el panel es público
+## Cuentas e inicio de sesión con Google
 
-La consola **no pide contraseña ni autentica a los visitantes**. Cualquiera que tenga la URL puede cambiar el banner y el menú, desactivar comandos, consultar la actividad y usar los controles de WhatsApp (incluidos emparejamiento y cierre de sesión). El QR y el código de emparejamiento también se muestran a los visitantes mientras estén activos. No publiques la URL si no quieres conceder ese acceso.
+Para entrar al panel (`/home`) y a la tienda (`/store`) hay que **iniciar sesión o registrarse**.
 
-Los cambios del panel se limitan por IP para reducir el abuso accidental, pero el límite no es un mecanismo de autenticación.
+- **Con Google**: define `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` de un proyecto en [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (tipo *OAuth client ID* → *Web application*). En la lista de *Authorized redirect URIs* agrega `https://TU-DOMINIO/api/auth/google/callback` (en local: `http://localhost:3000/api/auth/google/callback`). El botón «Continuar con Google» queda activo solo cuando esas variables existen.
+- **Con email (demo)**: registro y acceso con email y contraseña (hash scrypt en la base). Es la vía por defecto para probar sin configurar Google; pon `DEMO_LOGIN=0` para desactivarla y dejar solo Google.
+- Las sesiones viven 30 días en la tabla `web_sessions` y viajan en una cookie `HttpOnly` (`versova_session`).
+
+## Tienda, tokens y sub-bots
+
+- Comprar un **token** entrega el código al instante (formato `VRSOV-PREM-XXXX-XXXX` / `VRSOV-VIP-…`), queda en «Mis tokens» y se canjea **una sola vez** al crear un sub-bot de su mismo tipo. Cada token queda ligado a la cuenta que lo compró.
+- El **espacio extra** (1 GB = $1) entra al pool de la cuenta y se reparte entre los bots desde «Mis Sub-Bots».
+- Los **otros tipos de bots** (música, juegos, IA, stickers) aparecen en la tienda como *Próximamente*: no se pueden comprar todavía.
+- El pago es **demo**: registra la compra en el historial pero no cobra nada real. Puedes conectar tu pasarela de pagos en `POST /api/store/checkout`.
+
+## Aviso importante: el panel exige cuenta
+
+El panel y la tienda requieren iniciar sesión; la portada y el catálogo de comandos son públicos. Dentro de una sesión, quien tenga acceso a la cuenta puede cambiar el banner y el menú, desactivar comandos, consultar la actividad y usar los controles de WhatsApp (incluidos emparejamiento y cierre de sesión), así que no compartas tus credenciales.
+
+Los cambios del panel se limitan por IP para reducir el abuso accidental, pero el límite no sustituye a la autenticación.
 
 ## Requisitos
 
@@ -44,7 +65,7 @@ npm run build
 npm start
 ```
 
-Panel: `http://localhost:3000/home`. Portada: `http://localhost:3000`. No hay inicio de sesión.
+Panel: `http://localhost:3000/home` (pide iniciar sesión). Portada: `http://localhost:3000`. Tienda: `http://localhost:3000/store`.
 
 Variables:
 
@@ -54,6 +75,9 @@ Variables:
 | `DB_SSL` | `true` para Neon y otras bases con SSL; `false` solo en local. |
 | `OWNER_NUMBERS` | Números del propietario, con código de país, separados por coma. |
 | `BOT_PHONE` | Opcional: número del bot para pedir un código de emparejamiento al arrancar. |
+| `GOOGLE_CLIENT_ID` | Opcional: activa «Continuar con Google» en el acceso. |
+| `GOOGLE_CLIENT_SECRET` | Opcional: secreto OAuth de Google (junto al ID). |
+| `DEMO_LOGIN` | `0` desactiva el acceso con email y deja solo Google. Por defecto activado. |
 | `PORT` | Puerto HTTP (Render asigna su propio valor). |
 
 ## Emparejamiento por código

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#05060f" />
-  <meta name="description" content="VÉRSOVA · Plataforma de gestión del bot de WhatsApp para teams de rol: vinculación con QR o código, menú personalizable y telemetría en vivo." />
+  <meta name="description" content="VÉRSOVA · Plataforma de gestión del bot de WhatsApp para teams de rol: inicia sesión con Google, crea sub-bots free/premium/vip y compra tokens en la tienda." />
   <title>VÉRSOVA — Plataforma de gestión para WhatsApp</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cff'/%3E%3Cstop offset='1' stop-color='%2326e0ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
@@ -18,13 +18,6 @@
         <small>BOT SYSTEM</small>
       </span>
     </a>
-    <nav class="nav" aria-label="Secciones">
-      <a href="#inicio" class="is-active">Inicio</a>
-      <a href="#pasos">Cómo empezar</a>
-      <a href="#features">Ventajas</a>
-      <a href="/cmds">Comandos</a>
-      <a href="/home">Panel</a>
-    </nav>
     <div class="top-actions">
       <span class="pill" id="navStatus"><span class="live-dot off"></span><span>Comprobando…</span></span>
       <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema" aria-pressed="true">
@@ -34,9 +27,32 @@
           <span class="switch-thumb"></span>
         </span>
       </button>
-      <a class="btn btn-primary btn-sm" href="/home">Ir al Panel</a>
+      <div id="authArea" class="auth-area"></div>
+      <button id="menuToggle" class="hamburger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuOverlay">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+
+  <!-- Menú de pestañas: se abre con las 3 líneas de arriba -->
+  <div class="menu-overlay" id="menuOverlay" aria-hidden="true">
+    <nav class="menu-sheet" aria-label="Secciones del sitio">
+      <p class="side-nav-label">Pestañas</p>
+      <nav class="nav" aria-label="Pestañas">
+        <a href="/#inicio" class="is-active"><span class="ico" aria-hidden="true">⌂</span> Inicio</a>
+        <a href="/#pasos"><span class="ico" aria-hidden="true">✦</span> Cómo empezar</a>
+        <a href="/#features"><span class="ico" aria-hidden="true">◈</span> Ventajas</a>
+        <a href="/#planes"><span class="ico" aria-hidden="true">◍</span> Planes</a>
+        <a href="/store"><span class="ico" aria-hidden="true">⛶</span> Tienda <span class="tag">tokens · espacio</span></a>
+        <a href="/cmds"><span class="ico" aria-hidden="true">⌘</span> Comandos</a>
+        <a href="/home"><span class="ico" aria-hidden="true">⌁</span> Panel</a>
+      </nav>
+      <div class="menu-sheet-foot">
+        <span>VÉRSOVA · est. 2026</span>
+        <button class="text-button" id="menuClose" type="button">Cerrar ✕</button>
+      </div>
+    </nav>
+  </div>
 
   <main class="shell" id="inicio">
     <section class="hero">
@@ -46,17 +62,17 @@
           <span class="pill accent">Plataforma oficial · v1.0</span>
           <h1 style="margin-top:18px">Automatiza WhatsApp con <span class="gradient-text">VÉRSOVA</span> Intelligence</h1>
           <p class="hero-lead">
-            Plataforma de gestión para tu bot de WhatsApp: vinculación con QR o código de 8 dígitos, menú
-            personalizable, sistema de roles para teams y telemetría del servidor en tiempo real.
+            Inicia sesión con Google, crea tus <strong>sub-bots</strong> (free, premium o vip), canjea tokens de la
+            tienda y administra todo desde un panel en vivo: vinculación con QR, menú personalizable y telemetría real.
           </p>
           <div class="hero-cta">
             <a class="btn btn-primary" href="/home">Ir al Panel</a>
-            <a class="btn btn-ghost" href="/cmds">Ver comandos</a>
+            <a class="btn btn-ghost" href="/store">Ver la Tienda</a>
           </div>
           <div class="hero-note">
-            <span>✦ Sin contraseña, panel abierto</span>
+            <span>✦ Inicio de sesión con Google</span>
+            <span>✦ Tokens con código al instante</span>
             <span>✦ Sesión guardada en base de datos</span>
-            <span>✦ Reconexión automática</span>
           </div>
         </div>
 
@@ -106,16 +122,16 @@
       </div>
       <div class="steps">
         <article class="step">
-          <h3>Vincula tu número</h3>
-          <p class="step-body">Genera un <code>código de 8 dígitos</code> o un <strong>QR</strong> desde el panel y escanéalo con WhatsApp en el dispositivo que será el bot.</p>
+          <h3>Crea tu cuenta</h3>
+          <p class="step-body">Inicia sesión o regístrate con <strong>Google</strong> en un clic (o con email y contraseña). Tu plan Free se activa al instante.</p>
         </article>
         <article class="step">
-          <h3>Personaliza tu bot</h3>
-          <p class="step-body">Configura <strong>banner, prefijo, decoración y menú</strong> desde la sección Identidad. Los cambios se aplican sin reiniciar nada.</p>
+          <h3>Crea tus sub-bots</h3>
+          <p class="step-body">Elige el tipo: <strong>Free (1 GB)</strong>, <strong>Premium (2 GB)</strong> o <strong>VIP (4 GB)</strong> canjeando un token de la tienda.</p>
         </article>
         <article class="step">
-          <h3>Usa comandos en tus grupos</h3>
-          <p class="step-body">Explora el catálogo completo en <a class="gradient-text" href="/cmds">/cmds</a>. Escribe <code>.menu</code> en cualquier grupo donde esté el bot.</p>
+          <h3>Vincula y administra</h3>
+          <p class="step-body">Genera un <code>QR</code> o un <code>código de 8 dígitos</code> desde el panel y edita tus sub-bots cuando quieras en <strong>Mis Sub-Bots</strong>.</p>
         </article>
       </div>
     </section>
@@ -124,13 +140,23 @@
       <div class="section-head">
         <p class="eyebrow">Ventajas</p>
         <h2>¿Por qué elegir VÉRSOVA?</h2>
-        <p>Un panel claro para administrar tu bot y tu team de rol sin perder el control de nada.</p>
+        <p>Un panel claro para administrar tus bots y tu team de rol sin perder el control de nada.</p>
       </div>
       <div class="grid three">
         <article class="card hoverable feature">
           <span class="icon" aria-hidden="true">◉</span>
-          <h3>Panel sin clave</h3>
-          <p>Entra desde cualquier dispositivo y administra el bot al instante, sin cuentas ni inicios de sesión.</p>
+          <h3>Cuenta con Google</h3>
+          <p>Entra con tu cuenta de Google o regístrate con email. Cada usuario tiene su panel, sus tokens y sus sub-bots.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">⛶</span>
+          <h3>Tienda de tokens</h3>
+          <p>Compra tokens Premium y VIP, espacio extra o mejora de plan. El código del token se muestra al instante.</p>
+        </article>
+        <article class="card hoverable feature">
+          <span class="icon" aria-hidden="true">◈</span>
+          <h3>Sub-bots a tu medida</h3>
+          <p>Crea hasta 10 sub-bots según tu plan, asigna espacio comprado y edítalos cuando quieras.</p>
         </article>
         <article class="card hoverable feature">
           <span class="icon" aria-hidden="true">↻</span>
@@ -138,26 +164,86 @@
           <p>Si la conexión cae, el bot se reconecta solo y recupera la sesión guardada en PostgreSQL.</p>
         </article>
         <article class="card hoverable feature">
-          <span class="icon" aria-hidden="true">◍</span>
-          <h3>Telemetría en vivo</h3>
-          <p>Uptime, CPU, memoria, disco y latencia de la base de datos, medidos en tiempo real desde el servidor.</p>
-        </article>
-        <article class="card hoverable feature">
           <span class="icon" aria-hidden="true">✎</span>
           <h3>Menú a tu medida</h3>
           <p>Activa, oculta o renombra comandos, crea alias y mira la vista previa exacta del menú antes de publicarlo.</p>
         </article>
         <article class="card hoverable feature">
-          <span class="icon" aria-hidden="true">♱</span>
-          <h3>Roles y personajes</h3>
-          <p>Registro, fichas, reservas de personajes, solicitudes de cambio y parejas, todo separado por grupo.</p>
-        </article>
-        <article class="card hoverable feature">
           <span class="icon" aria-hidden="true">⛨</span>
-          <h3>Control anti-abuso</h3>
-          <p>Límite de uso por usuario, deduplicación de mensajes, advertencias y auditoría de acciones administrativas.</p>
+          <h3>Telemetría en vivo</h3>
+          <p>Uptime, CPU, memoria, disco y latencia de la base de datos, medidos en tiempo real desde el servidor.</p>
         </article>
       </div>
+    </section>
+
+    <section class="section" id="planes">
+      <div class="section-head">
+        <p class="eyebrow">Planes</p>
+        <h2>Elige tu plan</h2>
+        <p>Todos los planes incluyen el panel completo. Puedes cambiar de plan o comprar espacio extra en la tienda.</p>
+      </div>
+      <div class="grid three plans-grid">
+        <article class="card hoverable plan-card tier-free">
+          <div class="plan-head">
+            <span class="tier-badge tier-free">Free</span>
+            <div class="price"><b>$0</b><span class="muted">para siempre</span></div>
+          </div>
+          <ul class="checklist">
+            <li><span><strong>1 GB</strong> de espacio por bot</span></li>
+            <li><span>Hasta <strong>3 sub-bots</strong></span></li>
+            <li><span>Panel y catálogo completos</span></li>
+          </ul>
+          <div class="row" style="margin-top:18px"><a class="btn btn-sm" href="/store#planes">Empezar gratis</a></div>
+        </article>
+        <article class="card hoverable plan-card featured tier-premium">
+          <span class="plan-flag pill accent">Popular</span>
+          <div class="plan-head">
+            <span class="tier-badge tier-premium">Premium</span>
+            <div class="price"><b>$1</b><span class="muted">pago único</span></div>
+          </div>
+          <ul class="checklist">
+            <li><span><strong>2 GB</strong> de espacio por bot</span></li>
+            <li><span>Hasta <strong>5 sub-bots</strong></span></li>
+            <li><span>Tokens premium canjeables</span></li>
+          </ul>
+          <div class="row" style="margin-top:18px"><a class="btn btn-sm btn-primary" href="/store#planes">Activar Premium</a></div>
+        </article>
+        <article class="card hoverable plan-card tier-vip">
+          <div class="plan-head">
+            <span class="tier-badge tier-vip">VIP</span>
+            <div class="price"><b>$5</b><span class="muted">pago único</span></div>
+          </div>
+          <ul class="checklist">
+            <li><span><strong>5 GB</strong> de espacio por bot</span></li>
+            <li><span>Hasta <strong>10 sub-bots</strong></span></li>
+            <li><span>Tokens VIP + espacio prioritario</span></li>
+          </ul>
+          <div class="row" style="margin-top:18px"><a class="btn btn-sm btn-primary" href="/store#planes">Activar VIP</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="tienda">
+      <div class="section-head">
+        <p class="eyebrow">Tienda</p>
+        <h2>Tokens, espacio y más</h2>
+        <p>Compra un token y úsalo al crear tu sub-bot: el código se entrega al instante, listo para canjear.</p>
+      </div>
+      <div class="grid three">
+        <article class="card hoverable product-card">
+          <div class="row"><span class="tier-badge tier-premium">Token Premium</span><span class="spacer"></span><b class="price-tag">$1</b></div>
+          <p class="muted">Sub-bot Premium de <strong>2 GB</strong>. Al comprar recibes el código del token al instante.</p>
+        </article>
+        <article class="card hoverable product-card">
+          <div class="row"><span class="tier-badge tier-vip">Token VIP</span><span class="spacer"></span><b class="price-tag">$5</b></div>
+          <p class="muted">Sub-bot VIP de <strong>4 GB</strong>. Al comprar recibes el código del token al instante.</p>
+        </article>
+        <article class="card hoverable product-card">
+          <div class="row"><span class="tier-badge">+ Espacio</span><span class="spacer"></span><b class="price-tag">$1<small>/GB</small></b></div>
+          <p class="muted">Espacio extra para repartir entre tus sub-bots, <strong>1 GB por $1</strong>.</p>
+        </article>
+      </div>
+      <p class="muted small" style="margin-top:16px">También habrá otros tipos de bots (música, juegos, IA) — <a class="gradient-text" href="/store#otros">muy pronto en la tienda</a>.</p>
     </section>
 
     <section class="section">
@@ -215,51 +301,96 @@
       <div class="section-head">
         <p class="eyebrow">Dudas frecuentes</p>
         <h2>Preguntas frecuentes</h2>
-        <p>Respuestas rápidas sobre la vinculación, la sesión y el panel.</p>
+        <p>Respuestas rápidas sobre la cuenta, los tokens y la vinculación.</p>
       </div>
       <div class="faq">
         <details open>
+          <summary>¿Necesito cuenta para usar la plataforma?</summary>
+          <p>Sí. Para entrar al panel y a la tienda tienes que <strong>iniciar sesión o registrarte</strong>. Puedes hacerlo con tu cuenta de <strong>Google</strong> en un clic o con email y contraseña.</p>
+        </details>
+        <details>
+          <summary>¿Cómo funcionan los tokens?</summary>
+          <p>Compras un token Premium ($1) o VIP ($5) en la <a href="/store">tienda</a> y el código se muestra al instante. Al crear un sub-bot de ese tipo, pegas el código para canjearlo: cada token se usa una sola vez.</p>
+        </details>
+        <details>
+          <summary>¿Cuánto espacio tiene cada sub-bot?</summary>
+          <p>Según su tipo: <strong>Free 1 GB</strong>, <strong>Premium 2 GB</strong> y <strong>VIP 4 GB</strong>. Tu plan también suma: con plan VIP cada bot arranca con hasta 5 GB. El espacio extra comprado (1 GB = $1) se reparte como quieras.</p>
+        </details>
+        <details>
           <summary>¿Es seguro vincular mi número?</summary>
           <p>Sí. Se usa el protocolo oficial <strong>WhatsApp Multi-Device</strong>. La sesión se guarda cifrada en la base de datos y el bot solo responde a los comandos con el prefijo configurado.</p>
-        </details>
-        <details>
-          <summary>¿Necesito un servidor propio?</summary>
-          <p>No. Todo corre en la infraestructura del proyecto y se administra desde este panel. Solo vinculas el número y usas los comandos.</p>
-        </details>
-        <details>
-          <summary>¿Cómo vinculo el bot?</summary>
-          <p>Desde <a href="/home#conexion">Conexión</a> puedes escanear el <strong>QR</strong> o pedir un <strong>código de 8 dígitos</strong>. El código vive unos 60 segundos y el panel lo retira al expirar.</p>
-        </details>
-        <details>
-          <summary>¿Puedo personalizar el menú?</summary>
-          <p>Sí. En la sección <a href="/home#comandos">Comandos</a> puedes activar, ocultar, renombrar con alias y cambiar el texto que decora cada comando, con vista previa en vivo.</p>
         </details>
         <details>
           <summary>¿Qué pasa si el bot se desconecta?</summary>
           <p>El sistema detecta la caída y <strong>reconecta automáticamente</strong>. Puedes revisar el estado del servidor en la sección <a href="/home#monitor">Monitor</a> del panel.</p>
         </details>
         <details>
-          <summary>¿El panel pide contraseña?</summary>
-          <p>No: el panel es público y no autentica visitantes. Cualquiera con el enlace puede editar el menú, ver la actividad y usar los controles de WhatsApp. No compartas la URL si no quieres conceder ese acceso.</p>
+          <summary>¿Puedo editar mis sub-bots después?</summary>
+          <p>Sí. En <strong>Mis Sub-Bots</strong> puedes renombrarlos, cambiar su número, asignarles espacio extra comprado, pausarlos o eliminarlos.</p>
         </details>
       </div>
     </section>
 
     <section class="cta-band">
       <h2>Empieza a automatizar tu team hoy mismo</h2>
-      <p class="muted">Vincula tu número, personaliza el menú y ejecuta comandos en tus grupos en menos de un minuto.</p>
+      <p class="muted">Crea tu cuenta, compra un token y lanza tu primer sub-bot en menos de un minuto.</p>
       <div class="row">
         <a class="btn btn-primary" href="/home">Ir al Panel</a>
+        <a class="btn btn-ghost" href="/store">Ver la Tienda</a>
         <a class="btn btn-ghost" href="/cmds">Ver comandos</a>
-        <a class="btn btn-ghost" href="https://github.com/lyanvalentinmail-prog/versova-project" rel="noreferrer" target="_blank">Repositorio</a>
       </div>
     </section>
 
     <footer class="footer">
       <span>VÉRSOVA · est. 2026</span>
-      <span>Panel público · sin autenticación</span>
+      <span>Cuenta con Google · tienda de tokens · sub-bots</span>
     </footer>
   </main>
+
+  <!-- ------------------------ Modal: iniciar sesión ------------------------ -->
+  <div class="modal-overlay" id="authOverlay" aria-hidden="true">
+    <div class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">VÉRSOVA</p>
+          <h3 class="card-title" id="authTitle">Bienvenido</h3>
+        </div>
+        <button class="modal-close" id="authClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="seg" role="tablist" aria-label="Iniciar sesión o crear cuenta">
+        <button id="authTabLogin" class="is-active" type="button" role="tab" aria-selected="true">Iniciar sesión</button>
+        <button id="authTabRegister" type="button" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <button id="googleButton" class="btn btn-google" type="button">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.3 5.3C36.9 40.2 44 35 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
+        <span id="googleButtonLabel">Continuar con Google</span>
+      </button>
+      <p class="muted small" id="googleNote" style="margin-top:8px"></p>
+      <div class="auth-divider"><span>o con tu email</span></div>
+
+      <form id="authForm" novalidate>
+        <div class="stack" style="gap:12px">
+          <div id="authNameField" hidden>
+            <label class="field-label" for="authName">Nombre</label>
+            <input id="authName" type="text" maxlength="40" autocomplete="name" placeholder="Cómo te mostramos" />
+          </div>
+          <div>
+            <label class="field-label" for="authEmail">Email</label>
+            <input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" required />
+          </div>
+          <div>
+            <label class="field-label" for="authPassword">Contraseña</label>
+            <input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" required minlength="6" />
+          </div>
+        </div>
+        <p id="authError" class="form-message error" hidden></p>
+        <button id="authSubmit" class="btn btn-primary" type="submit" style="width:100%;margin-top:16px">Iniciar sesión</button>
+      </form>
+      <p class="muted small" style="margin-top:14px;text-align:center">Al continuar aceptas administrar tus bots bajo tu propia cuenta.</p>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
