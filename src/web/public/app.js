@@ -13,12 +13,24 @@ const APP = {
   selectedServer: 'vrsov-01',
   selectedMethod: 'code',
   wizardStep: 0,
-  wizard: { instance: 'subbot', serverId: 'vrsov-01', serverName: '', phone: '', method: 'code', name: '', botId: null, tokenCode: '' },
+  wizard: { botType: 'versova', botSlug: 'versova', instance: 'subbot', serverId: 'vrsov-01', serverName: '', phone: '', method: 'code', name: '', botId: null, tokenCode: '' },
+  botTypes: [],
   pairing: { code: null, expiresAt: null, timer: null },
   wizardPoll: null,
   wizardRun: 0,
   stream: null,
 };
+
+/* ------------------------------ tipos de bot ------------------------------ */
+
+/** Busca el tipo de bot por slug del pack o por alias del catálogo (`raiden`, `yae-miku`…). */
+function findBotType(value) {
+  if (!value) return null;
+  const wanted = String(value).trim().toLowerCase();
+  return (APP.botTypes ?? []).find(
+    (entry) => entry.id === wanted || (entry.aliases ?? []).some((alias) => String(alias).toLowerCase() === wanted),
+  ) ?? null;
+}
 
 /* --------------------- emparejamiento del bot principal ------------------- */
 /* Estas funciones las usa la tarjeta «Vinculación de WhatsApp» de la portada. */
@@ -379,7 +391,10 @@ function showAuthErrorFromUrl() {
 
 /* ============================== ASISTENTE ================================= */
 
-const WIZARD_STEPS = ['Instancia', 'Servidor', 'Vinculación', 'Nombre', 'Código'];
+const WIZARD_STEPS = ['Bot', 'Instancia', 'Servidor', 'Vinculación', 'Nombre', 'Código'];
+/** Paso final del asistente (el que muestra el código / el QR). */
+const WIZARD_LAST_STEP = WIZARD_STEPS.length - 1;
+const WIZARD_NAME_STEP = 4;
 
 function renderSteps() {
   const box = document.getElementById('wizardSteps');
@@ -394,8 +409,8 @@ function renderSteps() {
 }
 
 function showWizardStep(step) {
-  APP.wizardStep = Math.max(0, Math.min(WIZARD_STEPS.length - 1, step));
-  if (APP.wizardStep !== 4) {
+  APP.wizardStep = Math.max(0, Math.min(WIZARD_LAST_STEP, step));
+  if (APP.wizardStep !== WIZARD_LAST_STEP) {
     stopWizardPolling();
     APP.wizardRun += 1;
   }
@@ -405,7 +420,7 @@ function showWizardStep(step) {
     if (panel) panel.hidden = index !== APP.wizardStep;
   }
   const pill = document.getElementById('pasoPill');
-  if (pill) pill.textContent = `Paso ${APP.wizardStep + 1} de 5`;
+  if (pill) pill.textContent = `Paso ${APP.wizardStep + 1} de ${WIZARD_STEPS.length}`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -420,11 +435,59 @@ async function renderRegistrar() {
   APP.subbotsMeta = subbots;
   APP.subbots = subbots.bots ?? [];
 
+  // Paso 1 · tipo de bot del catálogo (llega con ?bot= desde la tienda).
+  const types = subbots.botTypes ?? [];
+  APP.botTypes = types;
+  const requestedBot = new URLSearchParams(window.location.search).get('bot');
+  const requested = findBotType(requestedBot);
+  if (requested) {
+    APP.wizard.botType = requested.id;
+    APP.wizard.botSlug = requested.id;
+    APP.selectedInstance = types.length && requested.id !== 'versova' ? 'subbot' : APP.selectedInstance;
+  } else if (!findBotType(APP.wizard.botType) && types.length) {
+    APP.wizard.botType = types[0].id;
+    APP.wizard.botSlug = types[0].id;
+  }
+
+  const botBox = document.getElementById('botTypeOptions');
+  if (botBox) {
+    botBox.replaceChildren(
+      ...types.map((type) =>
+        V.el('button', {
+          class: `select-card ${APP.wizard.botType === type.id ? 'is-active' : ''}`,
+          type: 'button',
+          onclick: () => {
+            APP.wizard.botType = type.id;
+            APP.wizard.botSlug = type.id;
+            renderRegistrar();
+          },
+        }, [
+          V.el('span', { class: 'ico', text: type.emoji ?? '🤖' }),
+          V.el('span', { class: 'grow' }, [
+            V.el('b', { text: `${type.name}${type.active ? ' · activo' : ''}` }),
+            V.el('small', { text: type.tagline ?? type.description ?? '' }),
+            V.el('span', { class: 'chips', style: 'margin-top:6px' }, [
+              V.el('span', { class: 'pill green', text: 'GRATIS' }),
+              V.el('span', { class: 'pill', text: `${V.num(type.commands ?? 0)} comandos` }),
+              V.el('span', { class: 'pill mono', text: type.folder ?? '' }),
+            ]),
+          ]),
+          V.el('span', { class: 'check', text: APP.wizard.botType === type.id ? '✓' : '' }),
+        ]),
+      ),
+    );
+    const chosen = findBotType(APP.wizard.botType);
+    V.setText('botTypeHint', chosen
+      ? `${chosen.description ?? chosen.tagline ?? ''} Código en GitHub: ${chosen.link ?? ''}`
+      : 'Elige uno de los bots del catálogo.');
+  }
+
   const used = subbots.usage?.botsUsed ?? APP.subbots.length;
   const max = subbots.usage?.botsMax ?? 3;
   const limitNote = document.getElementById('wizardLimit');
   if (limitNote) {
-    limitNote.textContent = `Plan ${subbots.plan?.name ?? user.planInfo?.name ?? user.plan} · ${used}/${max} bots · 0 $`;
+    const chosenType = findBotType(APP.wizard.botType);
+    limitNote.textContent = `${chosenType?.emoji ?? '🤖'} ${chosenType?.name ?? 'Bot'} · plan ${subbots.plan?.name ?? user.planInfo?.name ?? user.plan} · ${used}/${max} bots · 0 $`;
   }
 
   // Paso 1 · instancias
@@ -535,16 +598,18 @@ async function createBotFromWizard() {
 
   if (name.length < 2) {
     V.toast('Falta el nombre', 'Escribe un nombre de al menos 2 caracteres.', 'err');
-    showWizardStep(3);
+    showWizardStep(WIZARD_NAME_STEP);
     return;
   }
   if (instance?.requiresToken && !tokenCode) {
     V.toast('Token requerido', 'Elige el token de la instancia que quieres activar.', 'err');
-    showWizardStep(0);
+    showWizardStep(1);
     return;
   }
 
   const tier = instance?.requiresToken ? (APP.selectedInstance === 'vip' ? 'vip' : 'premium') : 'free';
+  const chosenType = findBotType(APP.wizard.botType);
+  const prefix = chosenType?.prefix ?? '.';
   const body = {
     name,
     tier,
@@ -553,13 +618,14 @@ async function createBotFromWizard() {
     instanceType: APP.selectedInstance,
     serverId: APP.selectedServer,
     serverName: server?.name ?? '',
-    botType: 'versova',
-    catalogSlug: 'versova',
+    // El bot elegido en el paso 1 define la conexión: VÉRSOVA, Raiden WaBot o Yae Miku.
+    botType: APP.wizard.botSlug,
+    catalogSlug: APP.wizard.botSlug,
     shortName: name,
-    longName: name,
-    description: `Bot creado desde el asistente (${instance?.name ?? 'SubBot'}).`,
+    longName: chosenType?.name ?? name,
+    description: `Bot creado desde el asistente (${chosenType?.name ?? 'SubBot'} · ${instance?.name ?? 'instancia'}).`,
     username: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-    prefixes: ['/'],
+    prefixes: [prefix],
   };
 
   try {
@@ -597,7 +663,7 @@ function startWizardQrPolling() {
   stopWizardPolling();
   let lastQr = null;
   const tick = async () => {
-    if (APP.wizard.method !== 'qr' || APP.wizardStep !== 4) return stopWizardPolling();
+    if (APP.wizard.method !== 'qr' || APP.wizardStep !== WIZARD_LAST_STEP) return stopWizardPolling();
     const qrBox = document.getElementById('wizardQr');
     try {
       const status = await fetchWhatsappStatus();
@@ -782,10 +848,17 @@ async function renderBots() {
     return;
   }
 
+  const botTypes = data.botTypes ?? [];
+  // La misma lista que usa el asistente: `findBotType` resuelve slug o alias del catálogo.
+  APP.botTypes = botTypes;
+  const activeSlug = data.activeBot ?? 'versova';
+
   list.replaceChildren(
     ...APP.subbots.map((bot) => {
       const groups = bot.groups?.filter((group) => group.active) ?? [];
       const prefix = (bot.prefixes ?? ['.'])[0] ?? '.';
+      const type = findBotType(bot.catalog_slug || bot.bot_type);
+      const speaking = bot.status === 'online' && type?.id === activeSlug;
       return V.el('div', { class: 'bot-card', id: `bot-${bot.id}` }, [
         V.el('div', { class: 'bot-head' }, [
           bot.avatar_url
@@ -805,20 +878,26 @@ async function renderBots() {
           ]),
         ]),
         V.el('div', { class: 'chips' }, [
+          V.el('span', { class: 'pill accent', text: `${type?.emoji ?? '🤖'} ${type?.name ?? bot.bot_type ?? 'VÉRSOVA'}` }),
           V.el('span', { class: 'pill accent', text: (bot.instance_type || 'subbot').toUpperCase() }),
           V.el('span', { class: 'pill amber', text: bot.linked_at ? 'Código' : 'Sin vincular' }),
           botStatusPill(bot),
+          speaking ? V.el('span', { class: 'pill blue', text: '⚡ Respondiendo ahora' }) : null,
           V.el('span', { class: 'pill', text: bot.server_name || bot.server_id }),
           V.el('span', { class: 'pill green', text: `↻ ${bot.extra_gb}/${bot.totalSpaceGb} GB` }),
           V.el('span', { class: 'pill', text: `prefijo ${prefix}` }),
           V.el('span', { class: 'pill', text: `${groups.length} grupos` }),
-        ]),
+          type?.folder ? V.el('span', { class: 'pill mono', text: type.folder }) : null,
+        ].filter(Boolean)),
         V.el('div', { class: 'bot-actions' }, [
           botActionButton('⚙', 'Config', () => openBotOptions(bot.id)),
           botActionButton('👥', 'Grupos', () => openBotGroups(bot.id)),
           botActionButton(bot.status === 'offline' ? '⏻' : '⭘', bot.status === 'offline' ? 'Encender' : 'Apagar', () => botAction(bot.id, bot.status === 'offline' ? 'start' : 'stop')),
           botActionButton('↻', 'Reiniciar', () => botAction(bot.id, 'restart')),
           botActionButton('🌐', 'Server', () => openBotServer(bot.id)),
+          type && type.id !== activeSlug
+            ? botActionButton('⚡', 'Usar bot', () => useBotPack(bot))
+            : null,
           botActionButton('🗑', 'Borrar', () => botAction(bot.id, 'delete'), true),
         ]),
       ]);
@@ -826,11 +905,64 @@ async function renderBots() {
   );
 }
 
+/**
+ * «⚡ Usar bot» de Mis Bots: deja el paquete de ese SubBot como el bot que
+ * responde (la elección se guarda en `settings`, junto al SubBot que la pidió).
+ */
+async function useBotPack(bot) {
+  const slug = bot.catalog_slug || bot.bot_type || 'versova';
+  try {
+    const result = await V.api(`/api/bots/${slug}/activate`, { body: { subbotId: bot.id } });
+    V.toast('Bot activo', result.message ?? `Ahora responde «${bot.name}».`, 'ok');
+    await renderBots();
+  } catch (error) {
+    V.toast('No se pudo activar', error.message, 'err');
+  }
+}
+
 function botActionButton(ico, label, onclick, danger = false) {
   return V.el('button', { class: `bot-action${danger ? ' danger' : ''}`, type: 'button', onclick }, [
     V.el('span', { class: 'ico', text: ico }),
     V.el('span', { text: label }),
   ]);
+}
+
+/**
+ * «Crear este bot» de la tienda: crea la instancia del bot elegido con valores
+ * razonables (nombre del bot y primer servidor con cupo) y la deja activa.
+ */
+async function createCatalogBot(slug, name) {
+  if (!V.state.user) {
+    V.toast('Inicia sesión', 'Necesitas una cuenta para crear el bot.', 'err');
+    window.location.href = `/?login=1&next=store`;
+    return;
+  }
+  const servers = APP.servers.length ? APP.servers : ((await V.api('/api/servers').catch(() => ({ servers: [] }))).servers ?? []);
+  APP.servers = servers;
+  const free = servers.find((server) => !server.full && server.status !== 'maintenance') ?? servers[0];
+  if (!free) {
+    V.toast('Sin servidores', 'No hay servidores disponibles ahora mismo.', 'err');
+    return;
+  }
+  try {
+    const result = await V.api(`/api/catalog/${slug}/create`, {
+      body: { name: name || 'Mi bot', serverId: free.id, tier: 'free', instanceType: 'subbot' },
+    });
+    V.toast('Bot creado', result.message ?? 'Revisa «Mis Bots» para vincular su WhatsApp.', 'ok');
+    window.location.href = '/bots';
+  } catch (error) {
+    V.toast('No se pudo crear', error.message, 'err');
+  }
+}
+
+async function activateCatalogBot(slug, name) {
+  try {
+    const result = await V.api(`/api/bots/${slug}/activate`, { body: {} });
+    V.toast('Bot activo', result.message ?? `Ahora responde «${name}».`, 'ok');
+    await renderStore();
+  } catch (error) {
+    V.toast('No se pudo activar', error.message, 'err');
+  }
 }
 
 async function botAction(id, action) {
@@ -1176,7 +1308,10 @@ function renderCatalogList(category) {
               V.el('span', { class: 'pill', text: bot.category }),
               bot.badge ? V.el('span', { class: 'pill accent', text: bot.badge }) : null,
               V.el('span', { class: 'pill green', text: `${V.num(bot.users)} usos` }),
-              bot.owned ? V.el('span', { class: 'pill blue', text: '✓ Activo' }) : null,
+              bot.totalCommands ? V.el('span', { class: 'pill', text: `${V.num(bot.totalCommands)} comandos` }) : null,
+              bot.folder ? V.el('span', { class: 'pill mono', text: bot.folder }) : null,
+              bot.owned ? V.el('span', { class: 'pill blue', text: '✓ En tu cuenta' }) : null,
+              bot.active ? V.el('span', { class: 'pill accent', text: '⚡ Respondiendo' }) : null,
             ]),
           ]),
         ]),
@@ -1199,10 +1334,25 @@ function renderCatalogList(category) {
               }
             },
           }),
+          V.el('button', {
+            class: 'btn btn-sm',
+            type: 'button',
+            text: '＋ Crear este bot',
+            onclick: () => createCatalogBot(bot.slug, bot.name),
+          }),
+          bot.implemented
+            ? V.el('button', {
+                class: 'btn btn-sm btn-ghost',
+                type: 'button',
+                text: bot.active ? '⚡ Está respondiendo' : '⚡ Usar este bot',
+                disabled: Boolean(bot.active),
+                onclick: () => activateCatalogBot(bot.slug, bot.name),
+              })
+            : null,
+          V.el('a', { class: 'btn btn-sm btn-ghost', href: `/registrar?bot=${bot.slug}`, text: 'Registrar con asistente' }),
           bot.link
             ? V.el('a', { class: 'btn btn-sm btn-ghost', href: bot.link, target: '_blank', rel: 'noopener', text: '⌥ Ver en GitHub' })
             : null,
-          V.el('a', { class: 'btn btn-sm btn-ghost', href: '/registrar', text: 'Registrar instancia' }),
         ]),
       ]);
     }),
@@ -1307,7 +1457,31 @@ function startLogStream() {
 /* ============================== COMANDOS ================================= */
 
 async function renderCommands() {
-  const data = await V.api('/api/commands');
+  // Selector de bot: cada pack del catálogo tiene su propio catálogo de comandos.
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get('bot');
+  const data = await V.api(`/api/commands${requested ? `?bot=${encodeURIComponent(requested)}` : ''}`);
+  const bots = data.bots ?? [];
+  const current = data.bot ?? 'versova';
+  const tabs = document.getElementById('botTabs');
+  if (tabs && bots.length) {
+    tabs.replaceChildren(
+      ...bots.map((bot) =>
+        V.el('button', {
+          class: `tab ${bot.slug === current ? 'is-active' : ''}`,
+          type: 'button',
+          text: `${bot.emoji ?? '🤖'} ${bot.name}${bot.active ? ' ⚡' : ''}`,
+          onclick: () => window.location.assign(`/cmds?bot=${bot.slug}`),
+        }),
+      ),
+    );
+  }
+  const chosen = bots.find((bot) => bot.slug === current);
+  V.setText('cmdBot', chosen ? `${chosen.emoji ?? ''} ${chosen.name}` : current);
+  if (chosen) {
+    V.setText('botHint', `${chosen.tagline ?? ''} · ${V.num(chosen.ownCommands)} comandos propios · ${V.num(chosen.totalCommands)} en total · ${chosen.folder ?? ''}`);
+  }
+
   const commands = data.commands ?? [];
   V.setText('cmdCount', String(commands.length));
   V.setText('cmdImplemented', String(commands.filter((command) => command.implemented).length));
@@ -1359,7 +1533,7 @@ async function renderCommands() {
   const menu = document.getElementById('menuPreview');
   if (menu) {
     try {
-      const preview = await V.api('/api/menu');
+      const preview = await V.api(`/api/menu?bot=${encodeURIComponent(current)}`);
       menu.textContent = preview.text;
     } catch {
       menu.textContent = 'El menú no está disponible.';
@@ -1491,9 +1665,10 @@ async function boot() {
   document.getElementById('authForm')?.addEventListener('submit', submitAuth);
   document.getElementById('authSwitch')?.addEventListener('click', () => setAuthMode(document.getElementById('authModal')?.dataset.mode === 'login' ? 'register' : 'login'));
 
-  for (const [id, step] of [['wizardNext1', 1], ['wizardNext2', 2], ['wizardNext3', 3]]) {
+  // Pasos: 0 bot · 1 instancia · 2 servidor · 3 vinculación · 4 nombre · 5 código.
+  for (const [id, step] of [['wizardNextBot', 1], ['wizardNext1', 2], ['wizardNext2', 3], ['wizardNext3', 4]]) {
     document.getElementById(id)?.addEventListener('click', () => {
-      if (step === 3) {
+      if (step === 4) {
         const phone = document.getElementById('wizardPhone')?.value?.trim() ?? '';
         if (phone.replace(/\D/g, '').length < 8) {
           V.toast('Número incompleto', 'Escribe el número del bot con código de país.', 'err');
@@ -1504,7 +1679,7 @@ async function boot() {
       showWizardStep(step);
     });
   }
-  for (const [id, step] of [['wizardBack1', 0], ['wizardBack2', 1], ['wizardBack3', 2], ['wizardBack4', 3]]) {
+  for (const [id, step] of [['wizardBack0', 0], ['wizardBack1', 1], ['wizardBack2', 2], ['wizardBack3', 3], ['wizardBack4', 4]]) {
     document.getElementById(id)?.addEventListener('click', () => showWizardStep(step));
   }
   document.getElementById('wizardPhone')?.addEventListener('input', (event) => {

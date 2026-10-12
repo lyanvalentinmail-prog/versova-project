@@ -2,8 +2,19 @@
 
 VÉRSOVA es una **plataforma** con panel web propio donde cada persona crea, configura y usa sus
 bots de WhatsApp (SubBots). Incluye catálogo de bots **100 % gratis** (con repos abiertos en
-GitHub), tienda sin costo, métricas y reportes que llegan al owner. El bot de WhatsApp ejecuta
-**34 comandos** con prefijo `.`.
+GitHub), tienda sin costo, métricas y reportes que llegan al owner.
+
+El motor es **multi-bot**: el bot de WhatsApp ejecuta el paquete que esté activo y cada bot del
+catálogo vive en su propia carpeta del repositorio:
+
+| Bot | Carpeta | Prefijo | Comandos |
+|---|---|---|---|
+| 👑 **VÉRSOVA** | `src/commands/` | `.` | 34 |
+| ⚡ **Raiden WaBot** | `bots/raiden-wabot/` | `.` | 71 |
+| 🎧 **Yae Miku Bot** | `bots/yae-miku-bot/` | `.` | 8 |
+
+Los paquetes de `bots/` comparten utilidades en `bots/shared/` (almacén, texto, enlaces, HTTP,
+antilink, sociales y medios) y se cargan con el motor de `src/core/bot-packs.ts`.
 
 - Prefijo: `.` (configurable en el panel)
 - Idioma: español
@@ -17,16 +28,24 @@ GitHub), tienda sin costo, métricas y reportes que llegan al owner. El bot de W
 - **Cuentas**: registro y acceso con email (demo) o **Google** (OAuth 2.0). Sesiones con cookie
   `HttpOnly` (`versova_session`, 30 días).
 - **Catálogo de bots** (`/store`): **VÉRSOVA**, **Raiden WaBot** y **Yae Miku Bot**, todos
-  **gratis (0 $)** y con enlace a su repo en GitHub. Activar un bot de catálogo lo deja ligado a la
-  cuenta; el resto de bots se desactiva en la base al arrancar (sin borrar las activaciones).
+  **gratis (0 $)** y con enlace a su repo en GitHub. Cada tarjeta ofrece **«＋ Crear este bot»**
+  (crea el SubBot de ese tipo y lo deja activo), **«⚡ Usar este bot»** (cambia el bot que
+  responde ahora) y **«Registrar con asistente»** (`/registrar?bot=<slug>`, el asistente llega con
+  el tipo de bot ya elegido).
 - **Tienda de tokens, espacio y planes**: token Premium, token VIP, espacio extra (1 GB), plan
   Premium y plan VIP — **todo a 0 $**. El pago es demo: registra la compra, no cobra dinero real.
 - **Soporte** (`/ticket`): los reportes se notifican al owner (WhatsApp +598 96 719 709 y
   lyanvalentinmail@gmail.com, configurables) con bandeja «Mis Envíos».
-- **Registrar un SubBot** (`/registrar`): asistente de 6 pasos (token → instancia → servidor →
-  vinculación → nombre → confirmación) con QR de WhatsApp y **código de 8 dígitos**.
+- **Registrar un SubBot** (`/registrar`): asistente de 6 pasos (bot → instancia → servidor →
+  vinculación → nombre → confirmación) con QR de WhatsApp y **código de 8 dígitos**. El primer
+  paso elige el paquete (VÉRSOVA, Raiden WaBot o Yae Miku Bot) o el catálogo; el resto del
+  asistente es igual para todos.
+- **Comandos por bot** (`/cmds`): pestañas por paquete; `/api/commands?bot=<slug>` y
+  `/api/menu?bot=<slug>` devuelven el inventario y el menú de ese bot sin cambiar el activo.
 - **Mis Bots** (`/bots`): sesiones activas, estado del socket, «Opciones del bot», grupos, métricas
-  y acciones (reiniciar, pausar, reanudar, detener, desvincular, eliminar).
+  y acciones (reiniciar, pausar, reanudar, detener, desvincular, eliminar). Cada tarjeta muestra el
+  paquete del SubBot y, si no es el que responde, el botón **«⚡ Usar bot»** lo activa;
+  `/api/status` publica el paquete activo.
 - **Bots editables**: nombre corto, nombre largo, moneda, dueño (número), enlace del bot, canal de
   WhatsApp, prefijos (`/ # ! + - . * ~`), banner, usuario, estado, avatar e instancia.
 - **Monitor del sistema** (`/metrics`): CPU, memoria, disco, red, latencia y datos del proceso por
@@ -47,7 +66,15 @@ GitHub), tienda sin costo, métricas y reportes que llegan al owner. El bot de W
 | Administración | `.add`, `.expulsar`, `.ban`, `.unban`, `.warn`, `.unwarn`, `.close`, `.open` |
 
 El menú (`.menu`) agrupa los comandos por bloques. El panel los marca como **implementado**,
-permite desactivarlos, ocultarlos o crear alias.
+permite desactivarlos, ocultarlos o crear alias, todo **por paquete**: los ajustes de VÉRSOVA y de
+los bots de `bots/` se guardan por separado (`command-settings[:<paquete>]`).
+
+**Comandos de los bots del catálogo** (se ejecutan cuando ese bot está activo)
+
+| Bot | Comandos | Notas |
+|---|---|---|
+| Raiden WaBot | **Descargas**: `.download`, `.play`, `.yt`, `.ig`, `.spotify`, `.tiktok`, `.xdl`<br>**Stickers e imágenes**: `.sticker`, `.brat`, `.logo`, `.foto`/`.photo`<br>**IA**: `.ai`<br>**Reacciones**: `.reacciones`, `.reaccion` + 45 reacciones (`hug`, `kiss`, `pat`, `slap`, `cuddle`, `poke`…)<br>**Rol y moderación**: `.menu`, `.perfil`, `.marry`, `.divorce`, `.ship`, `.work`, `.top`, `.cumple`, `.ping`, `.tagall`, `.kick`, `.antilink`, `.mute`, `.unmute` | Stickers y logos usan `sharp` opcional; `.ai` necesita `AI_API_KEY`; las descargas usan `DOWNLOAD_API_URL` opcional |
+| Yae Miku Bot | `.menu`, `.marry`, `.divorce`, `.profile`, `.top`, `.config`, `.subbots`, `.antilink` | Matrimonio con propuesta por respuesta «sí»/«no», antilink y sub-bots persistentes |
 
 ## Cuentas e inicio de sesión con Google
 
@@ -75,9 +102,31 @@ sesión o registrarse**.
   pareja visible en el perfil, antilink y sub-bots persistentes. Enlace:
   [Yae-Miku-Bot](https://github.com/Abrahan987/Yae-Miku-Bot).
 
-Activar un bot del catálogo (`/api/catalog/:slug/use`) lo liga a la cuenta sin costo. Desde
-«Registrar un SubBot» se elige el tipo de bot (VÉRSOVA, Raiden WaBot o Yae Miku Bot) y el resto del
-asistente es igual.
+El catálogo se usa de tres formas:
+
+- **＋ Crear este bot** (`POST /api/catalog/:slug/create`): crea el SubBot de ese tipo (mismos
+  límites del plan que cualquier alta), lo liga a la cuenta, marca el uso en `catalog_uses` y lo
+  deja **activo**.
+- **⚡ Usar este bot** (`POST /api/bots/:slug/activate`): cambia el paquete que responde sin crear
+  nada; la elección se guarda en `settings` (`active-bot`) y sobrevive al reinicio.
+- **Registrar con asistente** (`/registrar?bot=<slug>`): el asistente arranca con ese tipo de bot
+  elegido; también se puede cambiar el paquete después desde «Opciones del bot» o `/bots`.
+
+`GET /api/bots` lista los paquetes implementados y cuál está activo. El tipo de bot se valida con
+`AVAILABLE_BOT_TYPES` (VÉRSOVA, Raiden WaBot, Yae Miku Bot); un tipo inventado responde 400.
+
+**Carpetas** (así se implementan «en una carpeta en GitHub»):
+
+```
+bots/
+  shared/           utilidades comunes (store, texto, enlaces, http, antilink, social, media)
+  raiden-wabot/     pack.ts, brand.ts, lib/reactions.ts y commands/ (10 módulos)
+  yae-miku-bot/     pack.ts, brand.ts, commands/ y guards/
+```
+
+Cada carpeta exporta un `BotPack` (slug, nombre, emoji, carpeta, enlace, prefijos, comandos y
+guards) que `src/bots/index.ts` registra al arrancar. Para añadir otro bot del catálogo basta con
+crear su carpeta, exportar el paquete y sumarlo a `src/bots/index.ts` y a `BOT_CATALOG`.
 
 ## Tienda, tokens y SubBots
 
@@ -124,17 +173,37 @@ Variables:
 | `MAIL_HOST` / `MAIL_USER` / `MAIL_PASS` | Opcional: SMTP para avisar al owner por email cuando llega un ticket. Sin él, solo WhatsApp. |
 | `MAIL_PORT` / `MAIL_SECURE` / `MAIL_FROM` | Ajustes opcionales del SMTP (587 / `false` / remitente). |
 | `DEMO_LOGIN` | `0` desactiva el acceso con email y deja solo Google. Por defecto activado. |
+| `BOT_TYPE` | Paquete que responde por defecto al arrancar (`versova`, `raiden`, `yae-miku`). Luego manda lo elegido en el panel. |
+| `BOT_ALLOW_NETWORK` | `0` desactiva cualquier petición externa de los bots (descargas, metadatos e IA). |
+| `DOWNLOAD_API_URL` | Opcional: API de descargas estilo Cobalt para `.download`/`.play` de Raiden. |
+| `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL` / `AI_MAX_TOKENS` | Opcionales: proveedor compatible con OpenAI para `.ai` de Raiden (por defecto `gpt-4o-mini`). |
 | `PORT` | Puerto HTTP (Render asigna su propio valor). |
 
 ## API
 
 Rutas públicas: `/`, `/cmds`, `/links`, `/menu`, `/health`, `/api/platform`, `/api/catalog`,
-`/api/servers`, `/api/status`, `/api/system`, `/api/metrics`, `/api/banner`, `/api/commands`,
-`/api/menu` y `/api/logs/stream` (SSE). `/home` redirige a `/` y `/status` a `/metrics`.
+`/api/bots`, `/api/servers`, `/api/status`, `/api/system`, `/api/metrics`, `/api/banner`,
+`/api/commands`, `/api/menu` y `/api/logs/stream` (SSE). `/home` redirige a `/` y `/status` a
+`/metrics`.
 
 Rutas con sesión: `/api/auth/*`, `/api/store/catalog`, `/api/store/checkout`, `/api/store/tokens`,
 `/api/subbots` (opciones, acciones, grupos, emparejamiento y confirmación), `/api/reports`
-(notifica al owner) y `/api/catalog/:slug/use`.
+(notifica al owner) y las del catálogo.
+
+Catálogo y paquetes:
+
+| Método y ruta | Qué hace |
+|---|---|
+| `GET /api/bots` | Paquetes implementados (`slug`, nombre, emoji, carpeta, enlace, nº de comandos) y cuál está activo. |
+| `POST /api/bots/:slug/activate` | Cambia el bot que responde. Con `{"subbotId": 12}` la elección queda ligada a ese SubBot (es lo que hace «⚡ Usar bot» en `/bots`); un SubBot de otra cuenta responde 404. |
+| `POST /api/catalog/:slug/create` | **Crear este bot**: crea el SubBot de ese tipo, marca el uso y lo activa. Devuelve 201 con `catalog`, `bot`, `botType` y `message`. |
+| `POST /api/catalog/:slug/use` | Marca el uso del bot del catálogo en la cuenta (equivale a activarlo sin crear SubBot). |
+| `GET /api/commands?bot=<slug>` | Inventario de comandos de un paquete (`implemented`, categoría, alias) sin cambiar el activo. |
+| `GET /api/menu?bot=<slug>` | Menú renderizado (texto) de un paquete. |
+
+`GET /api/catalog` añade por bot `implemented`, `folder`, `botType`, `totalCommands`, `ownCommands`,
+`active`, `owned` y `subbotId`. `POST /api/subbots` y `GET /api/subbots` aceptan y devuelven
+`botType`/`botTypes`; al confirmar el emparejamiento la respuesta incluye `activeBot`.
 
 ## Pruebas
 
@@ -143,7 +212,7 @@ npm test                                   # suite completa (modo memoria)
 TEST_DATABASE_URL=postgres://... npm test   # además, pruebas de PostgreSQL
 ```
 
-Además de las pruebas unitarias, la suite incluye tres verificaciones de conjunto:
+Además de las pruebas unitarias, la suite incluye estas verificaciones de conjunto:
 
 - **Prueba de humo de los 34 comandos** (`tests/commands-run.test.ts`): cada comando se ejecuta con
   una base simulada y debe responder sin caer en el error genérico.
@@ -151,16 +220,23 @@ Además de las pruebas unitarias, la suite incluye tres verificaciones de conjun
   catálogos sobre un emulador de PostgreSQL (pg-mem) y ejercita los repositorios reales.
 - **Páginas en el navegador** (`tests/pages.test.ts`): abre cada página con jsdom, con la API
   simulada, y comprueba que se dibujan sin errores de JavaScript.
+- **Bots del catálogo** (`tests/bots.test.ts`): ejecuta los comandos de Raiden WaBot y Yae Miku Bot
+  (herencia y sobrescritura de comandos del núcleo, menús, matrimonio con propuesta, antilink,
+  reacciones, sub-bots y guardas) y comprueba que un paquete inactivo no corre sus guardas.
+- **Panel y paquetes** (`tests/web.test.ts`): cubre `/api/bots`, `/api/commands?bot=`,
+  `/api/menu?bot=`, `/api/catalog` y el flujo `raiden/create` → activo → emparejamiento →
+  `yae-miku/create`.
 
 Las pruebas de base de datos reales (`db`, `web-auth`) solo corren con `TEST_DATABASE_URL` y vacían
 datos: usa una base dedicada.
 
 ## Base de datos
 
-El esquema (`src/database/schema.ts`, versión 5) cubre cuentas y sesiones web, tokens, subbots con
+El esquema (`src/database/schema.ts`, versión 6) cubre cuentas y sesiones web, tokens, subbots con
 todas sus opciones, catálogo de bots (con enlace a GitHub) y usos, servidores, grupos de cada
-subbot y reportes. Las migraciones se aplican al arrancar; en modo memoria se siembran los mismos
-datos en RAM.
+subbot, reportes y el almacén clave/valor de los bots (`bot_data`, con clave
+`(group_id, wa_id, key)`: economía, matrimonios, cumpleaños, niveles de antilink, etc.). Las
+migraciones se aplican al arrancar; en modo memoria se siembran los mismos datos en RAM.
 
 ### Neon (plan gratuito)
 
@@ -215,13 +291,18 @@ Los ajustes se guardan en la base (o en memoria) y se conservan al reiniciar el 
 ```
 src/
   config/        configuración y valores por defecto
-  core/          conexión WhatsApp, router, aliases, permisos y ajustes
+  core/          conexión WhatsApp, router, paquetes de bots, guardas, permisos y ajustes
   database/      esquema, repositorios PostgreSQL, capa en memoria y semillas
-  commands/      comandos en archivos por categoría, catálogo y menú
+  commands/      comandos de VÉRSOVA en archivos por categoría, catálogo y menú
+  bots/          carga y registro de los paquetes de bots/
   events/        mensajes entrantes, entradas y salidas del grupo
   services/      reglas compartidas (desregistro, sincronización)
   messages/      diseño de mensajes de VÉRSOVA
   utils/         texto, tiempo, logs, límites de uso
   web/           servidor, autenticación, datos de la plataforma y páginas públicas
+bots/
+  shared/        utilidades comunes de los bots del catálogo
+  raiden-wabot/  paquete ⚡ Raiden WaBot (comandos, reacciones y guardas)
+  yae-miku-bot/  paquete 🎧 Yae Miku Bot (comandos y guardas)
 tests/
 ```

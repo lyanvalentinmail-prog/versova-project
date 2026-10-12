@@ -59,6 +59,9 @@ export const allocatedExtraGb: typeof pgWeb.allocatedExtraGb = pick(pgWeb.alloca
 export const setSubBotPairing: typeof pgWeb.setSubBotPairing = pick(pgWeb.setSubBotPairing, mem.setSubBotPairing);
 export const markSubBotLinked: typeof pgWeb.markSubBotLinked = pick(pgWeb.markSubBotLinked, mem.markSubBotLinked);
 export const bumpSubBotUptime: typeof pgWeb.bumpSubBotUptime = pick(pgWeb.bumpSubBotUptime, mem.bumpSubBotUptime);
+export const getSubBotAny: typeof pgWeb.getSubBotAny = pick(pgWeb.getSubBotAny, mem.getSubBotAny);
+export const listSubBotsByPhone: typeof pgWeb.listSubBotsByPhone = pick(pgWeb.listSubBotsByPhone, mem.listSubBotsByPhone);
+export const listSubBotsByCatalog: typeof pgWeb.listSubBotsByCatalog = pick(pgWeb.listSubBotsByCatalog, mem.listSubBotsByCatalog);
 
 /* -------------------------------- compras -------------------------------- */
 export const recordPurchase: typeof pgWeb.recordPurchase = pick(pgWeb.recordPurchase, mem.recordPurchase);
@@ -78,6 +81,7 @@ export const getServer: typeof pgPlatform.getServer = pick(pgPlatform.getServer,
 export const listSubBotGroups: typeof pgPlatform.listSubBotGroups = pick(pgPlatform.listSubBotGroups, mem.listSubBotGroups);
 export const upsertSubBotGroup: typeof pgPlatform.upsertSubBotGroup = pick(pgPlatform.upsertSubBotGroup, mem.upsertSubBotGroup);
 export const deleteSubBotGroup: typeof pgPlatform.deleteSubBotGroup = pick(pgPlatform.deleteSubBotGroup, mem.deleteSubBotGroup);
+export const findSubBotsByGroupJid: typeof pgPlatform.findSubBotsByGroupJid = pick(pgPlatform.findSubBotsByGroupJid, mem.findSubBotsByGroupJid);
 
 /* -------------------------------- reportes ------------------------------- */
 export const createReport: typeof pgPlatform.createReport = pick(pgPlatform.createReport, mem.createReport);
@@ -91,6 +95,16 @@ export const getSetting: typeof pgCore.getSetting = pick(pgCore.getSetting, mem.
 export const setSetting: typeof pgCore.setSetting = pick(pgCore.setSetting, mem.setSetting);
 export const getPlatformMetrics: typeof pgCore.getPlatformMetrics = pick(pgCore.getPlatformMetrics, mem.getPlatformMetrics);
 export const auditLog: typeof pgCore.audit = pick(pgCore.audit, mem.audit);
+
+/* ------------------ datos de los bots del catálogo (carpeta bots/) ---------------- */
+export const getBotValue: typeof pgCore.getBotValue = pick(pgCore.getBotValue, mem.getBotValue);
+export const setBotValue: typeof pgCore.setBotValue = pick(pgCore.setBotValue, mem.setBotValue);
+export const deleteBotValue: typeof pgCore.deleteBotValue = pick(pgCore.deleteBotValue, mem.deleteBotValue);
+export const addBotValue: typeof pgCore.addBotValue = pick(pgCore.addBotValue, mem.addBotValue);
+export const listBotValues: typeof pgCore.listBotValues = pick(pgCore.listBotValues, mem.listBotValues);
+export const getGroupSettings: typeof pgCore.getGroupSettings = pick(pgCore.getGroupSettings, mem.getGroupSettings);
+export const getGroupSetting: typeof pgCore.getGroupSetting = pick(pgCore.getGroupSetting, mem.getGroupSetting);
+export const setGroupSetting: typeof pgCore.setGroupSetting = pick(pgCore.setGroupSetting, mem.setGroupSetting);
 
 export const usingMemory = memoryMode;
 

@@ -1,1292 +1,3726 @@
 {
- "/api/platform": {
-  "bot": "VÉRSOVA",
-  "team": "◢禍◣ Versova ࿙☕࿚",
-  "version": "1.0",
-  "prefix": ".",
-  "memoryMode": true,
-  "uptimeSec": 4,
-  "commands": 34,
-  "implemented": 34,
-  "counts": {
-   "totalBots": 2,
-   "main": 0,
-   "premium": 1,
-   "subs": 1,
-   "users": 2,
-   "tokens": 0,
-   "catalogUses": 2,
-   "online": 1,
-   "commands": 34,
-   "implemented": 34,
-   "catalogBots": 3,
-   "servers": 6
-  },
-  "catalogUses": {
-   "versova": 1,
-   "raiden": 0,
-   "yae-miku": 0
-  },
-  "servers": [
-   {
-    "id": "vrsov-01",
-    "name": "Vrsov Srv Asuna",
-    "provider": "Versova Cloud",
-    "region": "Asunción",
-    "capacity": 90,
-    "used": 80,
-    "cpu": 34,
-    "ram": 58,
-    "disk": 41,
-    "status": "online",
-    "ip": "10.20.0.11"
-   },
-   {
-    "id": "vrsov-02",
-    "name": "Vrsov Srv Kirito",
-    "provider": "Versova Cloud",
-    "region": "Buenos Aires",
-    "capacity": 90,
-    "used": 61,
-    "cpu": 27,
-    "ram": 46,
-    "disk": 38,
-    "status": "online",
-    "ip": "10.20.0.12"
-   },
-   {
-    "id": "vrsov-03",
-    "name": "Vrsov Srv Rem",
-    "provider": "Versova Cloud",
-    "region": "Montevideo",
-    "capacity": 60,
-    "used": 60,
-    "cpu": 72,
-    "ram": 81,
-    "disk": 63,
-    "status": "full",
-    "ip": "10.20.0.13"
-   },
-   {
-    "id": "vrsov-04",
-    "name": "Vrsov Srv Zero Two",
-    "provider": "Versova Cloud",
-    "region": "Bogotá",
-    "capacity": 120,
-    "used": 47,
-    "cpu": 22,
-    "ram": 39,
-    "disk": 29,
-    "status": "online",
-    "ip": "10.20.0.14"
-   },
-   {
-    "id": "vrsov-05",
-    "name": "Vrsov Srv Mikasa",
-    "provider": "Versova Cloud",
-    "region": "Santiago",
-    "capacity": 120,
-    "used": 88,
-    "cpu": 51,
-    "ram": 67,
-    "disk": 52,
-    "status": "online",
-    "ip": "10.20.0.15"
-   },
-   {
-    "id": "vrsov-06",
-    "name": "Vrsov Srv Mai",
-    "provider": "Versova Cloud",
-    "region": "Lima",
-    "capacity": 60,
-    "used": 12,
-    "cpu": 14,
-    "ram": 26,
-    "disk": 19,
-    "status": "maintenance",
-    "ip": "10.20.0.16"
-   }
-  ],
-  "plans": {
-   "free": {
-    "id": "free",
-    "name": "Free",
-    "priceUsd": 0,
-    "spacePerBotGb": 1,
-    "maxBots": 3,
-    "color": "free"
-   },
-   "premium": {
-    "id": "premium",
-    "name": "Premium",
-    "priceUsd": 1,
-    "spacePerBotGb": 2,
-    "maxBots": 5,
-    "color": "premium"
-   },
-   "vip": {
-    "id": "vip",
-    "name": "VIP",
-    "priceUsd": 5,
-    "spacePerBotGb": 5,
-    "maxBots": 10,
-    "color": "vip"
-   }
-  },
-  "tiers": {
-   "free": {
-    "name": "Free",
-    "spaceGb": 1,
-    "requiresToken": false,
-    "priceUsd": 0
-   },
-   "premium": {
-    "name": "Premium",
-    "spaceGb": 2,
-    "requiresToken": true,
-    "priceUsd": 1
-   },
-   "vip": {
-    "name": "VIP",
-    "spaceGb": 4,
-    "requiresToken": true,
-    "priceUsd": 5
-   }
-  },
-  "instances": [
-   {
-    "id": "subbot",
-    "name": "SubBot Gratis",
-    "description": "Instancia gratuita básica",
-    "tier": "free",
-    "requiresToken": false,
-    "spaceGb": 1,
-    "emoji": "🤖"
-   },
-   {
-    "id": "principal",
-    "name": "Principal",
-    "description": "Requiere token de moderador",
-    "tier": "premium",
-    "requiresToken": true,
-    "spaceGb": 2,
-    "emoji": "👑"
-   },
-   {
-    "id": "premium",
-    "name": "Premium",
-    "description": "Beneficios exclusivos",
-    "tier": "premium",
-    "requiresToken": true,
-    "spaceGb": 2,
-    "emoji": "💎"
-   },
-   {
-    "id": "vip",
-    "name": "VIP",
-    "description": "Todo ilimitado y prioridad",
-    "tier": "vip",
-    "requiresToken": true,
-    "spaceGb": 4,
-    "emoji": "🚀"
-   }
-  ],
-  "googleEnabled": false,
-  "support": {
-   "whatsapp": "59896719709",
-   "email": "lyanvalentinmail@gmail.com"
-  }
- },
- "/api/catalog": {
-  "bots": [
-   {
-    "slug": "versova",
-    "name": "VÉRSOVA Rol",
-    "emoji": "👑",
-    "tagline": "El bot completo para teams de rol",
-    "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
-    "category": "Team & Rol",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#8b5cf6",
-    "features": [
-     "Registro y fichas con edad y personaje",
-     "Solicitudes de personaje con aprobación",
-     "Parejas, ships y perfiles sociales",
-     "Advertencias, bans y anuncios",
-     "Menú de 33 comandos con prefijo propio"
+  "/api/platform": {
+    "bot": "VÉRSOVA",
+    "team": "◢禍◣ Versova ࿙☕࿚",
+    "version": "1.0",
+    "prefix": ".",
+    "memoryMode": true,
+    "uptimeSec": 4,
+    "commands": 34,
+    "implemented": 34,
+    "counts": {
+      "totalBots": 2,
+      "main": 0,
+      "premium": 1,
+      "subs": 1,
+      "users": 2,
+      "tokens": 0,
+      "catalogUses": 2,
+      "online": 1,
+      "commands": 34,
+      "implemented": 34,
+      "catalogBots": 3,
+      "servers": 6
+    },
+    "catalogUses": {
+      "versova": 1,
+      "raiden": 0,
+      "yae-miku": 0
+    },
+    "servers": [
+      {
+        "id": "vrsov-01",
+        "name": "Vrsov Srv Asuna",
+        "provider": "Versova Cloud",
+        "region": "Asunción",
+        "capacity": 90,
+        "used": 80,
+        "cpu": 34,
+        "ram": 58,
+        "disk": 41,
+        "status": "online",
+        "ip": "10.20.0.11"
+      },
+      {
+        "id": "vrsov-02",
+        "name": "Vrsov Srv Kirito",
+        "provider": "Versova Cloud",
+        "region": "Buenos Aires",
+        "capacity": 90,
+        "used": 61,
+        "cpu": 27,
+        "ram": 46,
+        "disk": 38,
+        "status": "online",
+        "ip": "10.20.0.12"
+      },
+      {
+        "id": "vrsov-03",
+        "name": "Vrsov Srv Rem",
+        "provider": "Versova Cloud",
+        "region": "Montevideo",
+        "capacity": 60,
+        "used": 60,
+        "cpu": 72,
+        "ram": 81,
+        "disk": 63,
+        "status": "full",
+        "ip": "10.20.0.13"
+      },
+      {
+        "id": "vrsov-04",
+        "name": "Vrsov Srv Zero Two",
+        "provider": "Versova Cloud",
+        "region": "Bogotá",
+        "capacity": 120,
+        "used": 47,
+        "cpu": 22,
+        "ram": 39,
+        "disk": 29,
+        "status": "online",
+        "ip": "10.20.0.14"
+      },
+      {
+        "id": "vrsov-05",
+        "name": "Vrsov Srv Mikasa",
+        "provider": "Versova Cloud",
+        "region": "Santiago",
+        "capacity": 120,
+        "used": 88,
+        "cpu": 51,
+        "ram": 67,
+        "disk": 52,
+        "status": "online",
+        "ip": "10.20.0.15"
+      },
+      {
+        "id": "vrsov-06",
+        "name": "Vrsov Srv Mai",
+        "provider": "Versova Cloud",
+        "region": "Lima",
+        "capacity": 60,
+        "used": 12,
+        "cpu": 14,
+        "ram": 26,
+        "disk": 19,
+        "status": "maintenance",
+        "ip": "10.20.0.16"
+      }
     ],
-    "commands": [
-     "menu",
-     "reg",
-     "unreg",
-     "rol",
-     "roles",
-     "ficha",
-     "editar",
-     "mirol",
-     "cambiarol",
-     "reservar",
-     "liberar"
+    "plans": {
+      "free": {
+        "id": "free",
+        "name": "Free",
+        "priceUsd": 0,
+        "spacePerBotGb": 1,
+        "maxBots": 3,
+        "color": "free"
+      },
+      "premium": {
+        "id": "premium",
+        "name": "Premium",
+        "priceUsd": 1,
+        "spacePerBotGb": 2,
+        "maxBots": 5,
+        "color": "premium"
+      },
+      "vip": {
+        "id": "vip",
+        "name": "VIP",
+        "priceUsd": 5,
+        "spacePerBotGb": 5,
+        "maxBots": 10,
+        "color": "vip"
+      }
+    },
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "spaceGb": 1,
+        "requiresToken": false,
+        "priceUsd": 0
+      },
+      "premium": {
+        "name": "Premium",
+        "spaceGb": 2,
+        "requiresToken": true,
+        "priceUsd": 1
+      },
+      "vip": {
+        "name": "VIP",
+        "spaceGb": 4,
+        "requiresToken": true,
+        "priceUsd": 5
+      }
+    },
+    "instances": [
+      {
+        "id": "subbot",
+        "name": "SubBot Gratis",
+        "description": "Instancia gratuita básica",
+        "tier": "free",
+        "requiresToken": false,
+        "spaceGb": 1,
+        "emoji": "🤖"
+      },
+      {
+        "id": "principal",
+        "name": "Principal",
+        "description": "Requiere token de moderador",
+        "tier": "premium",
+        "requiresToken": true,
+        "spaceGb": 2,
+        "emoji": "👑"
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "description": "Beneficios exclusivos",
+        "tier": "premium",
+        "requiresToken": true,
+        "spaceGb": 2,
+        "emoji": "💎"
+      },
+      {
+        "id": "vip",
+        "name": "VIP",
+        "description": "Todo ilimitado y prioridad",
+        "tier": "vip",
+        "requiresToken": true,
+        "spaceGb": 4,
+        "emoji": "🚀"
+      }
     ],
-    "popularity": 100,
-    "featured": true,
-    "active": true,
-    "sort": 1,
-    "priceUsd": 0,
-    "users": 1,
-    "owned": false,
-    "subbotId": null,
-    "priceCoins": 0,
-    "link": "https://github.com/lyanvalentinmail-prog/versova-project"
-   },
-   {
-    "slug": "raiden",
-    "name": "Raiden WaBot",
-    "emoji": "⚡",
-    "tagline": "Bot anime completo: descargas, stickers, IA y más",
-    "description": "Bot de WhatsApp en Node.js + Baileys inspirado en Raiden (Genshin Impact). Código abierto en GitHub.",
-    "category": "Juegos",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#6366f1",
-    "features": [
-     "Descargas: Instagram, YouTube, Spotify, TikTok y letras",
-     "Stickers: creación, estilo BRAT y Sticker.ly",
-     "Más de 40 comandos de reacciones anime",
-     "IA conversacional y generación de logos"
-    ],
-    "commands": [
-     "menu",
-     "ping",
-     "download",
-     "sticker",
-     "marry",
-     "antilink"
-    ],
-    "popularity": 86,
-    "featured": true,
-    "active": true,
-    "sort": 1,
-    "priceUsd": 0,
-    "users": 0,
-    "owned": false,
-    "subbotId": null,
-    "priceCoins": 0,
-    "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot"
-   },
-   {
-    "slug": "yae-miku",
-    "name": "Yae Miku Bot",
-    "emoji": "🎧",
-    "tagline": "Bot de rol y moderación con sub-bots",
-    "description": "Bot de WhatsApp abierto en GitHub (MIT): matrimonio/divorcio, antilink y sub-bots persistentes.",
-    "category": "Juegos",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#22d3ee",
-    "features": [
-     "Matrimonio/divorcio con pareja visible en el perfil",
-     "Antilink: borra enlaces y expulsa al que los envíe",
-     "Sub-bots persistentes: se restauran al reconectar",
-     "Moderación de grupos y comandos sociales"
-    ],
-    "commands": [
-     "menu",
-     "marry",
-     "divorce",
-     "antilink",
-     "profile",
-     "config"
-    ],
-    "popularity": 74,
-    "featured": true,
-    "active": true,
-    "sort": 1,
-    "priceUsd": 0,
-    "users": 0,
-    "owned": false,
-    "subbotId": null,
-    "priceCoins": 0,
-    "link": "https://github.com/Abrahan987/Yae-Miku-Bot"
-   }
-  ],
-  "categories": [
-   "Team & Rol",
-   "Juegos"
-  ],
-  "owned": []
- },
- "/api/servers": {
-  "servers": [
-   {
-    "id": "vrsov-01",
-    "name": "Vrsov Srv Asuna",
-    "provider": "Versova Cloud",
-    "region": "Asunción",
-    "capacity": 90,
-    "used": 80,
-    "cpu": 34,
-    "ram": 58,
-    "disk": 41,
-    "status": "online",
-    "ip": "10.20.0.11",
-    "free": 10,
-    "full": false
-   },
-   {
-    "id": "vrsov-02",
-    "name": "Vrsov Srv Kirito",
-    "provider": "Versova Cloud",
-    "region": "Buenos Aires",
-    "capacity": 90,
-    "used": 61,
-    "cpu": 27,
-    "ram": 46,
-    "disk": 38,
-    "status": "online",
-    "ip": "10.20.0.12",
-    "free": 29,
-    "full": false
-   },
-   {
-    "id": "vrsov-03",
-    "name": "Vrsov Srv Rem",
-    "provider": "Versova Cloud",
-    "region": "Montevideo",
-    "capacity": 60,
-    "used": 60,
-    "cpu": 72,
-    "ram": 81,
-    "disk": 63,
-    "status": "full",
-    "ip": "10.20.0.13",
-    "free": 0,
-    "full": true
-   },
-   {
-    "id": "vrsov-04",
-    "name": "Vrsov Srv Zero Two",
-    "provider": "Versova Cloud",
-    "region": "Bogotá",
-    "capacity": 120,
-    "used": 47,
-    "cpu": 22,
-    "ram": 39,
-    "disk": 29,
-    "status": "online",
-    "ip": "10.20.0.14",
-    "free": 73,
-    "full": false
-   },
-   {
-    "id": "vrsov-05",
-    "name": "Vrsov Srv Mikasa",
-    "provider": "Versova Cloud",
-    "region": "Santiago",
-    "capacity": 120,
-    "used": 88,
-    "cpu": 51,
-    "ram": 67,
-    "disk": 52,
-    "status": "online",
-    "ip": "10.20.0.15",
-    "free": 32,
-    "full": false
-   },
-   {
-    "id": "vrsov-06",
-    "name": "Vrsov Srv Mai",
-    "provider": "Versova Cloud",
-    "region": "Lima",
-    "capacity": 60,
-    "used": 12,
-    "cpu": 14,
-    "ram": 26,
-    "disk": 19,
-    "status": "maintenance",
-    "ip": "10.20.0.16",
-    "free": 48,
-    "full": false
-   }
-  ]
- },
- "/api/status": {
-  "bot": "VÉRSOVA",
-  "team": "◢禍◣ Versova ࿙☕࿚",
-  "version": "1.0",
-  "prefix": ".",
-  "whatsapp": "idle",
-  "me": null,
-  "since": "2026-10-12T08:10:27.356Z",
-  "lastError": null,
-  "qr": null,
-  "pairingCode": null,
-  "pairingExpiresAt": null,
-  "pairingReady": false,
-  "linked": false,
-  "uptimeSec": 4,
-  "connected": false
- },
- "/api/system": {
-  "hostname": "e2b.local",
-  "pid": 4765,
-  "platform": "linux 6.1.158+",
-  "arch": "x64",
-  "node": "v22.22.3",
-  "cpuModel": "Intel(R) Xeon(R) Processor @ 2.60GHz",
-  "cpuCores": 2,
-  "cpuSpeedMhz": 0,
-  "loadAvg": [
-   0.59,
-   0.43,
-   0.26
-  ],
-  "cpuPercent": 29.5,
-  "uptimeSec": 5,
-  "systemUptimeSec": 1270,
-  "memory": {
-   "totalGb": 3.85,
-   "usedGb": 0.38,
-   "freeGb": 3.47,
-   "usedPercent": 9.9
+    "googleEnabled": false,
+    "support": {
+      "whatsapp": "59896719709",
+      "email": "lyanvalentinmail@gmail.com"
+    }
   },
-  "disk": {
-   "totalGb": 20.3,
-   "freeGb": 19,
-   "usedGb": 1.4,
-   "usedPercent": 6.7
-  },
-  "dbLatencyMs": 0,
-  "memoryMode": true,
-  "time": "2026-10-12T08:10:32.386Z"
- },
- "/api/metrics": {
-  "ok": true,
-  "metrics": {
-   "groups": 2,
-   "members": 42,
-   "activeMembers": 25,
-   "users": 2,
-   "characters": 0,
-   "charactersOccupied": 0,
-   "pendingRequests": 0,
-   "warnings": 0,
-   "actions": 0,
-   "lastActivityAt": "2026-10-12T08:10:32.402Z"
-  },
-  "memoryMode": true
- },
- "/api/commands": {
-  "settings": {
-   "commandDecoration": "ㅤ୨ৎㅤ.",
-   "disabled": [],
-   "hidden": [],
-   "aliases": {}
-  },
-  "commands": [
-   {
-    "name": "reg",
-    "args": "<nombre.edad>",
-    "category": "Registro",
-    "description": "Registra tu cuenta en el team.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".reg <nombre.edad>"
-   },
-   {
-    "name": "unreg",
-    "args": "",
-    "category": "Registro",
-    "description": "Elimina tu registro y libera tu personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".unreg"
-   },
-   {
-    "name": "rol",
-    "args": "<personaje>",
-    "category": "Registro",
-    "description": "Solicita un personaje disponible.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".rol <personaje>"
-   },
-   {
-    "name": "roles",
-    "args": "",
-    "category": "Registro",
-    "description": "Muestra los personajes ocupados.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".roles"
-   },
-   {
-    "name": "ficha",
-    "args": "",
-    "category": "Registro",
-    "description": "Muestra tu información personal.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".ficha"
-   },
-   {
-    "name": "editar",
-    "args": "<nombre.edad>",
-    "category": "Registro",
-    "description": "Cambia tu nombre y edad.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".editar <nombre.edad>"
-   },
-   {
-    "name": "mirol",
-    "args": "",
-    "category": "Registro",
-    "description": "Muestra tu personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".mirol"
-   },
-   {
-    "name": "cambiarol",
-    "args": "<personaje>",
-    "category": "Registro",
-    "description": "Solicita cambiar tu personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".cambiarol <personaje>"
-   },
-   {
-    "name": "team",
-    "args": "",
-    "category": "Gestión",
-    "description": "Muestra la información del team.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".team"
-   },
-   {
-    "name": "miembros",
-    "args": "",
-    "category": "Gestión",
-    "description": "Lista a los integrantes del grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".miembros"
-   },
-   {
-    "name": "afk",
-    "args": "<motivo>",
-    "category": "Gestión",
-    "description": "Activa tu estado de ausencia.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".afk <motivo>"
-   },
-   {
-    "name": "inactivos",
-    "args": "",
-    "category": "Gestión",
-    "description": "Muestra integrantes inactivos.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".inactivos [días]"
-   },
-   {
-    "name": "reservar",
-    "args": "",
-    "category": "Personajes",
-    "description": "Reserva un personaje disponible.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".reservar <personaje>"
-   },
-   {
-    "name": "liberar",
-    "args": "",
-    "category": "Personajes",
-    "description": "Libera tu personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".liberar"
-   },
-   {
-    "name": "perfil",
-    "args": "<@usuario>",
-    "category": "Interacción",
-    "description": "Muestra el perfil de un integrante.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".perfil <@usuario>"
-   },
-   {
-    "name": "pareja",
-    "args": "<@usuario>",
-    "category": "Interacción",
-    "description": "Envía una propuesta de pareja.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".pareja <@usuario>"
-   },
-   {
-    "name": "rechazar",
-    "args": "",
-    "category": "Interacción",
-    "description": "Rechaza una propuesta de pareja.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".rechazar"
-   },
-   {
-    "name": "ship",
-    "args": "<@usuario> <@usuario>",
-    "category": "Interacción",
-    "description": "Calcula la compatibilidad entre dos personas.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".ship <@usuario> <@usuario>"
-   },
-   {
-    "name": "reglas",
-    "args": "",
-    "category": "Interacción",
-    "description": "Muestra las reglas del grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".reglas [set <texto>]"
-   },
-   {
-    "name": "admins",
-    "args": "",
-    "category": "Interacción",
-    "description": "Muestra a los administradores del grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".admins"
-   },
-   {
-    "name": "add",
-    "args": "",
-    "category": "Administración",
-    "description": "Añade un integrante al grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".add <número>"
-   },
-   {
-    "name": "expulsar",
-    "args": "",
-    "category": "Administración",
-    "description": "Expulsa a un integrante del grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".expulsar <@usuario> [motivo]"
-   },
-   {
-    "name": "ban",
-    "args": "",
-    "category": "Administración",
-    "description": "Bloquea a un integrante del bot.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".ban <@usuario> [motivo]"
-   },
-   {
-    "name": "unban",
-    "args": "",
-    "category": "Administración",
-    "description": "Retira el bloqueo de un integrante.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".unban <@usuario>"
-   },
-   {
-    "name": "resetrol",
-    "args": "",
-    "category": "Administración",
-    "description": "Libera el personaje de otro integrante.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".resetrol @usuario"
-   },
-   {
-    "name": "warn",
-    "args": "",
-    "category": "Administración",
-    "description": "Añade una advertencia.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".warn <@usuario> [motivo]"
-   },
-   {
-    "name": "unwarn",
-    "args": "",
-    "category": "Administración",
-    "description": "Retira una advertencia.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".unwarn <@usuario>"
-   },
-   {
-    "name": "acceptrol",
-    "args": "",
-    "category": "Administración",
-    "description": "Aprueba una solicitud de personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".acceptrol (respondiendo a la solicitud)"
-   },
-   {
-    "name": "denyrol",
-    "args": "",
-    "category": "Administración",
-    "description": "Rechaza una solicitud de personaje.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".denyrol (respondiendo a la solicitud)"
-   },
-   {
-    "name": "anuncio",
-    "args": "",
-    "category": "Administración",
-    "description": "Envía un anuncio al grupo.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".anuncio <texto>"
-   },
-   {
-    "name": "close",
-    "args": "",
-    "category": "Administración",
-    "description": "Cierra el grupo para participantes.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".close"
-   },
-   {
-    "name": "open",
-    "args": "",
-    "category": "Administración",
-    "description": "Abre el grupo para participantes.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".open"
-   },
-   {
-    "name": "aceptar",
-    "args": "",
-    "category": "Interacción",
-    "description": "Acepta una propuesta de pareja.",
-    "implemented": true,
-    "enabled": true,
-    "visible": true,
-    "inTemplate": true,
-    "aliases": [],
-    "usage": ".aceptar"
-   },
-   {
-    "name": "menu",
-    "args": "",
-    "category": "General",
-    "description": "Muestra el menú de comandos.",
-    "implemented": true,
-    "enabled": true,
-    "visible": false,
-    "inTemplate": false,
-    "aliases": [],
-    "usage": ".menu"
-   }
-  ]
- },
- "/api/menu": {
-  "text": "ㅤㅤㅤㅤۖㅤㅤㅤㅤㅤۖ\n\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤㅤㅤ𓆩ㅤ禊ㅤ𓆪\n\nㅤㅤㅤ𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨\n\nㅤㅤㅤㅤ𝐁𝗈𝗍 𝗌𝗒𝗌𝗍𝖾𝗆\n\nㅤ➢ㅤ◢𝟔𝟔 ; 𝟕𝟕◣ㅤ禍...ㅤ𝐁𝐎𝐓𝐒\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀ㅤ◌\n\nㅤㅤㅤㅤ𓆩 ☕ 𓆪\nㅤㅤㅤ𝓜𝓮𝓷𝓾 𝓭𝓮 𝓬𝓸𝓶𝓪𝓷𝓭𝓸𝓼\nㅤㅤㅤㅤ( ᵕ ᴗ ᵕ )♡\n\nㅤㅤ࿙ׄ࿚᮫᜔۬፟֟࿙ׄ࿚\n\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐅𝐎𝐑𝐌𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝖻𝗈𝗍 𝗂𝗇𝖿𝗈𝗋𝗆𝖺𝗍𝗂𝗈𝗇 𓂃\n\nㅤ𖦹ㅤ𝖭𝖺𝗆𝖾ㅤ⁙ㅤᴠᴇ́ʀsᴏᴠᴀ\nㅤ𖦹ㅤ𝖳𝖾𝖺𝗆ㅤ⁙    ◢禍◣ 𝐕𝖊𝖗𝖘𝖔𝐯𝖆 ࿙☕࿚\nㅤ𖦹ㅤ𝖯𝗋𝖾𝖿𝗂𝗑ㅤ⁙ㅤ.\nㅤ𖦹ㅤ𝖲𝗍𝖺𝗍𝗎𝗌ㅤ⁙ㅤᴏɴʟɪɴᴇ\nㅤ𖦹ㅤ𝖵𝖾𝗋𝗌𝗂𝗈𝗇ㅤ⁙ㅤ𝟷.𝟶\n\nㅤㅤㅤ(˶ᵔ ᵕ ᵔ˶) .ᐟ\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟏 ◣\n⸸ㅤ׃ㅤ ~𝕽𝐄𝐆𝐈𝐒𝐓𝐑𝐎~ ㅤ׃\nㅤㅤ𓂃 𝗆𝖾𝗆𝖻𝖾𝗋 𝗋𝖾𝗀𝗂𝗌𝗍𝗋𝖺𝗍𝗂𝗈𝗇 𓂃\nㅤㅤㅤ(｡•̀ᴗ-)✧\n\nㅤ୨ৎㅤ.reg <nombre.edad>\nㅤ୨ৎㅤ.unreg\nㅤ୨ৎㅤ.rol <personaje>\n    ୨ৎㅤ.roles \nㅤ୨ৎㅤ.ficha\nㅤ୨ৎㅤ.editar <nombre.edad>\nㅤ୨ৎㅤ.mirol\nㅤ୨ৎㅤ.cambiarol <personaje>\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᴗ͈ˬᴗ͈)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟐 ◣\n𖤐ㅤ׃ㅤ ~𝕲𝐄𝐒𝐓𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗍𝖾𝖺𝗆 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𓂃\nㅤㅤㅤ(๑˃̵ᴗ˂̵)و\n\nㅤ୨ৎㅤ.team\nㅤ୨ৎㅤ.miembros\nㅤ୨ৎㅤ.afk <motivo>\nㅤ୨ৎㅤ.inactivos\n\nㅤㅤ࿙🥢࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(˶˃ ᵕ ˂˶)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟑 ◣\n☕ㅤ׃ㅤ ~𝕻𝐄𝐑𝐒𝐎𝐍𝐀𝐉𝐄𝐒~ ㅤ׃\nㅤㅤ𓂃 𝗋𝗈𝗅𝖾 𝗌𝗒𝗌𝗍𝖾𝗆 𓂃\nㅤㅤㅤ( ੭ ˙ᗜ˙ )੭\n\nㅤ୨ৎㅤ.reservar\nㅤ୨ৎㅤ.liberar\n\nㅤㅤ࿙𖤐࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᵕ ᴗ ᵕ )ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟒 ◣\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐓𝐄𝐑𝐀𝐂𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗈𝖼𝗂𝖺𝗅 & 𝖿𝗎𝗇 𓂃\nㅤㅤㅤ(づ๑•ᴗ•๑)づ♡\n\nㅤ୨ৎㅤ.perfil <@usuario>\nㅤ୨ৎㅤ.pareja <@usuario>\nㅤ୨ৎㅤ.rechazar\nㅤ୨ৎㅤ.ship <@usuario> <@usuario>\nㅤ୨ৎㅤ.reglas\nㅤ୨ৎㅤ.admins\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(っ˘ω˘ς)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟓 ◣\n⛓️ㅤ׃ㅤ ~𝕬𝐃𝐌𝐈𝐍𝐈𝐒𝐓𝐑𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗍𝖺𝖿𝖿 𝗈𝗇𝗅𝗒 𓂃\nㅤㅤㅤ( •̀ - •́ )✧\n\nㅤ୨ৎㅤ.add\nㅤ୨ৎㅤ.expulsar\nㅤ୨ৎㅤ.ban\nㅤ୨ৎㅤ.unban\nㅤ୨ৎㅤ.resetrol\nㅤ୨ৎㅤ.warn\nㅤ୨ৎㅤ.unwarn\nㅤ୨ৎㅤ.acceptrol\nㅤ୨ৎㅤ.denyrol\nㅤ୨ৎㅤ.anuncio\nㅤ୨ৎㅤ.close\nㅤ୨ৎㅤ.open\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ𓆩ㅤ禍ㅤ𓆪\nㅤㅤ ~𝕰𝐍𝐃 𝐎𝐅 𝐌𝐄𝐍𝐔~\nㅤㅤㅤ( ᴗ͈ˬᴗ͈) ♡\n\nㅤㅤ𝖸𝗈𝗎𝗋 𝗋𝗈𝗅𝖾 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗂𝖽𝖾𝗇𝗍𝗂𝗍𝗒.\nㅤㅤ𝖸𝗈𝗎\n\n𝗋 𝗍𝖾𝖺𝗆 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗌𝗍𝗈𝗋𝗒.\n\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀\nㅤㅤㅤ𝖾𝗌𝗍.ㅤ𝟐𝟎𝟐𝟔\n\nㅤㅤ࿙ׄ࿚ㅤ𓆩 ☕ 𝟔𝟔 ; 𝟕𝟕𓆪ㅤ࿙ׄ࿚",
-  "hasBannerImage": false,
-  "imageUrl": null
- },
- "/api/auth/me": {
-  "user": {
-   "id": 2,
-   "email": "walk@versova.dev",
-   "name": "Walk",
-   "picture": null,
-   "plan": "free",
-   "planInfo": {
-    "id": "free",
-    "name": "Free",
-    "priceUsd": 0,
-    "spacePerBotGb": 1,
-    "maxBots": 3,
-    "color": "free"
-   },
-   "extraSpaceGb": 0,
-   "handle": null,
-   "avatarUrl": null,
-   "theme": "dark",
-   "createdAt": "2026-10-12T08:10:32.239Z"
-  },
-  "googleEnabled": false,
-  "demoLogin": true
- },
- "/api/subbots": {
-  "bots": [
-   {
-    "id": 2,
-    "user_id": 2,
-    "name": "Bot Demo",
-    "tier": "free",
-    "token_code": null,
-    "phone": "59899111222",
-    "description": "",
-    "status": "offline",
-    "extra_gb": 0,
-    "bot_type": "versova",
-    "display_name": "Bot Demo",
-    "bot_prefix": ".",
-    "banner_text": "",
-    "short_name": "Bot Demo",
-    "long_name": "Bot Demo",
-    "currency": "",
-    "owner_number": "",
-    "owner_hidden": true,
-    "bot_link": "https://127.0.0.1:3000/cmds",
-    "channel_url": "",
-    "prefixes": [
-     "."
+  "/api/catalog": {
+    "bots": [
+      {
+        "slug": "versova",
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "category": "Team & Rol",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#8b5cf6",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 33 comandos con prefijo propio"
+        ],
+        "commands": [
+          "menu",
+          "reg",
+          "unreg",
+          "rol",
+          "roles",
+          "ficha",
+          "editar",
+          "mirol",
+          "cambiarol",
+          "reservar",
+          "liberar"
+        ],
+        "popularity": 100,
+        "featured": true,
+        "active": true,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 1,
+        "owned": true,
+        "subbotId": 2,
+        "priceCoins": 0,
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "implemented": true,
+        "folder": "src/commands",
+        "botType": "versova",
+        "totalCommands": 34,
+        "ownCommands": 0
+      },
+      {
+        "slug": "raiden",
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "description": "Bot de WhatsApp en Node.js + Baileys inspirado en Raiden (Genshin Impact). Código abierto en GitHub.",
+        "category": "Juegos",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#6366f1",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify, TikTok y letras",
+          "Stickers: creación, estilo BRAT y Sticker.ly",
+          "Más de 40 comandos de reacciones anime",
+          "IA conversacional y generación de logos"
+        ],
+        "commands": [
+          "menu",
+          "ping",
+          "download",
+          "sticker",
+          "marry",
+          "antilink"
+        ],
+        "popularity": 86,
+        "featured": true,
+        "active": false,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 0,
+        "owned": false,
+        "subbotId": null,
+        "priceCoins": 0,
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "implemented": true,
+        "folder": "bots/raiden-wabot",
+        "botType": "raiden-wabot",
+        "totalCommands": 103,
+        "ownCommands": 71
+      },
+      {
+        "slug": "yae-miku",
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "description": "Bot de WhatsApp abierto en GitHub (MIT): matrimonio/divorcio, antilink y sub-bots persistentes.",
+        "category": "Juegos",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#22d3ee",
+        "features": [
+          "Matrimonio/divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Moderación de grupos y comandos sociales"
+        ],
+        "commands": [
+          "menu",
+          "marry",
+          "divorce",
+          "antilink",
+          "profile",
+          "config"
+        ],
+        "popularity": 74,
+        "featured": true,
+        "active": false,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 0,
+        "owned": false,
+        "subbotId": null,
+        "priceCoins": 0,
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "implemented": true,
+        "folder": "bots/yae-miku-bot",
+        "botType": "yae-miku-bot",
+        "totalCommands": 41,
+        "ownCommands": 8
+      }
     ],
-    "banner_url": "",
-    "username": "botdemo",
-    "status_info": "online",
-    "instance_type": "subbot",
-    "server_id": "vrsov-02",
-    "server_name": "Vrsov Srv Kirito",
-    "pairing_code": null,
-    "pairing_expires_at": null,
-    "linked_at": null,
-    "synced_at": null,
-    "uptime_seconds": 0,
-    "avatar_url": "",
-    "catalog_slug": "versova",
-    "created_at": "2026-10-12T08:10:32.254Z",
-    "updated_at": "2026-10-12T08:10:32.254Z",
-    "baseSpaceGb": 1,
-    "totalSpaceGb": 1,
-    "groups": [
-     {
-      "id": 2,
-      "subbot_id": 2,
-      "group_jid": "pending-2@g.us",
-      "name": "Sin grupos todavía",
-      "members": 0,
-      "active": false,
-      "updated_at": "2026-10-12T08:10:32.254Z"
-     }
+    "categories": [
+      "Team & Rol",
+      "Juegos"
+    ],
+    "owned": [],
+    "activeBot": "versova"
+  },
+  "/api/servers": {
+    "servers": [
+      {
+        "id": "vrsov-01",
+        "name": "Vrsov Srv Asuna",
+        "provider": "Versova Cloud",
+        "region": "Asunción",
+        "capacity": 90,
+        "used": 80,
+        "cpu": 34,
+        "ram": 58,
+        "disk": 41,
+        "status": "online",
+        "ip": "10.20.0.11",
+        "free": 10,
+        "full": false
+      },
+      {
+        "id": "vrsov-02",
+        "name": "Vrsov Srv Kirito",
+        "provider": "Versova Cloud",
+        "region": "Buenos Aires",
+        "capacity": 90,
+        "used": 61,
+        "cpu": 27,
+        "ram": 46,
+        "disk": 38,
+        "status": "online",
+        "ip": "10.20.0.12",
+        "free": 29,
+        "full": false
+      },
+      {
+        "id": "vrsov-03",
+        "name": "Vrsov Srv Rem",
+        "provider": "Versova Cloud",
+        "region": "Montevideo",
+        "capacity": 60,
+        "used": 60,
+        "cpu": 72,
+        "ram": 81,
+        "disk": 63,
+        "status": "full",
+        "ip": "10.20.0.13",
+        "free": 0,
+        "full": true
+      },
+      {
+        "id": "vrsov-04",
+        "name": "Vrsov Srv Zero Two",
+        "provider": "Versova Cloud",
+        "region": "Bogotá",
+        "capacity": 120,
+        "used": 47,
+        "cpu": 22,
+        "ram": 39,
+        "disk": 29,
+        "status": "online",
+        "ip": "10.20.0.14",
+        "free": 73,
+        "full": false
+      },
+      {
+        "id": "vrsov-05",
+        "name": "Vrsov Srv Mikasa",
+        "provider": "Versova Cloud",
+        "region": "Santiago",
+        "capacity": 120,
+        "used": 88,
+        "cpu": 51,
+        "ram": 67,
+        "disk": 52,
+        "status": "online",
+        "ip": "10.20.0.15",
+        "free": 32,
+        "full": false
+      },
+      {
+        "id": "vrsov-06",
+        "name": "Vrsov Srv Mai",
+        "provider": "Versova Cloud",
+        "region": "Lima",
+        "capacity": 60,
+        "used": 12,
+        "cpu": 14,
+        "ram": 26,
+        "disk": 19,
+        "status": "maintenance",
+        "ip": "10.20.0.16",
+        "free": 48,
+        "full": false
+      }
     ]
-   }
-  ],
-  "plan": {
-   "id": "free",
-   "name": "Free",
-   "priceUsd": 0,
-   "spacePerBotGb": 1,
-   "maxBots": 3,
-   "color": "free"
   },
-  "tiers": {
-   "free": {
-    "name": "Free",
-    "spaceGb": 1,
-    "requiresToken": false,
-    "priceUsd": 0
-   },
-   "premium": {
-    "name": "Premium",
-    "spaceGb": 2,
-    "requiresToken": true,
-    "priceUsd": 1
-   },
-   "vip": {
-    "name": "VIP",
-    "spaceGb": 4,
-    "requiresToken": true,
-    "priceUsd": 5
-   }
+  "/api/status": {
+    "bot": "VÉRSOVA",
+    "team": "◢禍◣ Versova ࿙☕࿚",
+    "version": "1.0",
+    "prefix": ".",
+    "whatsapp": "idle",
+    "me": null,
+    "since": "2026-10-12T08:10:27.356Z",
+    "lastError": null,
+    "qr": null,
+    "pairingCode": null,
+    "pairingExpiresAt": null,
+    "pairingReady": false,
+    "linked": false,
+    "uptimeSec": 4,
+    "connected": false
   },
-  "botTypes": [
-   {
-    "id": "versova",
-    "name": "VÉRSOVA",
-    "description": "Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.",
-    "recommended": true
-   },
-   {
-    "id": "moderador",
-    "name": "Moderador Pro",
-    "description": "Antilink, antispam y administración automática del grupo.",
-    "recommended": false
-   },
-   {
-    "id": "economia",
-    "name": "Economía V-Coin",
-    "description": "Monedas, tienda interna y ranking para tu grupo.",
-    "recommended": false
-   },
-   {
-    "id": "ia",
-    "name": "IA Assistant",
-    "description": "Respuestas con inteligencia artificial dentro del grupo.",
-    "recommended": false
-   },
-   {
-    "id": "musica",
-    "name": "Música",
-    "description": "Reproductor de música en grupos.",
-    "recommended": false
-   },
-   {
-    "id": "juegos",
-    "name": "Juegos",
-    "description": "Minijuegos, trivia y economía.",
-    "recommended": false
-   }
-  ],
-  "instances": [
-   {
-    "id": "subbot",
-    "name": "SubBot Gratis",
-    "description": "Instancia gratuita básica",
-    "tier": "free",
-    "requiresToken": false,
-    "spaceGb": 1,
-    "emoji": "🤖"
-   },
-   {
-    "id": "principal",
-    "name": "Principal",
-    "description": "Requiere token de moderador",
-    "tier": "premium",
-    "requiresToken": true,
-    "spaceGb": 2,
-    "emoji": "👑"
-   },
-   {
-    "id": "premium",
-    "name": "Premium",
-    "description": "Beneficios exclusivos",
-    "tier": "premium",
-    "requiresToken": true,
-    "spaceGb": 2,
-    "emoji": "💎"
-   },
-   {
-    "id": "vip",
-    "name": "VIP",
-    "description": "Todo ilimitado y prioridad",
-    "tier": "vip",
-    "requiresToken": true,
-    "spaceGb": 4,
-    "emoji": "🚀"
-   }
-  ],
-  "catalog": [
-   {
-    "slug": "versova",
-    "name": "VÉRSOVA Rol",
-    "emoji": "👑",
-    "tagline": "El bot completo para teams de rol",
-    "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
-    "category": "Team & Rol",
-    "pricing": "free",
-    "price_usd": "0.00",
-    "price_coins": 0,
-    "badge": "GRATIS",
-    "accent": "#8b5cf6",
-    "features": [
-     "Registro y fichas con edad y personaje",
-     "Solicitudes de personaje con aprobación",
-     "Parejas, ships y perfiles sociales",
-     "Advertencias, bans y anuncios",
-     "Menú de 33 comandos con prefijo propio"
+  "/api/system": {
+    "hostname": "e2b.local",
+    "pid": 4765,
+    "platform": "linux 6.1.158+",
+    "arch": "x64",
+    "node": "v22.22.3",
+    "cpuModel": "Intel(R) Xeon(R) Processor @ 2.60GHz",
+    "cpuCores": 2,
+    "cpuSpeedMhz": 0,
+    "loadAvg": [
+      0.59,
+      0.43,
+      0.26
     ],
+    "cpuPercent": 29.5,
+    "uptimeSec": 5,
+    "systemUptimeSec": 1270,
+    "memory": {
+      "totalGb": 3.85,
+      "usedGb": 0.38,
+      "freeGb": 3.47,
+      "usedPercent": 9.9
+    },
+    "disk": {
+      "totalGb": 20.3,
+      "freeGb": 19,
+      "usedGb": 1.4,
+      "usedPercent": 6.7
+    },
+    "dbLatencyMs": 0,
+    "memoryMode": true,
+    "time": "2026-10-12T08:10:32.386Z"
+  },
+  "/api/metrics": {
+    "ok": true,
+    "metrics": {
+      "groups": 2,
+      "members": 42,
+      "activeMembers": 25,
+      "users": 2,
+      "characters": 0,
+      "charactersOccupied": 0,
+      "pendingRequests": 0,
+      "warnings": 0,
+      "actions": 0,
+      "lastActivityAt": "2026-10-12T08:10:32.402Z"
+    },
+    "memoryMode": true
+  },
+  "/api/commands": {
+    "settings": {
+      "commandDecoration": "ㅤ୨ৎㅤ.",
+      "disabled": [],
+      "hidden": [],
+      "aliases": {}
+    },
     "commands": [
-     "menu",
-     "reg",
-     "unreg",
-     "rol",
-     "roles",
-     "ficha",
-     "editar",
-     "mirol",
-     "cambiarol",
-     "reservar",
-     "liberar"
+      {
+        "name": "reg",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Registra tu cuenta en el team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reg <nombre.edad>"
+      },
+      {
+        "name": "unreg",
+        "args": "",
+        "category": "Registro",
+        "description": "Elimina tu registro y libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unreg"
+      },
+      {
+        "name": "rol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rol <personaje>"
+      },
+      {
+        "name": "roles",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra los personajes ocupados.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".roles"
+      },
+      {
+        "name": "ficha",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu información personal.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ficha"
+      },
+      {
+        "name": "editar",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Cambia tu nombre y edad.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".editar <nombre.edad>"
+      },
+      {
+        "name": "mirol",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".mirol"
+      },
+      {
+        "name": "cambiarol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita cambiar tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".cambiarol <personaje>"
+      },
+      {
+        "name": "team",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra la información del team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".team"
+      },
+      {
+        "name": "miembros",
+        "args": "",
+        "category": "Gestión",
+        "description": "Lista a los integrantes del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".miembros"
+      },
+      {
+        "name": "afk",
+        "args": "<motivo>",
+        "category": "Gestión",
+        "description": "Activa tu estado de ausencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".afk <motivo>"
+      },
+      {
+        "name": "inactivos",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra integrantes inactivos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".inactivos [días]"
+      },
+      {
+        "name": "reservar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Reserva un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reservar <personaje>"
+      },
+      {
+        "name": "liberar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".liberar"
+      },
+      {
+        "name": "perfil",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Muestra el perfil de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".perfil <@usuario>"
+      },
+      {
+        "name": "pareja",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Envía una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".pareja <@usuario>"
+      },
+      {
+        "name": "rechazar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Rechaza una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rechazar"
+      },
+      {
+        "name": "ship",
+        "args": "<@usuario> <@usuario>",
+        "category": "Interacción",
+        "description": "Calcula la compatibilidad entre dos personas.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ship <@usuario> <@usuario>"
+      },
+      {
+        "name": "reglas",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra las reglas del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reglas [set <texto>]"
+      },
+      {
+        "name": "admins",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra a los administradores del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".admins"
+      },
+      {
+        "name": "add",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade un integrante al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".add <número>"
+      },
+      {
+        "name": "expulsar",
+        "args": "",
+        "category": "Administración",
+        "description": "Expulsa a un integrante del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".expulsar <@usuario> [motivo]"
+      },
+      {
+        "name": "ban",
+        "args": "",
+        "category": "Administración",
+        "description": "Bloquea a un integrante del bot.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ban <@usuario> [motivo]"
+      },
+      {
+        "name": "unban",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira el bloqueo de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unban <@usuario>"
+      },
+      {
+        "name": "resetrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Libera el personaje de otro integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".resetrol @usuario"
+      },
+      {
+        "name": "warn",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".warn <@usuario> [motivo]"
+      },
+      {
+        "name": "unwarn",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unwarn <@usuario>"
+      },
+      {
+        "name": "acceptrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Aprueba una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".acceptrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "denyrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Rechaza una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".denyrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "anuncio",
+        "args": "",
+        "category": "Administración",
+        "description": "Envía un anuncio al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".anuncio <texto>"
+      },
+      {
+        "name": "close",
+        "args": "",
+        "category": "Administración",
+        "description": "Cierra el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".close"
+      },
+      {
+        "name": "open",
+        "args": "",
+        "category": "Administración",
+        "description": "Abre el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".open"
+      },
+      {
+        "name": "aceptar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Acepta una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".aceptar"
+      },
+      {
+        "name": "menu",
+        "args": "",
+        "category": "General",
+        "description": "Muestra el menú de comandos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".menu"
+      }
     ],
-    "popularity": 100,
-    "featured": true,
-    "active": true,
-    "sort": 1
-   }
-  ],
-  "uses": [
-   {
-    "id": 2,
-    "user_id": 2,
-    "bot_slug": "moderador",
-    "subbot_id": null,
-    "paid_coins": 0,
-    "created_at": "2026-10-12T08:10:32.285Z"
-   }
-  ],
-  "usage": {
-   "botsUsed": 1,
-   "botsMax": 3,
-   "extraSpaceGb": 0,
-   "extraSpaceFree": 0
+    "bot": "versova",
+    "bots": [
+      {
+        "slug": "versova",
+        "id": "versova",
+        "aliases": [
+          "versova",
+          "versova-rol",
+          "principal"
+        ],
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "folder": "src/commands",
+        "prefix": ".",
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "commands": 34,
+        "ownCommands": 34,
+        "totalCommands": 34,
+        "active": true,
+        "recommended": true
+      },
+      {
+        "slug": "raiden-wabot",
+        "id": "raiden-wabot",
+        "aliases": [
+          "raiden",
+          "raiden-wabot",
+          "raidenwabot",
+          "raiden-wabot-bot"
+        ],
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "folder": "bots/raiden-wabot",
+        "prefix": ".",
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "commands": 103,
+        "ownCommands": 71,
+        "totalCommands": 103,
+        "active": false,
+        "recommended": false
+      },
+      {
+        "slug": "yae-miku-bot",
+        "id": "yae-miku-bot",
+        "aliases": [
+          "yae-miku",
+          "yae",
+          "yaemiku",
+          "yae-miku-bot",
+          "miku"
+        ],
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "folder": "bots/yae-miku-bot",
+        "prefix": ".",
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "commands": 41,
+        "ownCommands": 8,
+        "totalCommands": 41,
+        "active": false,
+        "recommended": false
+      }
+    ]
   },
-  "tokens": []
- },
- "/api/store/catalog": {
-  "items": [
-   {
-    "id": "token-premium",
-    "kind": "token",
-    "name": "Token Premium",
-    "description": "Canjeable al crear un sub-bot Premium (2 GB). Se entrega al instante tras la compra.",
-    "priceUsd": 0,
-    "available": true,
-    "tier": "premium",
-    "spaceGb": 2,
-    "badge": "GRATIS"
-   },
-   {
-    "id": "token-vip",
-    "kind": "token",
-    "name": "Token VIP",
-    "description": "Canjeable al crear un sub-bot VIP (4 GB). Se entrega al instante tras la compra.",
-    "priceUsd": 0,
-    "available": true,
-    "tier": "vip",
-    "spaceGb": 4,
-    "badge": "GRATIS"
-   },
-   {
-    "id": "space-1gb",
-    "kind": "space",
-    "name": "1 GB extra",
-    "description": "Espacio adicional en el pool de tu cuenta. Repártelo entre tus sub-bots como quieras.",
-    "priceUsd": 0,
-    "available": true,
-    "spaceGb": 1
-   },
-   {
-    "id": "plan-premium",
-    "kind": "plan",
-    "name": "Plan Premium",
-    "description": "Hasta 5 sub-bots con 2 GB por bot. Actívalo al instante.",
-    "priceUsd": 0,
-    "available": true,
-    "plan": "premium"
-   },
-   {
-    "id": "plan-vip",
-    "kind": "plan",
-    "name": "Plan VIP",
-    "description": "Hasta 10 sub-bots con 5 GB por bot. Actívalo al instante.",
-    "priceUsd": 0,
-    "available": true,
-    "plan": "vip",
-    "badge": "TOP"
-   }
-  ],
-  "plans": {
-   "free": {
-    "id": "free",
-    "name": "Free",
-    "priceUsd": 0,
-    "spacePerBotGb": 1,
-    "maxBots": 3,
-    "color": "free"
-   },
-   "premium": {
-    "id": "premium",
-    "name": "Premium",
-    "priceUsd": 0,
-    "spacePerBotGb": 2,
-    "maxBots": 5,
-    "color": "premium"
-   },
-   "vip": {
-    "id": "vip",
-    "name": "VIP",
-    "priceUsd": 0,
-    "spacePerBotGb": 5,
-    "maxBots": 10,
-    "color": "vip"
-   }
+  "/api/menu": {
+    "text": "ㅤㅤㅤㅤۖㅤㅤㅤㅤㅤۖ\n\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤㅤㅤ𓆩ㅤ禊ㅤ𓆪\n\nㅤㅤㅤ𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨\n\nㅤㅤㅤㅤ𝐁𝗈𝗍 𝗌𝗒𝗌𝗍𝖾𝗆\n\nㅤ➢ㅤ◢𝟔𝟔 ; 𝟕𝟕◣ㅤ禍...ㅤ𝐁𝐎𝐓𝐒\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀ㅤ◌\n\nㅤㅤㅤㅤ𓆩 ☕ 𓆪\nㅤㅤㅤ𝓜𝓮𝓷𝓾 𝓭𝓮 𝓬𝓸𝓶𝓪𝓷𝓭𝓸𝓼\nㅤㅤㅤㅤ( ᵕ ᴗ ᵕ )♡\n\nㅤㅤ࿙ׄ࿚᮫᜔۬፟֟࿙ׄ࿚\n\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐅𝐎𝐑𝐌𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝖻𝗈𝗍 𝗂𝗇𝖿𝗈𝗋𝗆𝖺𝗍𝗂𝗈𝗇 𓂃\n\nㅤ𖦹ㅤ𝖭𝖺𝗆𝖾ㅤ⁙ㅤᴠᴇ́ʀsᴏᴠᴀ\nㅤ𖦹ㅤ𝖳𝖾𝖺𝗆ㅤ⁙    ◢禍◣ 𝐕𝖊𝖗𝖘𝖔𝐯𝖆 ࿙☕࿚\nㅤ𖦹ㅤ𝖯𝗋𝖾𝖿𝗂𝗑ㅤ⁙ㅤ.\nㅤ𖦹ㅤ𝖲𝗍𝖺𝗍𝗎𝗌ㅤ⁙ㅤᴏɴʟɪɴᴇ\nㅤ𖦹ㅤ𝖵𝖾𝗋𝗌𝗂𝗈𝗇ㅤ⁙ㅤ𝟷.𝟶\n\nㅤㅤㅤ(˶ᵔ ᵕ ᵔ˶) .ᐟ\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟏 ◣\n⸸ㅤ׃ㅤ ~𝕽𝐄𝐆𝐈𝐒𝐓𝐑𝐎~ ㅤ׃\nㅤㅤ𓂃 𝗆𝖾𝗆𝖻𝖾𝗋 𝗋𝖾𝗀𝗂𝗌𝗍𝗋𝖺𝗍𝗂𝗈𝗇 𓂃\nㅤㅤㅤ(｡•̀ᴗ-)✧\n\nㅤ୨ৎㅤ.reg <nombre.edad>\nㅤ୨ৎㅤ.unreg\nㅤ୨ৎㅤ.rol <personaje>\n    ୨ৎㅤ.roles \nㅤ୨ৎㅤ.ficha\nㅤ୨ৎㅤ.editar <nombre.edad>\nㅤ୨ৎㅤ.mirol\nㅤ୨ৎㅤ.cambiarol <personaje>\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᴗ͈ˬᴗ͈)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟐 ◣\n𖤐ㅤ׃ㅤ ~𝕲𝐄𝐒𝐓𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗍𝖾𝖺𝗆 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𓂃\nㅤㅤㅤ(๑˃̵ᴗ˂̵)و\n\nㅤ୨ৎㅤ.team\nㅤ୨ৎㅤ.miembros\nㅤ୨ৎㅤ.afk <motivo>\nㅤ୨ৎㅤ.inactivos\n\nㅤㅤ࿙🥢࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(˶˃ ᵕ ˂˶)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟑 ◣\n☕ㅤ׃ㅤ ~𝕻𝐄𝐑𝐒𝐎𝐍𝐀𝐉𝐄𝐒~ ㅤ׃\nㅤㅤ𓂃 𝗋𝗈𝗅𝖾 𝗌𝗒𝗌𝗍𝖾𝗆 𓂃\nㅤㅤㅤ( ੭ ˙ᗜ˙ )੭\n\nㅤ୨ৎㅤ.reservar\nㅤ୨ৎㅤ.liberar\n\nㅤㅤ࿙𖤐࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ( ᵕ ᴗ ᵕ )ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟒 ◣\n🥢ㅤ׃ㅤ ~𝕴𝐍𝐓𝐄𝐑𝐀𝐂𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗈𝖼𝗂𝖺𝗅 & 𝖿𝗎𝗇 𓂃\nㅤㅤㅤ(づ๑•ᴗ•๑)づ♡\n\nㅤ୨ৎㅤ.perfil <@usuario>\nㅤ୨ৎㅤ.pareja <@usuario>\nㅤ୨ৎㅤ.rechazar\nㅤ୨ৎㅤ.ship <@usuario> <@usuario>\nㅤ୨ৎㅤ.reglas\nㅤ୨ৎㅤ.admins\n\nㅤㅤ࿙☕࿚ㅤ𓆩 ♱ 𓆪\nㅤㅤㅤ(っ˘ω˘ς)ㅤ⁙\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ◢ 𝟎𝟓 ◣\n⛓️ㅤ׃ㅤ ~𝕬𝐃𝐌𝐈𝐍𝐈𝐒𝐓𝐑𝐀𝐂𝐈𝐎𝐍~ ㅤ׃\nㅤㅤ𓂃 𝗌𝗍𝖺𝖿𝖿 𝗈𝗇𝗅𝗒 𓂃\nㅤㅤㅤ( •̀ - •́ )✧\n\nㅤ୨ৎㅤ.add\nㅤ୨ৎㅤ.expulsar\nㅤ୨ৎㅤ.ban\nㅤ୨ৎㅤ.unban\nㅤ୨ৎㅤ.resetrol\nㅤ୨ৎㅤ.warn\nㅤ୨ৎㅤ.unwarn\nㅤ୨ৎㅤ.acceptrol\nㅤ୨ৎㅤ.denyrol\nㅤ୨ৎㅤ.anuncio\nㅤ୨ৎㅤ.close\nㅤ୨ৎㅤ.open\nㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙\n\nㅤㅤㅤ𓆩ㅤ禍ㅤ𓆪\nㅤㅤ ~𝕰𝐍𝐃 𝐎𝐅 𝐌𝐄𝐍𝐔~\nㅤㅤㅤ( ᴗ͈ˬᴗ͈) ♡\n\nㅤㅤ𝖸𝗈𝗎𝗋 𝗋𝗈𝗅𝖾 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗂𝖽𝖾𝗇𝗍𝗂𝗍𝗒.\nㅤㅤ𝖸𝗈𝗎\n\n𝗋 𝗍𝖾𝖺𝗆 𝗂𝗌 𝗒𝗈𝗎𝗋 𝗌𝗍𝗈𝗋𝗒.\n\nㅤ⌞ㅤ≪⁹⁹ㅤ⁙ㅤ𝐕𝐄́𝐑𝐒𝐎𝐕𝐀\nㅤㅤㅤ𝖾𝗌𝗍.ㅤ𝟐𝟎𝟐𝟔\n\nㅤㅤ࿙ׄ࿚ㅤ𓆩 ☕ 𝟔𝟔 ; 𝟕𝟕𓆪ㅤ࿙ׄ࿚",
+    "hasBannerImage": false,
+    "imageUrl": null,
+    "bot": "versova"
   },
-  "tiers": {
-   "free": {
-    "name": "Free",
-    "spaceGb": 1,
-    "requiresToken": false,
-    "priceUsd": 0
-   },
-   "premium": {
-    "name": "Premium",
-    "spaceGb": 2,
-    "requiresToken": true,
-    "priceUsd": 0
-   },
-   "vip": {
-    "name": "VIP",
-    "spaceGb": 4,
-    "requiresToken": true,
-    "priceUsd": 0
-   }
+  "/api/auth/me": {
+    "user": {
+      "id": 2,
+      "email": "walk@versova.dev",
+      "name": "Walk",
+      "picture": null,
+      "plan": "free",
+      "planInfo": {
+        "id": "free",
+        "name": "Free",
+        "priceUsd": 0,
+        "spacePerBotGb": 1,
+        "maxBots": 3,
+        "color": "free"
+      },
+      "extraSpaceGb": 0,
+      "handle": null,
+      "avatarUrl": null,
+      "theme": "dark",
+      "createdAt": "2026-10-12T08:10:32.239Z"
+    },
+    "googleEnabled": false,
+    "demoLogin": true
   },
-  "user": {
-   "id": 2,
-   "email": "walk@versova.dev",
-   "name": "Walk",
-   "picture": null,
-   "plan": "free",
-   "planInfo": {
-    "id": "free",
-    "name": "Free",
-    "priceUsd": 0,
-    "spacePerBotGb": 1,
-    "maxBots": 3,
-    "color": "free"
-   },
-   "extraSpaceGb": 0,
-   "handle": null,
-   "avatarUrl": null,
-   "theme": "dark",
-   "createdAt": "2026-10-12T08:10:32.239Z"
+  "/api/subbots": {
+    "bots": [
+      {
+        "id": 2,
+        "user_id": 2,
+        "name": "Bot Demo",
+        "tier": "free",
+        "token_code": null,
+        "phone": "59899111222",
+        "description": "",
+        "status": "offline",
+        "extra_gb": 0,
+        "bot_type": "versova",
+        "display_name": "Bot Demo",
+        "bot_prefix": ".",
+        "banner_text": "",
+        "short_name": "Bot Demo",
+        "long_name": "Bot Demo",
+        "currency": "",
+        "owner_number": "",
+        "owner_hidden": true,
+        "bot_link": "https://127.0.0.1:3000/cmds",
+        "channel_url": "",
+        "prefixes": [
+          "."
+        ],
+        "banner_url": "",
+        "username": "botdemo",
+        "status_info": "online",
+        "instance_type": "subbot",
+        "server_id": "vrsov-02",
+        "server_name": "Vrsov Srv Kirito",
+        "pairing_code": null,
+        "pairing_expires_at": null,
+        "linked_at": null,
+        "synced_at": null,
+        "uptime_seconds": 0,
+        "avatar_url": "",
+        "catalog_slug": "versova",
+        "created_at": "2026-10-12T08:10:32.254Z",
+        "updated_at": "2026-10-12T08:10:32.254Z",
+        "baseSpaceGb": 1,
+        "totalSpaceGb": 1,
+        "groups": [
+          {
+            "id": 2,
+            "subbot_id": 2,
+            "group_jid": "pending-2@g.us",
+            "name": "Sin grupos todavía",
+            "members": 0,
+            "active": false,
+            "updated_at": "2026-10-12T08:10:32.254Z"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "user_id": 2,
+        "name": "Raiden de Ana",
+        "tier": "free",
+        "token_code": null,
+        "phone": "59899000123",
+        "description": "",
+        "status": "offline",
+        "extra_gb": 0,
+        "bot_type": "raiden-wabot",
+        "display_name": "Raiden",
+        "bot_prefix": ".",
+        "banner_text": "",
+        "short_name": "Raiden",
+        "long_name": "Raiden WaBot",
+        "currency": "",
+        "owner_number": "",
+        "owner_hidden": true,
+        "bot_link": "https://127.0.0.1:3000/cmds",
+        "channel_url": "",
+        "prefixes": [
+          "."
+        ],
+        "banner_url": "",
+        "username": "raidenana",
+        "status_info": "online",
+        "instance_type": "subbot",
+        "server_id": "vrsov-01",
+        "server_name": "Vrsov Srv Raiden",
+        "pairing_code": null,
+        "pairing_expires_at": null,
+        "linked_at": null,
+        "synced_at": null,
+        "uptime_seconds": 0,
+        "avatar_url": "",
+        "catalog_slug": "raiden-wabot",
+        "created_at": "2026-10-12T08:10:32.254Z",
+        "updated_at": "2026-10-12T08:10:32.254Z",
+        "baseSpaceGb": 2,
+        "totalSpaceGb": 2,
+        "groups": [
+          {
+            "id": 3,
+            "subbot_id": 3,
+            "group_jid": "pending-3@g.us",
+            "name": "Sin grupos todavía",
+            "members": 0,
+            "active": false,
+            "updated_at": "2026-10-12T08:10:32.254Z"
+          }
+        ]
+      }
+    ],
+    "plan": {
+      "id": "free",
+      "name": "Free",
+      "priceUsd": 0,
+      "spacePerBotGb": 1,
+      "maxBots": 3,
+      "color": "free"
+    },
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "spaceGb": 1,
+        "requiresToken": false,
+        "priceUsd": 0
+      },
+      "premium": {
+        "name": "Premium",
+        "spaceGb": 2,
+        "requiresToken": true,
+        "priceUsd": 1
+      },
+      "vip": {
+        "name": "VIP",
+        "spaceGb": 4,
+        "requiresToken": true,
+        "priceUsd": 5
+      }
+    },
+    "botTypes": [
+      {
+        "id": "versova",
+        "aliases": [
+          "versova",
+          "versova-rol",
+          "principal"
+        ],
+        "name": "VÉRSOVA Rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "category": "Team & Rol",
+        "accent": "#8b5cf6",
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "folder": "src/commands",
+        "prefix": ".",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 34 comandos con prefijo propio"
+        ],
+        "highlights": [
+          "menu",
+          "reg",
+          "rol",
+          "ficha",
+          "perfil",
+          "pareja",
+          "warn",
+          "anuncio"
+        ],
+        "commands": 34,
+        "ownCommands": 0,
+        "active": true,
+        "recommended": true
+      },
+      {
+        "id": "raiden-wabot",
+        "aliases": [
+          "raiden",
+          "raiden-wabot",
+          "raidenwabot",
+          "raiden-wabot-bot"
+        ],
+        "name": "Raiden WaBot",
+        "description": "Bot anime en Node.js + Baileys inspirado en Raiden (Genshin Impact): descargas de Instagram, YouTube, Spotify y TikTok, stickers con estilo BRAT, IA conversacional, más de 40 reacciones anime, logos y moderación con antilink.",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "category": "Juegos",
+        "accent": "#6366f1",
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "folder": "bots/raiden-wabot",
+        "prefix": ".",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify y TikTok",
+          "Stickers: conversión a pegatina y estilo BRAT",
+          "Más de 40 reacciones anime con menciones",
+          "IA conversacional opcional (AI_API_KEY)",
+          "Logos en cinco estilos y herramientas de grupo",
+          "Moderación: antilink, mute y tagall",
+          "Perfil social: matrimonio, cumpleaños y foto"
+        ],
+        "highlights": [
+          "download",
+          "play",
+          "sticker",
+          "brat",
+          "ai",
+          "logo",
+          "reaccion",
+          "marry",
+          "work",
+          "antilink",
+          "tagall"
+        ],
+        "commands": 103,
+        "ownCommands": 71,
+        "active": false,
+        "recommended": false
+      },
+      {
+        "id": "yae-miku-bot",
+        "aliases": [
+          "yae-miku",
+          "yae",
+          "yaemiku",
+          "yae-miku-bot",
+          "miku"
+        ],
+        "name": "Yae Miku Bot",
+        "description": "Bot de WhatsApp abierto (MIT): matrimonio y divorcio con la pareja visible en el perfil, antilink que borra los enlaces y expulsa a quien insiste, sub-bots persistentes que se restauran al conectar y configuración del grupo por chat.",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "category": "Juegos",
+        "accent": "#22d3ee",
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "folder": "bots/yae-miku-bot",
+        "prefix": ".",
+        "features": [
+          "Matrimonio y divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Configuración del grupo por chat (.config)",
+          "Ranking de actividad de los integrantes",
+          "Licencia MIT: el código vive en bots/yae-miku-bot"
+        ],
+        "highlights": [
+          "marry",
+          "divorce",
+          "antilink",
+          "config",
+          "profile",
+          "subbots",
+          "top"
+        ],
+        "commands": 41,
+        "ownCommands": 8,
+        "active": false,
+        "recommended": false
+      }
+    ],
+    "instances": [
+      {
+        "id": "subbot",
+        "name": "SubBot Gratis",
+        "description": "Instancia gratuita básica",
+        "tier": "free",
+        "requiresToken": false,
+        "spaceGb": 1,
+        "emoji": "🤖"
+      },
+      {
+        "id": "principal",
+        "name": "Principal",
+        "description": "Requiere token de moderador",
+        "tier": "premium",
+        "requiresToken": true,
+        "spaceGb": 2,
+        "emoji": "👑"
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "description": "Beneficios exclusivos",
+        "tier": "premium",
+        "requiresToken": true,
+        "spaceGb": 2,
+        "emoji": "💎"
+      },
+      {
+        "id": "vip",
+        "name": "VIP",
+        "description": "Todo ilimitado y prioridad",
+        "tier": "vip",
+        "requiresToken": true,
+        "spaceGb": 4,
+        "emoji": "🚀"
+      }
+    ],
+    "catalog": [
+      {
+        "slug": "versova",
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "category": "Team & Rol",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#8b5cf6",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 33 comandos con prefijo propio"
+        ],
+        "commands": [
+          "menu",
+          "reg",
+          "unreg",
+          "rol",
+          "roles",
+          "ficha",
+          "editar",
+          "mirol",
+          "cambiarol",
+          "reservar",
+          "liberar"
+        ],
+        "popularity": 100,
+        "featured": true,
+        "active": true,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 1,
+        "owned": true,
+        "subbotId": 2,
+        "priceCoins": 0,
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "implemented": true,
+        "folder": "src/commands",
+        "botType": "versova",
+        "totalCommands": 34,
+        "ownCommands": 0
+      },
+      {
+        "slug": "raiden",
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "description": "Bot de WhatsApp en Node.js + Baileys inspirado en Raiden (Genshin Impact). Código abierto en GitHub.",
+        "category": "Juegos",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#6366f1",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify, TikTok y letras",
+          "Stickers: creación, estilo BRAT y Sticker.ly",
+          "Más de 40 comandos de reacciones anime",
+          "IA conversacional y generación de logos"
+        ],
+        "commands": [
+          "menu",
+          "ping",
+          "download",
+          "sticker",
+          "marry",
+          "antilink"
+        ],
+        "popularity": 86,
+        "featured": true,
+        "active": false,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 0,
+        "owned": false,
+        "subbotId": null,
+        "priceCoins": 0,
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "implemented": true,
+        "folder": "bots/raiden-wabot",
+        "botType": "raiden-wabot",
+        "totalCommands": 103,
+        "ownCommands": 71
+      },
+      {
+        "slug": "yae-miku",
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "description": "Bot de WhatsApp abierto en GitHub (MIT): matrimonio/divorcio, antilink y sub-bots persistentes.",
+        "category": "Juegos",
+        "pricing": "free",
+        "price_usd": "0.00",
+        "price_coins": 0,
+        "badge": "GRATIS",
+        "accent": "#22d3ee",
+        "features": [
+          "Matrimonio/divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Moderación de grupos y comandos sociales"
+        ],
+        "commands": [
+          "menu",
+          "marry",
+          "divorce",
+          "antilink",
+          "profile",
+          "config"
+        ],
+        "popularity": 74,
+        "featured": true,
+        "active": false,
+        "sort": 1,
+        "priceUsd": 0,
+        "users": 0,
+        "owned": false,
+        "subbotId": null,
+        "priceCoins": 0,
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "implemented": true,
+        "folder": "bots/yae-miku-bot",
+        "botType": "yae-miku-bot",
+        "totalCommands": 41,
+        "ownCommands": 8
+      }
+    ],
+    "uses": [
+      {
+        "id": 2,
+        "user_id": 2,
+        "bot_slug": "versova",
+        "subbot_id": 2,
+        "paid_coins": 0,
+        "created_at": "2026-10-12T08:10:32.285Z"
+      }
+    ],
+    "usage": {
+      "botsUsed": 2,
+      "botsMax": 3,
+      "extraSpaceGb": 0,
+      "extraSpaceFree": 0
+    },
+    "tokens": [],
+    "activeBot": "versova"
   },
-  "usage": {
-   "botsUsed": 1,
-   "botsMax": 3,
-   "extraSpaceGb": 0,
-   "extraSpaceFree": 0
+  "/api/store/catalog": {
+    "items": [
+      {
+        "id": "token-premium",
+        "kind": "token",
+        "name": "Token Premium",
+        "description": "Canjeable al crear un sub-bot Premium (2 GB). Se entrega al instante tras la compra.",
+        "priceUsd": 0,
+        "available": true,
+        "tier": "premium",
+        "spaceGb": 2,
+        "badge": "GRATIS"
+      },
+      {
+        "id": "token-vip",
+        "kind": "token",
+        "name": "Token VIP",
+        "description": "Canjeable al crear un sub-bot VIP (4 GB). Se entrega al instante tras la compra.",
+        "priceUsd": 0,
+        "available": true,
+        "tier": "vip",
+        "spaceGb": 4,
+        "badge": "GRATIS"
+      },
+      {
+        "id": "space-1gb",
+        "kind": "space",
+        "name": "1 GB extra",
+        "description": "Espacio adicional en el pool de tu cuenta. Repártelo entre tus sub-bots como quieras.",
+        "priceUsd": 0,
+        "available": true,
+        "spaceGb": 1
+      },
+      {
+        "id": "plan-premium",
+        "kind": "plan",
+        "name": "Plan Premium",
+        "description": "Hasta 5 sub-bots con 2 GB por bot. Actívalo al instante.",
+        "priceUsd": 0,
+        "available": true,
+        "plan": "premium"
+      },
+      {
+        "id": "plan-vip",
+        "kind": "plan",
+        "name": "Plan VIP",
+        "description": "Hasta 10 sub-bots con 5 GB por bot. Actívalo al instante.",
+        "priceUsd": 0,
+        "available": true,
+        "plan": "vip",
+        "badge": "TOP"
+      }
+    ],
+    "plans": {
+      "free": {
+        "id": "free",
+        "name": "Free",
+        "priceUsd": 0,
+        "spacePerBotGb": 1,
+        "maxBots": 3,
+        "color": "free"
+      },
+      "premium": {
+        "id": "premium",
+        "name": "Premium",
+        "priceUsd": 0,
+        "spacePerBotGb": 2,
+        "maxBots": 5,
+        "color": "premium"
+      },
+      "vip": {
+        "id": "vip",
+        "name": "VIP",
+        "priceUsd": 0,
+        "spacePerBotGb": 5,
+        "maxBots": 10,
+        "color": "vip"
+      }
+    },
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "spaceGb": 1,
+        "requiresToken": false,
+        "priceUsd": 0
+      },
+      "premium": {
+        "name": "Premium",
+        "spaceGb": 2,
+        "requiresToken": true,
+        "priceUsd": 0
+      },
+      "vip": {
+        "name": "VIP",
+        "spaceGb": 4,
+        "requiresToken": true,
+        "priceUsd": 0
+      }
+    },
+    "user": {
+      "id": 2,
+      "email": "walk@versova.dev",
+      "name": "Walk",
+      "picture": null,
+      "plan": "free",
+      "planInfo": {
+        "id": "free",
+        "name": "Free",
+        "priceUsd": 0,
+        "spacePerBotGb": 1,
+        "maxBots": 3,
+        "color": "free"
+      },
+      "extraSpaceGb": 0,
+      "handle": null,
+      "avatarUrl": null,
+      "theme": "dark",
+      "createdAt": "2026-10-12T08:10:32.239Z"
+    },
+    "usage": {
+      "botsUsed": 1,
+      "botsMax": 3,
+      "extraSpaceGb": 0,
+      "extraSpaceFree": 0
+    },
+    "tokens": [],
+    "purchases": []
   },
-  "tokens": [],
-  "purchases": []
- },
- "/api/reports": {
-  "reports": [
-   {
-    "id": 1,
-    "user_id": 2,
-    "kind": "suggestion",
-    "username": "Walk",
-    "whatsapp": "59899111222",
-    "text": "Agreguen más servidores.",
-    "status": "pending",
-    "created_at": "2026-10-12T08:10:32.295Z"
-   }
-  ]
- }
+  "/api/reports": {
+    "reports": [
+      {
+        "id": 1,
+        "user_id": 2,
+        "kind": "suggestion",
+        "username": "Walk",
+        "whatsapp": "59899111222",
+        "text": "Agreguen más servidores.",
+        "status": "pending",
+        "created_at": "2026-10-12T08:10:32.295Z"
+      }
+    ]
+  },
+  "/api/bots": {
+    "bots": [
+      {
+        "slug": "versova",
+        "aliases": [
+          "versova",
+          "versova-rol",
+          "principal"
+        ],
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "category": "Team & Rol",
+        "accent": "#8b5cf6",
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "prefix": ".",
+        "folder": "src/commands",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 34 comandos con prefijo propio"
+        ],
+        "highlights": [
+          "menu",
+          "reg",
+          "rol",
+          "ficha",
+          "perfil",
+          "pareja",
+          "warn",
+          "anuncio"
+        ],
+        "ownCommands": 0,
+        "totalCommands": 34,
+        "active": true
+      },
+      {
+        "slug": "raiden-wabot",
+        "aliases": [
+          "raiden",
+          "raiden-wabot",
+          "raidenwabot",
+          "raiden-wabot-bot"
+        ],
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "description": "Bot anime en Node.js + Baileys inspirado en Raiden (Genshin Impact): descargas de Instagram, YouTube, Spotify y TikTok, stickers con estilo BRAT, IA conversacional, más de 40 reacciones anime, logos y moderación con antilink.",
+        "category": "Juegos",
+        "accent": "#6366f1",
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "prefix": ".",
+        "folder": "bots/raiden-wabot",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify y TikTok",
+          "Stickers: conversión a pegatina y estilo BRAT",
+          "Más de 40 reacciones anime con menciones",
+          "IA conversacional opcional (AI_API_KEY)",
+          "Logos en cinco estilos y herramientas de grupo",
+          "Moderación: antilink, mute y tagall",
+          "Perfil social: matrimonio, cumpleaños y foto"
+        ],
+        "highlights": [
+          "download",
+          "play",
+          "sticker",
+          "brat",
+          "ai",
+          "logo",
+          "reaccion",
+          "marry",
+          "work",
+          "antilink",
+          "tagall"
+        ],
+        "ownCommands": 71,
+        "totalCommands": 103,
+        "active": false
+      },
+      {
+        "slug": "yae-miku-bot",
+        "aliases": [
+          "yae-miku",
+          "yae",
+          "yaemiku",
+          "yae-miku-bot",
+          "miku"
+        ],
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "description": "Bot de WhatsApp abierto (MIT): matrimonio y divorcio con la pareja visible en el perfil, antilink que borra los enlaces y expulsa a quien insiste, sub-bots persistentes que se restauran al conectar y configuración del grupo por chat.",
+        "category": "Juegos",
+        "accent": "#22d3ee",
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "prefix": ".",
+        "folder": "bots/yae-miku-bot",
+        "features": [
+          "Matrimonio y divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Configuración del grupo por chat (.config)",
+          "Ranking de actividad de los integrantes",
+          "Licencia MIT: el código vive en bots/yae-miku-bot"
+        ],
+        "highlights": [
+          "marry",
+          "divorce",
+          "antilink",
+          "config",
+          "profile",
+          "subbots",
+          "top"
+        ],
+        "ownCommands": 8,
+        "totalCommands": 41,
+        "active": false
+      }
+    ],
+    "active": "versova"
+  },
+  "/api/commands?bot=raiden": {
+    "bot": "raiden-wabot",
+    "bots": [
+      {
+        "slug": "versova",
+        "aliases": [
+          "versova",
+          "versova-rol",
+          "principal"
+        ],
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "category": "Team & Rol",
+        "accent": "#8b5cf6",
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "prefix": ".",
+        "folder": "src/commands",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 34 comandos con prefijo propio"
+        ],
+        "highlights": [
+          "menu",
+          "reg",
+          "rol",
+          "ficha",
+          "perfil",
+          "pareja",
+          "warn",
+          "anuncio"
+        ],
+        "ownCommands": 34,
+        "totalCommands": 34,
+        "active": true
+      },
+      {
+        "slug": "raiden-wabot",
+        "aliases": [
+          "raiden",
+          "raiden-wabot",
+          "raidenwabot",
+          "raiden-wabot-bot"
+        ],
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "description": "Bot anime en Node.js + Baileys inspirado en Raiden (Genshin Impact): descargas de Instagram, YouTube, Spotify y TikTok, stickers con estilo BRAT, IA conversacional, más de 40 reacciones anime, logos y moderación con antilink.",
+        "category": "Juegos",
+        "accent": "#6366f1",
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "prefix": ".",
+        "folder": "bots/raiden-wabot",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify y TikTok",
+          "Stickers: conversión a pegatina y estilo BRAT",
+          "Más de 40 reacciones anime con menciones",
+          "IA conversacional opcional (AI_API_KEY)",
+          "Logos en cinco estilos y herramientas de grupo",
+          "Moderación: antilink, mute y tagall",
+          "Perfil social: matrimonio, cumpleaños y foto"
+        ],
+        "highlights": [
+          "download",
+          "play",
+          "sticker",
+          "brat",
+          "ai",
+          "logo",
+          "reaccion",
+          "marry",
+          "work",
+          "antilink",
+          "tagall"
+        ],
+        "ownCommands": 71,
+        "totalCommands": 103,
+        "active": false
+      },
+      {
+        "slug": "yae-miku-bot",
+        "aliases": [
+          "yae-miku",
+          "yae",
+          "yaemiku",
+          "yae-miku-bot",
+          "miku"
+        ],
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "description": "Bot de WhatsApp abierto (MIT): matrimonio y divorcio con la pareja visible en el perfil, antilink que borra los enlaces y expulsa a quien insiste, sub-bots persistentes que se restauran al conectar y configuración del grupo por chat.",
+        "category": "Juegos",
+        "accent": "#22d3ee",
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "prefix": ".",
+        "folder": "bots/yae-miku-bot",
+        "features": [
+          "Matrimonio y divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Configuración del grupo por chat (.config)",
+          "Ranking de actividad de los integrantes",
+          "Licencia MIT: el código vive en bots/yae-miku-bot"
+        ],
+        "highlights": [
+          "marry",
+          "divorce",
+          "antilink",
+          "config",
+          "profile",
+          "subbots",
+          "top"
+        ],
+        "ownCommands": 8,
+        "totalCommands": 41,
+        "active": false
+      }
+    ],
+    "settings": {
+      "commandDecoration": "ㅤ୨ৎㅤ.",
+      "disabled": [],
+      "hidden": [],
+      "aliases": {}
+    },
+    "commands": [
+      {
+        "name": "reg",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Registra tu cuenta en el team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reg <nombre.edad>"
+      },
+      {
+        "name": "unreg",
+        "args": "",
+        "category": "Registro",
+        "description": "Elimina tu registro y libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unreg"
+      },
+      {
+        "name": "rol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rol <personaje>"
+      },
+      {
+        "name": "roles",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra los personajes ocupados.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".roles"
+      },
+      {
+        "name": "ficha",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu información personal.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ficha"
+      },
+      {
+        "name": "editar",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Cambia tu nombre y edad.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".editar <nombre.edad>"
+      },
+      {
+        "name": "mirol",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".mirol"
+      },
+      {
+        "name": "cambiarol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita cambiar tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".cambiarol <personaje>"
+      },
+      {
+        "name": "team",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra la información del team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".team"
+      },
+      {
+        "name": "miembros",
+        "args": "",
+        "category": "Gestión",
+        "description": "Lista a los integrantes del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".miembros"
+      },
+      {
+        "name": "afk",
+        "args": "<motivo>",
+        "category": "Gestión",
+        "description": "Activa tu estado de ausencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".afk <motivo>"
+      },
+      {
+        "name": "inactivos",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra integrantes inactivos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".inactivos [días]"
+      },
+      {
+        "name": "reservar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Reserva un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reservar <personaje>"
+      },
+      {
+        "name": "liberar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".liberar"
+      },
+      {
+        "name": "perfil",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Muestra el perfil de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".perfil [@usuario]"
+      },
+      {
+        "name": "pareja",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Envía una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".pareja <@usuario>"
+      },
+      {
+        "name": "rechazar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Rechaza una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rechazar"
+      },
+      {
+        "name": "ship",
+        "args": "<@usuario> <@usuario>",
+        "category": "Interacción",
+        "description": "Calcula la compatibilidad entre dos personas.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ship <@usuario> <@usuario>"
+      },
+      {
+        "name": "reglas",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra las reglas del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reglas [set <texto>]"
+      },
+      {
+        "name": "admins",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra a los administradores del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".admins"
+      },
+      {
+        "name": "add",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade un integrante al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".add <número>"
+      },
+      {
+        "name": "expulsar",
+        "args": "",
+        "category": "Administración",
+        "description": "Expulsa a un integrante del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".expulsar <@usuario> [motivo]"
+      },
+      {
+        "name": "ban",
+        "args": "",
+        "category": "Administración",
+        "description": "Bloquea a un integrante del bot.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ban <@usuario> [motivo]"
+      },
+      {
+        "name": "unban",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira el bloqueo de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unban <@usuario>"
+      },
+      {
+        "name": "resetrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Libera el personaje de otro integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".resetrol @usuario"
+      },
+      {
+        "name": "warn",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".warn <@usuario> [motivo]"
+      },
+      {
+        "name": "unwarn",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unwarn <@usuario>"
+      },
+      {
+        "name": "acceptrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Aprueba una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".acceptrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "denyrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Rechaza una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".denyrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "anuncio",
+        "args": "",
+        "category": "Administración",
+        "description": "Envía un anuncio al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".anuncio <texto>"
+      },
+      {
+        "name": "close",
+        "args": "",
+        "category": "Administración",
+        "description": "Cierra el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".close"
+      },
+      {
+        "name": "open",
+        "args": "",
+        "category": "Administración",
+        "description": "Abre el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".open"
+      },
+      {
+        "name": "aceptar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Acepta una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".aceptar"
+      },
+      {
+        "name": "menu",
+        "args": "[comando]",
+        "category": "General",
+        "description": "Muestra el menú de Raiden WaBot o la ayuda de un comando concreto.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".menu [comando]"
+      },
+      {
+        "name": "ping",
+        "args": "",
+        "category": "General",
+        "description": "Mide la latencia, muestra la versión y el estado de la conexión.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".ping"
+      },
+      {
+        "name": "download",
+        "args": "<enlace> [audio]",
+        "category": "Descargas",
+        "description": "Descarga un video o audio de YouTube, Instagram, TikTok, Spotify o X.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".download <enlace> [audio]"
+      },
+      {
+        "name": "play",
+        "args": "<texto o enlace>",
+        "category": "Descargas",
+        "description": "Busca una canción en YouTube y prepara el enlace de descarga.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".play <texto o enlace>"
+      },
+      {
+        "name": "yt",
+        "args": "<enlace>",
+        "category": "Descargas",
+        "description": "Descarga contenido de youtube.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".yt <enlace>"
+      },
+      {
+        "name": "ig",
+        "args": "<enlace>",
+        "category": "Descargas",
+        "description": "Descarga contenido de instagram.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".ig <enlace>"
+      },
+      {
+        "name": "tiktok",
+        "args": "<enlace>",
+        "category": "Descargas",
+        "description": "Descarga contenido de tiktok.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".tiktok <enlace>"
+      },
+      {
+        "name": "spotify",
+        "args": "<enlace>",
+        "category": "Descargas",
+        "description": "Descarga contenido de spotify.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".spotify <enlace>"
+      },
+      {
+        "name": "xdl",
+        "args": "<enlace>",
+        "category": "Descargas",
+        "description": "Descarga contenido de X/Twitter.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".xdl <enlace>"
+      },
+      {
+        "name": "sticker",
+        "args": "(responde a una imagen o video)",
+        "category": "Stickers",
+        "description": "Convierte la imagen o el video que respondes en una pegatina.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".sticker (responde a una imagen o video)"
+      },
+      {
+        "name": "brat",
+        "args": "<texto>",
+        "category": "Stickers",
+        "description": "Crea una pegatina estilo BRAT (fondo blanco y letra negra).",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".brat <texto>"
+      },
+      {
+        "name": "ai",
+        "args": "<texto> | .ai reset",
+        "category": "IA",
+        "description": "Conversa con la IA del bot. Con `.ai reset` se olvida la conversación.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".ai <texto> | .ai reset"
+      },
+      {
+        "name": "logo",
+        "args": "<texto> [neon|glitch|gaming|gold|fire]",
+        "category": "Imágenes",
+        "description": "Genera un logo con el texto indicado en cinco estilos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".logo <texto> [neon|glitch|gaming|gold|fire]"
+      },
+      {
+        "name": "reaccion",
+        "args": "<tipo> <@usuario>",
+        "category": "Reacciones",
+        "description": "Hace una reacción anime indicando el tipo (`.reaccion hug @Ana`).",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".reaccion <tipo> <@usuario>"
+      },
+      {
+        "name": "reacciones",
+        "args": "[filtro]",
+        "category": "Reacciones",
+        "description": "Lista todas las reacciones anime disponibles.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".reacciones [filtro]"
+      },
+      {
+        "name": "hug",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un abrazo enorme a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".hug <@usuario>"
+      },
+      {
+        "name": "kiss",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un beso a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".kiss <@usuario>"
+      },
+      {
+        "name": "pat",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le acarició la cabeza a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".pat <@usuario>"
+      },
+      {
+        "name": "slap",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio una bofetada a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".slap <@usuario>"
+      },
+      {
+        "name": "cuddle",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se acurrucó con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cuddle <@usuario>"
+      },
+      {
+        "name": "bite",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un mordisco a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".bite <@usuario>"
+      },
+      {
+        "name": "lick",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú lamió a la otra persona 👀.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".lick <@usuario>"
+      },
+      {
+        "name": "poke",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un toque a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".poke <@usuario>"
+      },
+      {
+        "name": "tickle",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le hizo cosquillas a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".tickle <@usuario>"
+      },
+      {
+        "name": "highfive",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú chocó los cinco con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".highfive <@usuario>"
+      },
+      {
+        "name": "handshake",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio la mano a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".handshake <@usuario>"
+      },
+      {
+        "name": "dance",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú bailó con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".dance <@usuario>"
+      },
+      {
+        "name": "sing",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le cantó una canción a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".sing <@usuario>"
+      },
+      {
+        "name": "smile",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le sonrió a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".smile <@usuario>"
+      },
+      {
+        "name": "wink",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le guiñó el ojo a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".wink <@usuario>"
+      },
+      {
+        "name": "blush",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se sonrojó por la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".blush <@usuario>"
+      },
+      {
+        "name": "cry",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú llora en el hombro de la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cry <@usuario>"
+      },
+      {
+        "name": "pout",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le hizo un mohín a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".pout <@usuario>"
+      },
+      {
+        "name": "laugh",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se rió muchísimo con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".laugh <@usuario>"
+      },
+      {
+        "name": "punch",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un puñetazo a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".punch <@usuario>"
+      },
+      {
+        "name": "kick",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio una patada a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".kick <@usuario>"
+      },
+      {
+        "name": "kill",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú eliminó a la otra persona del mapa.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".kill <@usuario>"
+      },
+      {
+        "name": "stare",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú miró fijamente a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".stare <@usuario>"
+      },
+      {
+        "name": "stare_glare",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le lanzó una mirada asesina a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".stare_glare <@usuario>"
+      },
+      {
+        "name": "feed",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio de comer a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".feed <@usuario>"
+      },
+      {
+        "name": "cook",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú cocinó para la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cook <@usuario>"
+      },
+      {
+        "name": "tea",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú compartió un té con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".tea <@usuario>"
+      },
+      {
+        "name": "coffee",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú invitó un café a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".coffee <@usuario>"
+      },
+      {
+        "name": "cake",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le regaló un pastel a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cake <@usuario>"
+      },
+      {
+        "name": "flowers",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le regaló flores a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".flowers <@usuario>"
+      },
+      {
+        "name": "gift",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le dio un regalo a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".gift <@usuario>"
+      },
+      {
+        "name": "carry",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú cargó a la otra persona en brazos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".carry <@usuario>"
+      },
+      {
+        "name": "protect",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú protegió a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".protect <@usuario>"
+      },
+      {
+        "name": "comfort",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú consoló a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".comfort <@usuario>"
+      },
+      {
+        "name": "scare",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú asustó a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".scare <@usuario>"
+      },
+      {
+        "name": "chase",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú persiguió a la otra persona por todo el grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".chase <@usuario>"
+      },
+      {
+        "name": "wink_kiss",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le tiró un beso volado a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".wink_kiss <@usuario>"
+      },
+      {
+        "name": "snuggle",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se acostó junto a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".snuggle <@usuario>"
+      },
+      {
+        "name": "cheer",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú animó a la otra persona con todas sus fuerzas.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cheer <@usuario>"
+      },
+      {
+        "name": "applaud",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú aplaudió a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".applaud <@usuario>"
+      },
+      {
+        "name": "bow",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se inclinó ante la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".bow <@usuario>"
+      },
+      {
+        "name": "respect",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú le mostró respeto a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".respect <@usuario>"
+      },
+      {
+        "name": "photo",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se tomó una foto con la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".photo <@usuario>"
+      },
+      {
+        "name": "sleep",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú se quedó dormido junto a la otra persona.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".sleep <@usuario>"
+      },
+      {
+        "name": "wave",
+        "args": "<@usuario>",
+        "category": "Reacciones",
+        "description": "Reacción anime: tú saludó a la otra persona con la mano.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".wave <@usuario>"
+      },
+      {
+        "name": "marry",
+        "args": "<@usuario>",
+        "category": "Social",
+        "description": "Propone matrimonio y sella la promesa con la persona mencionada.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".marry <@usuario>"
+      },
+      {
+        "name": "divorce",
+        "args": "",
+        "category": "Social",
+        "description": "Rompe el matrimonio actual.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".divorce"
+      },
+      {
+        "name": "work",
+        "args": "",
+        "category": "Economía",
+        "description": "Trabaja un turno para ganar puntos de Raiden (cada 30 minutos).",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".work"
+      },
+      {
+        "name": "top",
+        "args": "",
+        "category": "Economía",
+        "description": "Ranking de puntos de trabajo del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".top"
+      },
+      {
+        "name": "cumple",
+        "args": "[DD/MM]",
+        "category": "Social",
+        "description": "Guarda o consulta tu cumpleaños.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".cumple [DD/MM]"
+      },
+      {
+        "name": "antilink",
+        "args": "<on|off|warn|delete|kick|status>",
+        "category": "Moderación",
+        "description": "Activa o configura el borrado automático de enlaces.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".antilink <on|off|warn|delete|kick|status>"
+      },
+      {
+        "name": "mute",
+        "args": "[minutos]",
+        "category": "Moderación",
+        "description": "Silencia el grupo: solo hablan los administradores.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".mute [minutos]"
+      },
+      {
+        "name": "unmute",
+        "args": "",
+        "category": "Moderación",
+        "description": "Devuelve la voz al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".unmute"
+      },
+      {
+        "name": "tagall",
+        "args": "[mensaje]",
+        "category": "Moderación",
+        "description": "Menciona a todos los integrantes del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".tagall [mensaje]"
+      },
+      {
+        "name": "foto",
+        "args": "[@usuario]",
+        "category": "Social",
+        "description": "Muestra la foto de perfil de alguien del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".foto [@usuario]"
+      }
+    ]
+  },
+  "/api/commands?bot=yae-miku": {
+    "bot": "yae-miku-bot",
+    "bots": [
+      {
+        "slug": "versova",
+        "aliases": [
+          "versova",
+          "versova-rol",
+          "principal"
+        ],
+        "name": "VÉRSOVA Rol",
+        "emoji": "👑",
+        "tagline": "El bot completo para teams de rol",
+        "description": "Registro, personajes, parejas, advertencias, reglas, anuncios y administración del grupo. Es el bot principal de la plataforma y viene activo por defecto.",
+        "category": "Team & Rol",
+        "accent": "#8b5cf6",
+        "link": "https://github.com/lyanvalentinmail-prog/versova-project",
+        "prefix": ".",
+        "folder": "src/commands",
+        "features": [
+          "Registro y fichas con edad y personaje",
+          "Solicitudes de personaje con aprobación",
+          "Parejas, ships y perfiles sociales",
+          "Advertencias, bans y anuncios",
+          "Menú de 34 comandos con prefijo propio"
+        ],
+        "highlights": [
+          "menu",
+          "reg",
+          "rol",
+          "ficha",
+          "perfil",
+          "pareja",
+          "warn",
+          "anuncio"
+        ],
+        "ownCommands": 34,
+        "totalCommands": 34,
+        "active": true
+      },
+      {
+        "slug": "raiden-wabot",
+        "aliases": [
+          "raiden",
+          "raiden-wabot",
+          "raidenwabot",
+          "raiden-wabot-bot"
+        ],
+        "name": "Raiden WaBot",
+        "emoji": "⚡",
+        "tagline": "Bot anime completo: descargas, stickers, IA y más",
+        "description": "Bot anime en Node.js + Baileys inspirado en Raiden (Genshin Impact): descargas de Instagram, YouTube, Spotify y TikTok, stickers con estilo BRAT, IA conversacional, más de 40 reacciones anime, logos y moderación con antilink.",
+        "category": "Juegos",
+        "accent": "#6366f1",
+        "link": "https://github.com/Ryuzei-Ts/Raiden-WaBot",
+        "prefix": ".",
+        "folder": "bots/raiden-wabot",
+        "features": [
+          "Descargas: Instagram, YouTube, Spotify y TikTok",
+          "Stickers: conversión a pegatina y estilo BRAT",
+          "Más de 40 reacciones anime con menciones",
+          "IA conversacional opcional (AI_API_KEY)",
+          "Logos en cinco estilos y herramientas de grupo",
+          "Moderación: antilink, mute y tagall",
+          "Perfil social: matrimonio, cumpleaños y foto"
+        ],
+        "highlights": [
+          "download",
+          "play",
+          "sticker",
+          "brat",
+          "ai",
+          "logo",
+          "reaccion",
+          "marry",
+          "work",
+          "antilink",
+          "tagall"
+        ],
+        "ownCommands": 71,
+        "totalCommands": 103,
+        "active": false
+      },
+      {
+        "slug": "yae-miku-bot",
+        "aliases": [
+          "yae-miku",
+          "yae",
+          "yaemiku",
+          "yae-miku-bot",
+          "miku"
+        ],
+        "name": "Yae Miku Bot",
+        "emoji": "🎧",
+        "tagline": "Bot de rol y moderación con sub-bots",
+        "description": "Bot de WhatsApp abierto (MIT): matrimonio y divorcio con la pareja visible en el perfil, antilink que borra los enlaces y expulsa a quien insiste, sub-bots persistentes que se restauran al conectar y configuración del grupo por chat.",
+        "category": "Juegos",
+        "accent": "#22d3ee",
+        "link": "https://github.com/Abrahan987/Yae-Miku-Bot",
+        "prefix": ".",
+        "folder": "bots/yae-miku-bot",
+        "features": [
+          "Matrimonio y divorcio con pareja visible en el perfil",
+          "Antilink: borra enlaces y expulsa al que los envíe",
+          "Sub-bots persistentes: se restauran al reconectar",
+          "Configuración del grupo por chat (.config)",
+          "Ranking de actividad de los integrantes",
+          "Licencia MIT: el código vive en bots/yae-miku-bot"
+        ],
+        "highlights": [
+          "marry",
+          "divorce",
+          "antilink",
+          "config",
+          "profile",
+          "subbots",
+          "top"
+        ],
+        "ownCommands": 8,
+        "totalCommands": 41,
+        "active": false
+      }
+    ],
+    "settings": {
+      "commandDecoration": "ㅤ୨ৎㅤ.",
+      "disabled": [],
+      "hidden": [],
+      "aliases": {}
+    },
+    "commands": [
+      {
+        "name": "reg",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Registra tu cuenta en el team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reg <nombre.edad>"
+      },
+      {
+        "name": "unreg",
+        "args": "",
+        "category": "Registro",
+        "description": "Elimina tu registro y libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unreg"
+      },
+      {
+        "name": "rol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rol <personaje>"
+      },
+      {
+        "name": "roles",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra los personajes ocupados.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".roles"
+      },
+      {
+        "name": "ficha",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu información personal.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ficha"
+      },
+      {
+        "name": "editar",
+        "args": "<nombre.edad>",
+        "category": "Registro",
+        "description": "Cambia tu nombre y edad.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".editar <nombre.edad>"
+      },
+      {
+        "name": "mirol",
+        "args": "",
+        "category": "Registro",
+        "description": "Muestra tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".mirol"
+      },
+      {
+        "name": "cambiarol",
+        "args": "<personaje>",
+        "category": "Registro",
+        "description": "Solicita cambiar tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".cambiarol <personaje>"
+      },
+      {
+        "name": "team",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra la información del team.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".team"
+      },
+      {
+        "name": "miembros",
+        "args": "",
+        "category": "Gestión",
+        "description": "Lista a los integrantes del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".miembros"
+      },
+      {
+        "name": "afk",
+        "args": "<motivo>",
+        "category": "Gestión",
+        "description": "Activa tu estado de ausencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".afk <motivo>"
+      },
+      {
+        "name": "inactivos",
+        "args": "",
+        "category": "Gestión",
+        "description": "Muestra integrantes inactivos.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".inactivos [días]"
+      },
+      {
+        "name": "reservar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Reserva un personaje disponible.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reservar <personaje>"
+      },
+      {
+        "name": "liberar",
+        "args": "",
+        "category": "Personajes",
+        "description": "Libera tu personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".liberar"
+      },
+      {
+        "name": "perfil",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Muestra el perfil de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".perfil <@usuario>"
+      },
+      {
+        "name": "pareja",
+        "args": "<@usuario>",
+        "category": "Interacción",
+        "description": "Envía una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".pareja <@usuario>"
+      },
+      {
+        "name": "rechazar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Rechaza una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".rechazar"
+      },
+      {
+        "name": "ship",
+        "args": "<@usuario> <@usuario>",
+        "category": "Interacción",
+        "description": "Calcula la compatibilidad entre dos personas.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ship <@usuario> <@usuario>"
+      },
+      {
+        "name": "reglas",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra las reglas del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".reglas [set <texto>]"
+      },
+      {
+        "name": "admins",
+        "args": "",
+        "category": "Interacción",
+        "description": "Muestra a los administradores del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".admins"
+      },
+      {
+        "name": "add",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade un integrante al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".add <número>"
+      },
+      {
+        "name": "expulsar",
+        "args": "",
+        "category": "Administración",
+        "description": "Expulsa a un integrante del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".expulsar <@usuario> [motivo]"
+      },
+      {
+        "name": "ban",
+        "args": "",
+        "category": "Administración",
+        "description": "Bloquea a un integrante del bot.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".ban <@usuario> [motivo]"
+      },
+      {
+        "name": "unban",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira el bloqueo de un integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unban <@usuario>"
+      },
+      {
+        "name": "resetrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Libera el personaje de otro integrante.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".resetrol @usuario"
+      },
+      {
+        "name": "warn",
+        "args": "",
+        "category": "Administración",
+        "description": "Añade una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".warn <@usuario> [motivo]"
+      },
+      {
+        "name": "unwarn",
+        "args": "",
+        "category": "Administración",
+        "description": "Retira una advertencia.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".unwarn <@usuario>"
+      },
+      {
+        "name": "acceptrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Aprueba una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".acceptrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "denyrol",
+        "args": "",
+        "category": "Administración",
+        "description": "Rechaza una solicitud de personaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".denyrol (respondiendo a la solicitud)"
+      },
+      {
+        "name": "anuncio",
+        "args": "",
+        "category": "Administración",
+        "description": "Envía un anuncio al grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".anuncio <texto>"
+      },
+      {
+        "name": "close",
+        "args": "",
+        "category": "Administración",
+        "description": "Cierra el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".close"
+      },
+      {
+        "name": "open",
+        "args": "",
+        "category": "Administración",
+        "description": "Abre el grupo para participantes.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".open"
+      },
+      {
+        "name": "aceptar",
+        "args": "",
+        "category": "Interacción",
+        "description": "Acepta una propuesta de pareja.",
+        "implemented": true,
+        "enabled": true,
+        "visible": true,
+        "inTemplate": true,
+        "aliases": [],
+        "usage": ".aceptar"
+      },
+      {
+        "name": "menu",
+        "args": "[comando]",
+        "category": "General",
+        "description": "Muestra el menú de Yae Miku Bot y la ayuda de un comando.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".menu [comando]"
+      },
+      {
+        "name": "marry",
+        "args": "<@usuario>",
+        "category": "Social",
+        "description": "Propone matrimonio; la otra persona acepta respondiendo «sí» al mensaje.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".marry <@usuario>"
+      },
+      {
+        "name": "divorce",
+        "args": "",
+        "category": "Social",
+        "description": "Termina el matrimonio actual (propio o el de la persona mencionada).",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".divorce"
+      },
+      {
+        "name": "profile",
+        "args": "[@usuario]",
+        "category": "Social",
+        "description": "Muestra la ficha social: pareja, registro y actividad contada en el grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".profile [@usuario]"
+      },
+      {
+        "name": "top",
+        "args": "",
+        "category": "Social",
+        "description": "Ranking de integrantes por mensajes contados en el grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".top"
+      },
+      {
+        "name": "config",
+        "args": "[clave valor]",
+        "category": "Moderación",
+        "description": "Muestra o cambia la configuración del grupo (antilink, mute, welcome…).",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".config [clave valor]"
+      },
+      {
+        "name": "antilink",
+        "args": "<on|off|warn|delete|kick|status>",
+        "category": "Moderación",
+        "description": "Activa, apaga o configura el borrado automático de enlaces.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".antilink <on|off|warn|delete|kick|status>"
+      },
+      {
+        "name": "subbots",
+        "args": "[link <id|nombre> | unlink <id|nombre>]",
+        "category": "Moderación",
+        "description": "Lista, vincula o desvincula los sub-bots persistentes del grupo.",
+        "implemented": true,
+        "enabled": true,
+        "visible": false,
+        "inTemplate": false,
+        "aliases": [],
+        "usage": ".subbots [link <id|nombre> | unlink <id|nombre>]"
+      }
+    ]
+  }
 }

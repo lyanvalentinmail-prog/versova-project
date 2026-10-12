@@ -373,6 +373,84 @@ export async function setGroupRules(groupId: string, rules: string): Promise<voi
   await pool.query('UPDATE groups SET rules = $2, updated_at = now() WHERE id = $1', [groupId, rules]);
 }
 
+/* ------------------ datos de los bots del catálogo (carpeta bots/) ------------------ */
+
+export interface BotDataRow {
+  group_id: string;
+  wa_id: string;
+  key: string;
+  value: string;
+  updated_at: Date;
+}
+
+/** Valor guardado por un bot del catálogo (antilink, avisos, pareja, perfil…). */
+export async function getBotValue(groupId: string, waId: string, key: string): Promise<string | null> {
+  const r = await pool.query<BotDataRow>(
+    'SELECT value FROM bot_data WHERE group_id = $1 AND wa_id = $2 AND key = $3',
+    [groupId, waId, key],
+  );
+  return r.rows[0]?.value ?? null;
+}
+
+export async function setBotValue(groupId: string, waId: string, key: string, value: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO bot_data (group_id, wa_id, key, value) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (group_id, wa_id, key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+    [groupId, waId, key, value],
+  );
+}
+
+export async function deleteBotValue(groupId: string, waId: string, key: string): Promise<void> {
+  await pool.query('DELETE FROM bot_data WHERE group_id = $1 AND wa_id = $2 AND key = $3', [groupId, waId, key]);
+}
+
+/** Suma un número al valor guardado y devuelve el total (lo usa, por ejemplo, el ranking de trabajo). */
+export async function addBotValue(groupId: string, waId: string, key: string, delta: number): Promise<number> {
+  const current = Number(await getBotValue(groupId, waId, key)) || 0;
+  const total = current + delta;
+  await setBotValue(groupId, waId, key, String(total));
+  return total;
+}
+
+/** Todos los valores de una clave en un grupo (con el integrante al que pertenecen). */
+export async function listBotValues(groupId: string, key: string): Promise<Array<{ wa_id: string; value: string }>> {
+  const r = await pool.query<{ wa_id: string; value: string }>(
+    `SELECT wa_id, value FROM bot_data WHERE group_id = $1 AND key = $2 AND wa_id <> ''`,
+    [groupId, key],
+  );
+  return r.rows;
+}
+
+/* --------------------------- ajustes por grupo --------------------------- */
+
+/** Ajustes libres del grupo (`groups.settings`), la base de `.config` y `.antilink`. */
+export async function getGroupSettings(groupId: string): Promise<Record<string, unknown>> {
+  const r = await pool.query<{ settings: Record<string, unknown> | null }>(
+    'SELECT settings FROM groups WHERE id = $1',
+    [groupId],
+  );
+  return r.rows[0]?.settings ?? {};
+}
+
+export async function getGroupSetting<T>(groupId: string, key: string): Promise<T | null> {
+  const settings = await getGroupSettings(groupId);
+  return (settings[key] as T | undefined) ?? null;
+}
+
+/** Guarda un ajuste del grupo sin pisar los demás (lectura + fusión, compatible con pg-mem). */
+export async function setGroupSetting(groupId: string, key: string, value: unknown): Promise<void> {
+  await pool.query(
+    `INSERT INTO groups (id, settings) VALUES ($1, '{}'::jsonb) ON CONFLICT (id) DO NOTHING`,
+    [groupId],
+  );
+  const settings = await getGroupSettings(groupId);
+  const next = { ...settings, [key]: value };
+  await pool.query('UPDATE groups SET settings = $2::jsonb, updated_at = now() WHERE id = $1', [
+    groupId,
+    JSON.stringify(next),
+  ]);
+}
+
 /** Guarda (o borra) la pareja de un integrante. */
 export async function updatePartner(groupId: string, waId: string, partnerId: string | null): Promise<void> {
   await pool.query(

@@ -84,6 +84,15 @@ vi.mock('../src/database/repos.js', () => {
     updatePartner: async () => undefined,
     getSetting: async () => null,
     setSetting: async () => undefined,
+    // Almacén de los bots del catálogo (carpeta bots/): clave/valor y ajustes de grupo.
+    getBotValue: async () => null,
+    setBotValue: async () => undefined,
+    deleteBotValue: async () => undefined,
+    addBotValue: async (_g: string, _w: string, _k: string, delta: number) => delta,
+    listBotValues: async () => [],
+    getGroupSettings: async () => ({}),
+    getGroupSetting: async () => null,
+    setGroupSetting: async () => undefined,
     getPlatformMetrics: async () => ({
       groups: 0, members: 0, activeMembers: 0, users: 0, characters: 0,
       charactersOccupied: 0, pendingRequests: 0, warnings: 0, actions: 0, lastActivityAt: null,

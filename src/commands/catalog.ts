@@ -1,4 +1,5 @@
 import { allCommands } from '../core/router.js';
+import { DEFAULT_PACK_SLUG, knownCommandNamesAcrossPacks } from '../core/bot-packs.js';
 import {
   DEFAULT_COMMAND_DECORATION,
   getCommandSettings,
@@ -183,15 +184,22 @@ export interface CommandInventoryItem extends MenuCommandDefinition {
 const MENU_COMMAND_NAMES = new Set(MENU_COMMANDS.map((command) => command.name));
 
 export function knownCommandNames(): string[] {
-  return [...new Set([...MENU_COMMAND_NAMES, 'menu', ...allCommands().map((command) => command.name)])];
+  return [...new Set([...MENU_COMMAND_NAMES, 'menu', ...knownCommandNamesAcrossPacks()])];
 }
 
-export function getCommandInventory(settings: CommandSettings = getCommandSettings()): CommandInventoryItem[] {
-  const realCommands = new Map(allCommands().map((command) => [command.name, command]));
+/**
+ * Inventario de comandos de un bot del catálogo. Con `pack` se ve el catálogo de
+ * ese bot (núcleo + sus propios comandos); sin argumentos, el del bot base.
+ */
+export function getCommandInventory(
+  pack: string = DEFAULT_PACK_SLUG,
+  settings: CommandSettings = getCommandSettings(pack),
+): CommandInventoryItem[] {
+  const realCommands = new Map(allCommands(pack).map((command) => [command.name, command]));
   const definitions = [...MENU_COMMANDS];
   const allNames = new Set(definitions.map((command) => command.name));
 
-  for (const command of allCommands()) {
+  for (const command of allCommands(pack)) {
     if (!allNames.has(command.name)) {
       definitions.push({
         name: command.name,

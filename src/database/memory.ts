@@ -33,6 +33,10 @@ interface MemoryState {
   groups: SubBotGroupRow[];
   reports: ReportRow[];
   settings: Map<string, unknown>;
+  /** Valores de los bots del catálogo: clave `${grupo}|${wa_id}|${clave}`. */
+  botData: Map<string, string>;
+  /** Ajustes libres por grupo (`groups.settings` en PostgreSQL). */
+  groupSettings: Map<string, Record<string, unknown>>;
   audits: Array<{ group_id: string | null; actor: string; action: string; target: string | null; details: Record<string, unknown>; created_at: Date }>;
   ids: Record<'user' | 'token' | 'bot' | 'purchase' | 'use' | 'group' | 'report', number>;
 }
@@ -47,6 +51,8 @@ const state: MemoryState = {
   groups: [],
   reports: [],
   settings: new Map(),
+  botData: new Map(),
+  groupSettings: new Map(),
   audits: [],
   ids: { user: 0, token: 0, bot: 0, purchase: 0, use: 0, group: 0, report: 0 },
 };
@@ -672,6 +678,82 @@ export async function audit(
 }
 
 /** Datos públicos del conjunto de la plataforma (para la portada y el monitor). */
+/* ---------------- datos de los bots del catálogo (carpeta bots/) ---------------- */
+
+const botKey = (groupId: string, waId: string, key: string): string => `${groupId}|${waId}|${key}`;
+
+export async function getBotValue(groupId: string, waId: string, key: string): Promise<string | null> {
+  return state.botData.get(botKey(groupId, waId, key)) ?? null;
+}
+
+export async function setBotValue(groupId: string, waId: string, key: string, value: string): Promise<void> {
+  state.botData.set(botKey(groupId, waId, key), value);
+}
+
+export async function deleteBotValue(groupId: string, waId: string, key: string): Promise<void> {
+  state.botData.delete(botKey(groupId, waId, key));
+}
+
+export async function addBotValue(groupId: string, waId: string, key: string, delta: number): Promise<number> {
+  const current = Number(await getBotValue(groupId, waId, key)) || 0;
+  const total = current + delta;
+  await setBotValue(groupId, waId, key, String(total));
+  return total;
+}
+
+export async function listBotValues(groupId: string, key: string): Promise<Array<{ wa_id: string; value: string }>> {
+  const prefix = `${groupId}|`;
+  const suffix = `|${key}`;
+  const rows: Array<{ wa_id: string; value: string }> = [];
+  for (const [compound, value] of state.botData) {
+    if (!compound.startsWith(prefix) || !compound.endsWith(suffix)) continue;
+    const waId = compound.slice(prefix.length, compound.length - suffix.length);
+    if (waId) rows.push({ wa_id: waId, value });
+  }
+  return rows;
+}
+
+/* --------------------------- ajustes por grupo --------------------------- */
+
+export async function getGroupSettings(groupId: string): Promise<Record<string, unknown>> {
+  return { ...(state.groupSettings.get(groupId) ?? {}) };
+}
+
+export async function getGroupSetting<T>(groupId: string, key: string): Promise<T | null> {
+  const settings = state.groupSettings.get(groupId) ?? {};
+  return (settings[key] as T | undefined) ?? null;
+}
+
+export async function setGroupSetting(groupId: string, key: string, value: unknown): Promise<void> {
+  const settings = state.groupSettings.get(groupId) ?? {};
+  state.groupSettings.set(groupId, { ...settings, [key]: value });
+}
+
+/* ------------------- sub-bots del catálogo vistos por los packs ------------------- */
+
+export async function getSubBotAny(id: number): Promise<SubBotRow | null> {
+  return state.subbots.find((bot) => bot.id === id) ?? null;
+}
+
+export async function listSubBotsByCatalog(catalogSlug: string): Promise<SubBotRow[]> {
+  return state.subbots.filter((bot) => bot.catalog_slug === catalogSlug || bot.bot_type === catalogSlug);
+}
+
+/** Sub-bots vinculados a un grupo de WhatsApp concreto. */
+export async function findSubBotsByGroupJid(jid: string): Promise<SubBotRow[]> {
+  const ids = state.groups.filter((group) => group.group_jid === jid).map((group) => group.subbot_id);
+  return state.subbots.filter((bot) => ids.includes(bot.id));
+}
+
+/** Sub-bots cuyo teléfono o número de dueño coincide (para vinculaciones desde el grupo). */
+export async function listSubBotsByPhone(phone: string): Promise<SubBotRow[]> {
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return [];
+  return state.subbots.filter(
+    (bot) => bot.phone.replace(/\D/g, '') === digits || bot.owner_number.replace(/\D/g, '') === digits,
+  );
+}
+
 export function memorySnapshot(): { users: WebUser[]; bots: SubBotRow[]; uses: CatalogUseRow[] } {
   return { users: state.users, bots: state.subbots, uses: state.catalogUses };
 }

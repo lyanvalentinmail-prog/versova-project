@@ -47,6 +47,28 @@ export const config = {
     pass: process.env.MAIL_PASS ?? '',
     from: process.env.MAIL_FROM?.trim() ?? 'Versova <no-reply@versova.app>',
   },
+  /**
+   * Ajustes de los bots del catálogo (carpeta `bots/`): salida a internet,
+   * descargador externo opcional y proveedor de IA. Sin variables, los bots
+   * funcionan igual: solo omiten las funciones que dependen de servicios externos.
+   */
+  bots: {
+    /** Bot activo por defecto cuando todavía no se ha elegido ninguno en el panel. */
+    type: process.env.BOT_TYPE?.trim() || 'versova',
+    /** `0` desactiva cualquier petición externa (metadatos, descargas e IA). */
+    allowNetwork: process.env.BOT_ALLOW_NETWORK !== '0',
+    /** Tiempo máximo por petición externa. */
+    requestTimeoutMs: Number(process.env.BOT_HTTP_TIMEOUT_MS ?? 8000),
+    /** API de descargas opcional (formato Cobalt): POST { url, downloadMode } → { url }. */
+    downloadApiUrl: process.env.DOWNLOAD_API_URL?.trim() ?? '',
+    /** Proveedor de IA compatible con OpenAI (`.ai` de Raiden WaBot). */
+    ai: {
+      apiKey: process.env.AI_API_KEY?.trim() ?? '',
+      baseUrl: (process.env.AI_BASE_URL?.trim() || 'https://api.openai.com/v1').replace(/\/$/, ''),
+      model: process.env.AI_MODEL?.trim() || 'gpt-4o-mini',
+      maxTokens: Number(process.env.AI_MAX_TOKENS ?? 400),
+    },
+  },
   defaults: {
     inactivityDays: 7,
     minAge: 1,

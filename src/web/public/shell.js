@@ -135,7 +135,7 @@ const V = (() => {
 
   const MENU = [
     { href: '/', ico: '⌂', title: 'Inicio', text: 'Resumen de tu plataforma y tus bots' },
-    { href: '/registrar', ico: '＋', title: 'Registrar bot', text: 'Asistente de 5 pasos' },
+    { href: '/registrar', ico: '＋', title: 'Registrar bot', text: 'Asistente de 6 pasos' },
     { href: '/bots', ico: '🤖', title: 'Mis Bots', text: 'Sesiones activas y opciones' },
     { href: '/store', ico: '🛒', title: 'Tienda', text: 'Tokens, espacio, monedas y bots' },
     { href: '/cmds', ico: '⌘', title: 'Comandos', text: 'Catálogo completo de comandos' },

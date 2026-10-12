@@ -331,6 +331,35 @@ export async function deleteSubBot(id: number, userId: number, q: Q = pool): Pro
   return (r.rowCount ?? 0) > 0;
 }
 
+/** Sub-bot por id sin comprobar el dueño (lo usan los bots del catálogo). */
+export async function getSubBotAny(id: number, q: Q = pool): Promise<SubBotRow | null> {
+  const r = await q.query<SubBotRow>('SELECT * FROM subbots WHERE id = $1', [id]);
+  return r.rows[0] ?? null;
+}
+
+/** Sub-bots cuyo teléfono (o número de dueño) coincide con el indicado. */
+export async function listSubBotsByPhone(phone: string, q: Q = pool): Promise<SubBotRow[]> {
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return [];
+  const r = await q.query<SubBotRow>(
+    `SELECT * FROM subbots
+     WHERE regexp_replace(phone, '\\D', '', 'g') = $1
+        OR regexp_replace(COALESCE(owner_number, ''), '\\D', '', 'g') = $1
+     ORDER BY id ASC`,
+    [digits],
+  );
+  return r.rows;
+}
+
+/** Sub-bots de un tipo del catálogo (para saber qué bots están «instalados»). */
+export async function listSubBotsByCatalog(catalogSlug: string, q: Q = pool): Promise<SubBotRow[]> {
+  const r = await q.query<SubBotRow>(
+    'SELECT * FROM subbots WHERE catalog_slug = $1 OR bot_type = $1 ORDER BY updated_at DESC',
+    [catalogSlug],
+  );
+  return r.rows;
+}
+
 export async function countSubBots(userId: number, q: Q = pool): Promise<number> {
   const r = await q.query<{ total: number }>('SELECT count(*)::int AS total FROM subbots WHERE user_id = $1', [userId]);
   return r.rows[0]?.total ?? 0;

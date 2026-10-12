@@ -29,7 +29,7 @@ function responseFor(pathname: string): { status: number; body: unknown } {
   return { status: 200, body: FIXTURES[keys[0]] };
 }
 
-async function openPage(page: string): Promise<PageResult> {
+async function openPage(page: string, search = ''): Promise<PageResult> {
   const errores: string[] = [];
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', (error) => {
@@ -44,7 +44,7 @@ async function openPage(page: string): Promise<PageResult> {
     runScripts: 'dangerously',
     resources: 'usable',
     pretendToBeVisual: true,
-    url: pathToFileURL(join(PUBLIC_DIR, page)).href,
+    url: `${pathToFileURL(join(PUBLIC_DIR, page)).href}${search}`,
     virtualConsole,
     beforeParse(window) {
       window.addEventListener('error', (event) => errores.push(`error: ${event.message}`));
@@ -62,7 +62,9 @@ async function openPage(page: string): Promise<PageResult> {
       window.scrollTo = () => undefined;
       window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
         const raw = typeof input === 'string' ? input : input instanceof URL ? input.pathname : String((input as Request).url);
-        const pathname = new URL(raw, 'http://localhost/').pathname;
+        const parsed = new URL(raw, 'http://localhost/');
+        // La ruta incluye la consulta: los fixtures pueden especializar `?bot=raiden`.
+        const pathname = `${parsed.pathname}${parsed.search}`;
         const { status, body } = responseFor(pathname);
         const method = (init?.method ?? 'GET').toUpperCase();
         // Las escrituras responden igual: lo que se comprueba es el dibujado de la página.
@@ -124,6 +126,15 @@ describe('páginas de la plataforma en el navegador', () => {
     expect(lista).toContain('SUBBOT');
     expect(lista).toContain('prefijo');
     expect(lista).toContain('Config');
+    // Cada tarjeta dice a qué bot del catálogo pertenece y de dónde sale su código.
+    expect(lista).toContain('VÉRSOVA Rol');
+    expect(lista).toContain('src/commands');
+    // Un SubBot de otro bot del catálogo ofrece «⚡ Usar bot» para ponerlo a responder.
+    expect(lista).toContain('Raiden de Ana');
+    expect(lista).toContain('bots/raiden-wabot');
+    expect(lista).toContain('⚡ Raiden WaBot');
+    // El ícono y el texto van en nodos distintos: el botón se lee «⚡Usar bot».
+    expect(lista).toContain('Usar bot');
     expect(dom.window.document.getElementById('optPrefixes')).toBeTruthy();
     expect(dom.window.document.getElementById('saveBotOptions')).toBeTruthy();
   });
@@ -136,6 +147,49 @@ describe('páginas de la plataforma en el navegador', () => {
     expect(dom.window.document.getElementById('catalogList')?.textContent).toContain('Raiden WaBot');
     expect(dom.window.document.getElementById('catalogList')?.textContent).toContain('Yae Miku Bot');
     expect(dom.window.document.getElementById('storeItems')?.textContent).toContain('Token');
+  });
+
+  it('cada bot del catálogo ofrece crearlo, usarlo, ver su carpeta y su repo', async () => {
+    const { dom, errores } = await openPage('store.html');
+    expect(errores).toEqual([]);
+    const catalogo = dom.window.document.getElementById('catalogList')?.textContent ?? '';
+    // «Crear este bot» y «Usar este bot» conviven con la carpeta y el enlace a GitHub.
+    expect(catalogo).toContain('＋ Crear este bot');
+    expect(catalogo).toContain('Registrar con asistente');
+    expect(catalogo).toContain('bots/raiden-wabot');
+    expect(catalogo).toContain('bots/yae-miku-bot');
+    expect(catalogo).toContain('103 comandos');
+    const enlaces = [...dom.window.document.querySelectorAll('#catalogList a[href*="github.com"]')];
+    expect(enlaces.map((a) => (a as HTMLAnchorElement).href)).toEqual(
+      expect.arrayContaining(['https://github.com/Ryuzei-Ts/Raiden-WaBot']),
+    );
+  });
+
+  it('el asistente arranca con el bot elegido y sabe crear ese bot', async () => {
+    const { dom, errores } = await openPage('registrar.html', '?bot=raiden');
+    expect(errores).toEqual([]);
+    const tipos = dom.window.document.getElementById('botTypeOptions');
+    expect(tipos?.children.length).toBe(3);
+    expect(dom.window.document.getElementById('pasoPill')?.textContent).toContain('Paso 1 de 6');
+    // El alias del catálogo (`raiden`) deja elegido el pack `raiden-wabot`.
+    const activa = tipos?.querySelector('.select-card.is-active')?.textContent ?? '';
+    expect(activa).toContain('Raiden WaBot');
+    expect(dom.window.document.getElementById('botTypeHint')?.textContent).toContain('https://github.com/Ryuzei-Ts/Raiden-WaBot');
+    expect(tipos?.textContent).toContain('bots/raiden-wabot');
+  });
+
+  it('el catálogo de comandos tiene una pestaña por bot', async () => {
+    const { dom, errores } = await openPage('cmds.html', '?bot=yae-miku');
+    expect(errores).toEqual([]);
+    const tabs = dom.window.document.getElementById('botTabs');
+    expect(tabs?.children.length).toBe(3);
+    expect(tabs?.querySelector('.tab.is-active')?.textContent).toContain('Yae Miku Bot');
+    expect(dom.window.document.getElementById('cmdBot')?.textContent).toContain('Yae Miku Bot');
+    expect(dom.window.document.getElementById('botHint')?.textContent).toContain('bots/yae-miku-bot');
+    // El inventario es el del pack pedido: 8 propios + los 34 del núcleo (uno reemplazado).
+    expect(dom.window.document.getElementById('cmdCount')?.textContent).toContain('41');
+    expect(dom.window.document.getElementById('cmdImplemented')?.textContent).toContain('41');
+    expect(dom.window.document.getElementById('cmdPending')?.textContent).toContain('0');
   });
 
   it('las métricas muestran los servidores y la telemetría', async () => {

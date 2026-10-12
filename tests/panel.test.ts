@@ -185,12 +185,14 @@ type Panel = {
   requestPairingCode: () => Promise<void>;
   renderPairingCode: () => void;
   renderPairingControls: (status: Record<string, unknown>) => void;
+  findBotType: (value: string | null) => { id: string } | null;
+  APP: { botTypes: Array<{ id: string; aliases?: string[] }> };
 };
 
 const loadPanel = (): Panel =>
   runInNewContext(
     `${APP_SOURCE}
-;({ requestPairingCode, renderPairingCode, renderPairingControls });`,
+;({ requestPairingCode, renderPairingCode, renderPairingControls, findBotType, APP });`,
     buildSandbox() as never,
   ) as Panel;
 
@@ -279,5 +281,24 @@ describe('panel de emparejamiento', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(element('pairCode').textContent).toBe('ABCD-1234');
+  });
+});
+
+describe('tipos de bot del panel', () => {
+  it('reconoce el slug del pack y los alias del catálogo', () => {
+    panel.APP.botTypes = [
+      { id: 'versova', aliases: ['versova', 'versova-rol', 'principal'] },
+      { id: 'raiden-wabot', aliases: ['raiden', 'raiden-wabot', 'raidenwabot'] },
+      { id: 'yae-miku-bot', aliases: ['yae-miku', 'yae', 'miku'] },
+    ];
+
+    // `?bot=raiden` (slug del catálogo) tiene que resolver al pack `raiden-wabot`.
+    expect(panel.findBotType('raiden')?.id).toBe('raiden-wabot');
+    expect(panel.findBotType('YAE-MIKU')?.id).toBe('yae-miku-bot');
+    expect(panel.findBotType('raiden-wabot')?.id).toBe('raiden-wabot');
+    expect(panel.findBotType('versova')?.id).toBe('versova');
+    // Un bot que no existe no deja el asistente a medias.
+    expect(panel.findBotType('inventado')).toBeNull();
+    expect(panel.findBotType('')).toBeNull();
   });
 });
