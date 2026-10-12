@@ -4,6 +4,10 @@ let statusTimer = null;
 let eventSource = null;
 let commandSettings = null;
 let commandInventory = [];
+let pairingCode = null;
+let pairingExpiresAt = null;
+let pairingTicker = null;
+let pairingBusy = false;
 
 const api = async (path, options = {}) => {
   const headers = { Accept: 'application/json', ...(options.headers ?? {}) };
@@ -71,12 +75,12 @@ async function refreshStatus() {
       $('qrEmpty').hidden = false;
       $('qrEmpty').textContent = status.whatsapp === 'open' ? 'El dispositivo ya está vinculado.' : 'No hay un QR pendiente.';
     }
-    if (status.pairingCode) {
-      $('pairCode').textContent = status.pairingCode;
-      $('pairCode').hidden = false;
-    } else {
-      $('pairCode').hidden = true;
+    if (!pairingBusy) {
+      pairingCode = status.pairingCode ?? null;
+      pairingExpiresAt = status.pairingExpiresAt ?? null;
     }
+    renderPairingCode();
+    renderPairingControls(status);
   } catch (error) {
     $('statusBadge').className = 'status-badge bad';
     $('statusBadge').querySelector('span:last-child').textContent = 'Sin conexión';
@@ -84,22 +88,81 @@ async function refreshStatus() {
   }
 }
 
+function stopPairingTicker() {
+  if (pairingTicker) {
+    clearInterval(pairingTicker);
+    pairingTicker = null;
+  }
+}
+
+/** Muestra el código solo mientras siga vigente; al expirar lo quita y avisa. */
+function renderPairingCode() {
+  const now = Date.now();
+  const active = Boolean(pairingCode && pairingExpiresAt && pairingExpiresAt > now);
+
+  $('pairCode').hidden = !active;
+  $('pairCountdown').hidden = !active;
+
+  if (active) {
+    $('pairCode').textContent = pairingCode;
+    const left = Math.ceil((pairingExpiresAt - now) / 1000);
+    $('pairCountdown').textContent =
+      `Expira en ${left} s · WhatsApp → Ajustes → Dispositivos vinculados → Vincular con el número de teléfono`;
+  } else {
+    stopPairingTicker();
+    if (pairingCode) {
+      pairingCode = null;
+      pairingExpiresAt = null;
+      if (!pairingBusy) {
+        $('pairError').textContent = 'El código expiró antes de usarse. Pide uno nuevo e ingrésalo enseguida.';
+        $('pairError').hidden = false;
+      }
+    }
+    return;
+  }
+
+  if (!pairingTicker) pairingTicker = window.setInterval(renderPairingCode, 1000);
+}
+
+/** El botón solo sirve cuando WhatsApp puede aceptar un código por teléfono. */
+function renderPairingControls(status) {
+  if (!status) return;
+  const linked = Boolean(status.linked);
+  const ready = Boolean(status.pairingReady);
+  const hint = $('pairHint');
+
+  if (linked) hint.textContent = 'El bot ya está vinculado. Cierra la sesión para vincular otro número.';
+  else if (!ready) hint.textContent = 'Esperando a que la conexión entre en modo vinculación (ocurre cuando aparece el QR).';
+  hint.hidden = linked || ready;
+
+  if (!pairingBusy) $('pair').disabled = linked || !ready;
+}
+
 async function requestPairingCode() {
   $('pairError').hidden = true;
   $('pairCode').hidden = true;
+  $('pairCountdown').hidden = true;
+  pairingCode = null;
+  pairingExpiresAt = null;
+  stopPairingTicker();
+  pairingBusy = true;
   $('pair').disabled = true;
+  $('pair').textContent = 'Pidiendo…';
   try {
     const result = await api('/api/pair', {
       method: 'POST',
       body: JSON.stringify({ phone: $('phone').value }),
     });
-    $('pairCode').textContent = result.code;
-    $('pairCode').hidden = false;
+    pairingCode = result.code;
+    pairingExpiresAt = result.expiresAt ?? Date.now() + 60_000;
   } catch (error) {
     $('pairError').textContent = error.message;
     $('pairError').hidden = false;
   } finally {
+    pairingBusy = false;
     $('pair').disabled = false;
+    $('pair').textContent = 'Pedir código';
+    renderPairingCode();
   }
 }
 
@@ -389,6 +452,11 @@ function startLogs() {
 async function init() {
   initTheme();
   $('pair').addEventListener('click', requestPairingCode);
+  $('phone').addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    if (!$('pair').disabled) requestPairingCode();
+  });
   $('logout').addEventListener('click', requestLogout);
   $('saveBanner').addEventListener('click', saveBanner);
   $('removeImage').addEventListener('click', removeBannerImage);
@@ -415,6 +483,7 @@ async function init() {
 
 window.addEventListener('beforeunload', () => {
   clearInterval(statusTimer);
+  stopPairingTicker();
   eventSource?.close();
 });
 

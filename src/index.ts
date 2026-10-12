@@ -13,7 +13,7 @@ async function main(): Promise<void> {
   logger.info('boot', `${config.bot.name} ${config.bot.version} · ${config.bot.team}`);
   await migrate();
   await loadCommandSettings(allCommands().map((command) => command.name), knownCommandNames());
-  startWeb();
+  const server = startWeb();
   await startConnection();
 
   // Tareas de mantenimiento: reservas vencidas y registro de mensajes procesados.
@@ -26,6 +26,7 @@ async function main(): Promise<void> {
 
   const shutdown = async (signal: string) => {
     logger.info('boot', `Recibido ${signal}. Cerrando…`);
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     await pool.end().catch(() => undefined);
     process.exit(0);
   };
