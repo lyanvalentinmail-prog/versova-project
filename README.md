@@ -7,57 +7,85 @@ Bot de WhatsApp para administrar teams de rol. Prefijo `.` · Versión 1.0 · Id
 **Implementado**
 
 - Conexión con WhatsApp (QR y código de emparejamiento), reconexión automática y sesión guardada en PostgreSQL.
-- Consola web: estado, QR, código de emparejamiento, cerrar sesión, banner (texto e imagen) y logs en vivo.
-- Registro: `.reg`, `.unreg` (con confirmación), `.editar`, `.ficha`.
-- Roles: `.rol`, `.roles`, `.mirol`, `.cambiarol`, `.reservar` (24 h, con liberación automática), `.liberar` (con confirmación), `.resetrol`, `.acceptrol` y `.denyrol` (respondiendo a la solicitud).
-- `.menu` generado desde los comandos reales, con banner configurable.
+- Panel web público, sin clave: estado del bot, QR, emparejamiento, cerrar sesión, banner, lista de comandos, alias, activación/desactivación, vista previa del menú y logs en vivo.
+- Tema claro/oscuro con selector animado y preferencia guardada en el navegador.
+- Registro: `.reg`, `.unreg`, `.editar`, `.ficha`.
+- Personajes: `.rol`, `.roles`, `.mirol`, `.cambiarol`, `.reservar`, `.liberar`.
+- Administración de personajes: `.resetrol`, `.acceptrol` y `.denyrol`.
+- `.menu` con el diseño VÉRSOVA solicitado. El panel permite ocultar comandos, desactivar los que ya tienen implementación y crear alias.
 - Separación de datos por grupo, deduplicación de mensajes, límite de uso por usuario, auditoría de acciones administrativas y sincronización al salir del grupo.
-- Actividad y AFK: registro de última actividad, `.afk` y aviso cuando mencionan a alguien AFK (la limpieza automática al escribir está implementada).
+- Actividad y AFK: registro de última actividad y avisos al mencionar a alguien AFK.
 
-**Pendiente (próxima entrega)**
+**Aún sin implementar**
 
-`.team`, `.miembros`, `.afk` (comando), `.inactivos`, `.perfil`, `.pareja`, `.aceptar`, `.rechazar`, `.terminar`, `.ship`, `.reglas`, `.admins`, `.add`, `.expulsar`, `.ban`, `.unban` (con expulsión al volver a entrar), `.warn`, `.unwarn` (expulsión automática a las 3), `.anuncio`, `.close`, `.open`.
+`.team`, `.miembros`, `.afk` como comando, `.inactivos`, `.perfil`, `.pareja`, `.rechazar`, `.ship`, `.reglas`, `.admins`, `.add`, `.expulsar`, `.ban`, `.unban`, `.warn`, `.unwarn`, `.anuncio`, `.close` y `.open`.
 
-Solo aparecen en el menú los comandos que ya existen.
+El menú mantiene esas entradas porque forman parte del diseño pedido, pero el panel las marca como **Pendiente**. Los alias solo se pueden crear para comandos con implementación. Las secciones de código se organizan en archivos dentro de `src/commands/`.
+
+## Aviso importante: el panel es público
+
+La consola **no pide contraseña ni autentica a los visitantes**. Cualquiera que tenga la URL puede cambiar el banner y el menú, desactivar comandos, consultar la actividad y usar los controles de WhatsApp (incluidos emparejamiento y cierre de sesión). El QR y el código de emparejamiento también se muestran a los visitantes mientras estén activos. No publiques la URL si no quieres conceder ese acceso.
+
+Los cambios del panel se limitan por IP para reducir el abuso accidental, pero el límite no es un mecanismo de autenticación.
 
 ## Requisitos
 
 - Node.js 22 o superior.
-- PostgreSQL. En Render gratuito usa una base externa (por ejemplo, Neon).
+- PostgreSQL. Para un despliegue gratuito se recomienda Neon, compatible con el controlador PostgreSQL que ya usa el bot.
 - Un número de WhatsApp dedicado para el bot.
 
-## Configuración
+## Configuración local
 
 ```bash
-cp .env.example .env   # y completa los valores
+cp .env.example .env   # completa DATABASE_URL y OWNER_NUMBERS
 npm ci
 npm run build
 npm start
 ```
 
-Consola: `http://localhost:3000` (entra con `CONSOLE_KEY`).
+Panel: `http://localhost:3000`. No hay inicio de sesión.
 
-Variables importantes:
+Variables:
 
 | Variable | Uso |
 |---|---|
-| `DATABASE_URL` | Cadena de conexión PostgreSQL. |
-| `DB_SSL` | `true` para bases con SSL (Neon). `false` solo en local. |
-| `CONSOLE_KEY` | Clave de la consola web (mínimo 12 caracteres). |
-| `OWNER_NUMBERS` | Números del propietario del bot, con código de país, separados por coma. |
-| `BOT_PHONE` | Opcional: número del bot para emparejar por código al arrancar. |
+| `DATABASE_URL` | URL PostgreSQL pooled de Neon, con `sslmode=require`. También acepta PostgreSQL local. |
+| `DB_SSL` | `true` para Neon y otras bases con SSL; `false` solo en local. |
+| `OWNER_NUMBERS` | Números del propietario, con código de país, separados por coma. |
+| `BOT_PHONE` | Opcional: número del bot para pedir un código de emparejamiento al arrancar. |
+| `PORT` | Puerto HTTP (Render asigna su propio valor). |
+
+## Base de datos gratuita: Neon
+
+El proyecto conserva PostgreSQL —necesario para transacciones, datos y sesión persistente de WhatsApp— y queda preparado para alojarlo en [Neon](https://neon.com/pricing). Es serverless y compatible con el cliente `pg`; no requiere una SDK nueva ni migrar el esquema. El plan Free oficial ofrece actualmente 1 GB de almacenamiento y 100 CU-horas mensuales por proyecto, con cómputo que escala a cero cuando queda inactivo. Revisa [los límites y precios vigentes](https://neon.com/pricing): las cuotas pueden cambiar y un bot que mantenga la base ocupada todo el tiempo puede superar la cuota gratuita.
+
+1. Crea un proyecto PostgreSQL en Neon.
+2. En el panel de Neon, copia la **pooled connection string** (el hostname suele incluir `-pooler`).
+3. Configura esa URL como `DATABASE_URL` y deja `DB_SSL=true`.
+4. Mantén `DATABASE_URL` como variable secreta del servicio de Render; no la publiques en GitHub.
+
+Neon no se crea automáticamente desde este repositorio: hace falta crear el proyecto en tu cuenta y añadir su URL al entorno del despliegue.
 
 ## Despliegue en Render (plan gratuito)
 
-1. Crea una base PostgreSQL gratuita (Neon) y copia la cadena de conexión.
+1. Crea la base en Neon siguiendo los pasos anteriores.
 2. En Render, crea un *Blueprint* o un *Web Service* desde este repositorio. `render.yaml` ya define build, start y health check.
-3. Completa `DATABASE_URL`, `CONSOLE_KEY`, `OWNER_NUMBERS` y, si quieres, `BOT_PHONE`.
-4. Abre la URL del servicio, entra con la clave y vincula el bot con QR o con código.
+3. Completa `DATABASE_URL`, `OWNER_NUMBERS` y, si quieres, `BOT_PHONE` en las variables de entorno de Render.
+4. Abre la URL pública del servicio y vincula WhatsApp con QR o código.
 
 **Limitaciones del plan gratuito de Render**
 
-- El servicio se duerme tras 15 minutos sin tráfico, lo que corta la conexión con WhatsApp. Un monitor externo que consulte `/health` cada pocos minutos lo mantiene activo.
-- El disco es efímero. Por eso la sesión y los datos están en PostgreSQL externo.
+- El servicio web se duerme tras 15 minutos sin tráfico entrante; la conexión de WhatsApp se interrumpe cuando Render lo suspende.
+- El disco es efímero. Por eso la sesión y los datos viven en PostgreSQL externo.
+
+## Personalización desde el panel
+
+- Cambiar texto e imagen del banner que aparece antes del menú.
+- Editar el texto decorativo que se muestra antes de cada comando (por defecto `ㅤ୨ৎㅤ.`). Esto cambia la presentación del menú, no el prefijo real `.`.
+- Ver todos los comandos catalogados, buscar, activar/desactivar implementados, ocultar/restaurar entradas y crear o quitar alias.
+- Revisar una vista previa del menú antes de enviarlo.
+
+Los ajustes se guardan en PostgreSQL y se conservan al reiniciar el servicio.
 
 ## Limitaciones de WhatsApp
 
@@ -66,13 +94,12 @@ Variables importantes:
 - `.add` depende de la privacidad del usuario. Si WhatsApp no permite añadirlo, no hay forma de forzarlo.
 - WhatsApp migra identificadores de número a LID. Si un integrante aparece con LID distinto, puede requerir reregistro. Se guardan los identificadores tal como llegan.
 - La inactividad solo se conoce desde que el bot ve al integrante. No existe "última conexión" para usuarios con privacidad activa.
-- La sincronización al salir requiere que el bot esté conectado. Si estaba apagado, se detectará comparando miembros al reconectar (pendiente).
 - Los formatos de WhatsApp son solo negrita, cursiva, tachado y monoespaciado. Las tipografías Unicode son caracteres normales.
 
 ## Pruebas
 
 ```bash
-npm test                                   # validaciones (sin base de datos)
+npm test                                   # pruebas unitarias y validaciones
 TEST_DATABASE_URL=postgres://... npm test  # además, pruebas de base de datos
 ```
 
@@ -83,13 +110,13 @@ Las pruebas de base de datos requieren una base PostgreSQL real; se ejecutan sob
 ```
 src/
   config/        configuración y valores por defecto
-  core/          conexión WhatsApp, router de comandos, permisos, sesión en PostgreSQL
-  database/      esquema, migraciones y repositorios
-  commands/      registro/, roles/, general/ (menú)
+  core/          conexión WhatsApp, router, aliases y ajustes de comandos
+  database/      esquema, migraciones y repositorios PostgreSQL
+  commands/      comandos en archivos, catálogo y menú
   events/        mensajes entrantes, entradas y salidas del grupo
   services/      reglas compartidas (desregistro, sincronización)
   messages/      diseño de mensajes de VÉRSOVA
   utils/         texto, tiempo, logs, límites de uso
-  web/           servidor de la consola y su interfaz
-tests/
+  web/           servidor público y panel claro/oscuro
+ tests/
 ```

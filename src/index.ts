@@ -1,4 +1,7 @@
 import './commands/index.js';
+import { knownCommandNames } from './commands/catalog.js';
+import { allCommands } from './core/router.js';
+import { loadCommandSettings } from './core/command-settings.js';
 import { config } from './config/index.js';
 import { migrate, pool } from './database/db.js';
 import { purgeOldMessages, releaseExpiredReservations } from './database/repos.js';
@@ -9,6 +12,7 @@ import { logger } from './utils/logger.js';
 async function main(): Promise<void> {
   logger.info('boot', `${config.bot.name} ${config.bot.version} · ${config.bot.team}`);
   await migrate();
+  await loadCommandSettings(allCommands().map((command) => command.name), knownCommandNames());
   startWeb();
   await startConnection();
 

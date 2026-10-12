@@ -3,83 +3,175 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VÉRSOVA · Consola</title>
+  <meta name="theme-color" content="#f7f6f8" />
+  <meta name="description" content="Panel público de configuración del bot VÉRSOVA." />
+  <title>VÉRSOVA · Panel</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <header>
-      <p class="sign">𓆩 禊 𓆪</p>
-      <h1>𝑽 𝑬́ 𝑹 𝑺 𝑶 𝑽 𝑨</h1>
-      <p class="muted">◢禍◣ Versova ࿙☕࿚ · consola</p>
+  <div class="shell">
+    <header class="hero">
+      <div class="topbar">
+        <a class="brand" href="#top" aria-label="VÉRSOVA, inicio">
+          <span class="brand-mark" aria-hidden="true">𓆩 禊 𓆪</span>
+          <span class="brand-name">VÉRSOVA</span>
+        </a>
+        <div class="top-actions">
+          <span class="public-pill"><span class="live-dot"></span> Panel público</span>
+          <button id="themeToggle" class="theme-switch" type="button" aria-label="Activar modo oscuro" aria-pressed="false">
+            <span class="switch-track" aria-hidden="true">
+              <span class="switch-icon sun">☼</span>
+              <span class="switch-icon moon">☾</span>
+              <span class="switch-thumb"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-copy" id="top">
+        <p class="eyebrow">BOT SYSTEM <span>·</span> PANEL DE CONTROL</p>
+        <h1>VÉRSOVA</h1>
+        <p class="hero-subtitle">Una consola tranquila para cuidar cada detalle del bot.</p>
+      </div>
     </header>
 
-    <section id="login" class="card">
-      <label for="key">Clave de consola</label>
-      <div class="row">
-        <input id="key" type="password" autocomplete="current-password" placeholder="CONSOLE_KEY" />
-        <button id="enter">Entrar</button>
-      </div>
-      <p id="loginError" class="error" hidden></p>
-    </section>
+    <main>
+      <aside class="public-notice" aria-label="Aviso de privacidad">
+        <span class="notice-icon" aria-hidden="true">◌</span>
+        <p><strong>Este panel no tiene contraseña.</strong> Cualquiera con el enlace puede editar el menú y el banner, ver la actividad, consultar QR/códigos activos y vincular o cerrar la sesión de WhatsApp.</p>
+      </aside>
 
-    <section id="app" hidden>
-      <div class="card" id="statusCard">
-        <div class="row between">
-          <span>Estado</span>
-          <span id="statusBadge" class="badge">—</span>
-        </div>
-        <p class="muted small" id="statusDetail"></p>
-        <div class="row">
-          <button id="logout" class="ghost">Cerrar sesión de WhatsApp</button>
-          <button id="lock" class="ghost">Salir</button>
-        </div>
-      </div>
-
-      <div class="card" id="linkCard">
-        <h2>Vincular</h2>
-        <div class="grid">
+      <section class="panel status-panel" aria-labelledby="statusTitle">
+        <div class="section-heading">
           <div>
-            <p class="muted small">QR (WhatsApp → Dispositivos vinculados → Vincular dispositivo)</p>
-            <img id="qr" alt="Código QR" hidden />
-            <p id="qrEmpty" class="muted small">Sin QR pendiente.</p>
+            <p class="eyebrow">EN VIVO</p>
+            <h2 id="statusTitle">Estado del bot</h2>
           </div>
+          <span id="statusBadge" class="status-badge"><span class="status-dot"></span><span>Conectando…</span></span>
+        </div>
+        <p id="statusDetail" class="muted status-detail">Buscando estado…</p>
+        <div class="status-footer">
+          <span id="uptime" class="muted small">—</span>
+          <button id="logout" class="text-button danger-text" type="button">Cerrar sesión de WhatsApp</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="pairTitle">
+        <div class="section-heading">
           <div>
-            <p class="muted small">Código de emparejamiento (número con código de país, sin +)</p>
-            <div class="row">
-              <input id="phone" inputmode="numeric" placeholder="59899999999" />
-              <button id="pair">Pedir código</button>
+            <p class="eyebrow">CONEXIÓN</p>
+            <h2 id="pairTitle">Vincular dispositivo</h2>
+          </div>
+        </div>
+        <div class="connection-grid">
+          <div class="connection-method">
+            <p class="field-label">Escanea el código QR</p>
+            <p class="muted small">WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
+            <div class="qr-wrap">
+              <img id="qr" alt="Código QR para vincular el bot con WhatsApp" hidden />
+              <p id="qrEmpty" class="empty-state">No hay un QR pendiente.</p>
             </div>
-            <p id="pairCode" class="code" hidden></p>
-            <p id="pairError" class="error" hidden></p>
+          </div>
+          <div class="connection-method">
+            <label class="field-label" for="phone">O usa un código de emparejamiento</label>
+            <p class="muted small">Escribe tu número con código de país, sin + ni espacios.</p>
+            <div class="input-action">
+              <input id="phone" inputmode="numeric" autocomplete="tel" placeholder="59899999999" />
+              <button id="pair" class="button" type="button">Pedir código</button>
+            </div>
+            <p id="pairCode" class="pair-code" hidden></p>
+            <p id="pairError" class="form-message error" hidden></p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2>Banner</h2>
-        <p class="muted small">Aparece arriba del menú <code>.menu</code>. Si subes imagen, se envía como foto con el texto como pie.</p>
-        <textarea id="bannerText" rows="5" maxlength="800" placeholder="Déjalo vacío para usar el banner por defecto"></textarea>
-        <div class="row between">
-          <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" />
-          <span class="muted small" id="bannerImageState"></span>
+      <section class="panel" aria-labelledby="bannerTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">IDENTIDAD</p>
+            <h2 id="bannerTitle">Personalizar el banner</h2>
+          </div>
+          <span class="section-index">01</span>
         </div>
-        <div class="row">
-          <button id="saveBanner">Guardar banner</button>
-          <button id="removeImage" class="ghost">Quitar imagen</button>
+        <p class="muted">Este texto aparece al inicio de <code>.menu</code>. Si lo dejas vacío, se restaura el diseño VÉRSOVA.</p>
+        <label class="sr-only" for="bannerText">Texto del banner</label>
+        <textarea id="bannerText" rows="6" maxlength="800" placeholder="Se usará el banner original de VÉRSOVA"></textarea>
+        <div class="file-row">
+          <label class="file-picker" for="bannerImage">
+            <span aria-hidden="true">＋</span> Añadir imagen
+            <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" />
+          </label>
+          <span id="bannerImageState" class="muted small">Sin imagen</span>
+          <span class="spacer"></span>
+          <button id="removeImage" class="text-button" type="button">Quitar imagen</button>
         </div>
-        <p id="bannerMsg" class="small" hidden></p>
-      </div>
+        <div class="action-row">
+          <button id="saveBanner" class="button" type="button">Guardar banner</button>
+          <span id="bannerMsg" class="form-message" aria-live="polite" hidden></span>
+        </div>
+      </section>
 
-      <div class="card">
-        <div class="row between">
-          <h2>Consola</h2>
-          <label class="small"><input type="checkbox" id="autoscroll" checked /> auto-desplazar</label>
+      <section class="panel" aria-labelledby="commandsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PERSONALIZACIÓN</p>
+            <h2 id="commandsTitle">Todos los comandos</h2>
+          </div>
+          <span id="commandCount" class="count-pill">—</span>
         </div>
-        <pre id="console" class="console"></pre>
-      </div>
-    </section>
-  </main>
+        <p class="muted">Administra qué comandos funcionan, cuáles aparecen en el menú y crea alias. Los que todavía no tienen código se marcan como pendientes.</p>
+
+        <div class="decoration-setting">
+          <div class="decoration-copy">
+            <label class="field-label" for="commandDecoration">Texto antes del comando</label>
+            <p class="muted small">Solo cambia cómo se muestra en el menú; el prefijo real del bot sigue siendo «.».</p>
+          </div>
+          <div class="input-action decoration-input">
+            <input id="commandDecoration" maxlength="40" value="ㅤ୨ৎㅤ." aria-label="Texto de decoración antes del comando" />
+            <button id="saveDecoration" class="button secondary-button" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="command-toolbar">
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="commandSearch" type="search" placeholder="Buscar por nombre o categoría" autocomplete="off" />
+          </label>
+          <span id="commandSaveState" class="muted small" aria-live="polite"></span>
+        </div>
+        <div id="commandList" class="command-list" aria-live="polite">
+          <p class="empty-state">Cargando comandos…</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="previewTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">VISTA PREVIA</p>
+            <h2 id="previewTitle">Así se verá el menú</h2>
+          </div>
+          <button id="refreshPreview" class="text-button" type="button">Actualizar</button>
+        </div>
+        <pre id="menuPreview" class="menu-preview">Cargando vista previa…</pre>
+      </section>
+
+      <section class="panel" aria-labelledby="consoleTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ACTIVIDAD RECIENTE</p>
+            <h2 id="consoleTitle">Consola</h2>
+          </div>
+          <label class="toggle-label"><input type="checkbox" id="autoscroll" checked /><span class="checkmark"></span> Auto-desplazar</label>
+        </div>
+        <pre id="console" class="console" aria-live="polite"></pre>
+      </section>
+
+      <footer class="footer">
+        <span>𓆩 禊 𓆪</span>
+        <p>VÉRSOVA <span>·</span> EST. 2026</p>
+      </footer>
+    </main>
+  </div>
   <script src="app.js" type="module"></script>
 </body>
 </html>

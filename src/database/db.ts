@@ -6,6 +6,8 @@ import { logger } from '../utils/logger.js';
 export const pool = new pg.Pool({
   connectionString: config.database.url,
   max: config.database.poolMax,
+  idleTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 10_000,
   ssl: config.database.ssl ? { rejectUnauthorized: true } : false,
 });
 
@@ -15,8 +17,9 @@ pool.on('error', (err) => logger.error('db', `Error en conexión inactiva: ${err
 export async function migrate(): Promise<void> {
   const client = await pool.connect();
   try {
-    await client.query('SELECT pg_advisory_lock(7101)');
     await client.query('BEGIN');
+    // Transaction-scoped lock also works with Neon/PgBouncer pooled connections.
+    await client.query('SELECT pg_advisory_xact_lock(7101)');
     await client.query(SCHEMA_SQL);
     await client.query(
       `CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -32,7 +35,6 @@ export async function migrate(): Promise<void> {
     await client.query('ROLLBACK').catch(() => undefined);
     throw err;
   } finally {
-    await client.query('SELECT pg_advisory_unlock(7101)').catch(() => undefined);
     client.release();
   }
 }
