@@ -54,13 +54,6 @@ export const MENU_COMMANDS: MenuCommandDefinition[] = [
   { name: 'anuncio', args: '', category: 'Administración', description: 'Envía un anuncio al grupo.' },
   { name: 'close', args: '', category: 'Administración', description: 'Cierra el grupo para participantes.' },
   { name: 'open', args: '', category: 'Administración', description: 'Abre el grupo para participantes.' },
-  { name: 'coins', args: '[@usuario]', category: 'Economía', description: 'Muestra tus V-Coins.' },
-  { name: 'daily', args: '', category: 'Economía', description: 'Reclama tu bono diario.' },
-  { name: 'work', args: '', category: 'Economía', description: 'Trabaja para ganar V-Coins.' },
-  { name: 'robar', args: '<@usuario>', category: 'Economía', description: 'Intenta robar V-Coins.' },
-  { name: 'rank', args: '', category: 'Economía', description: 'Ranking de riqueza del team.' },
-  { name: 'tienda', args: '', category: 'Economía', description: 'Muestra la tienda interna.' },
-  { name: 'comprar', args: '<id>', category: 'Economía', description: 'Compra un objeto con V-Coins.' },
   { name: 'aceptar', args: '', category: 'Interacción', description: 'Acepta una propuesta de pareja.' },
 ];
 
@@ -162,24 +155,6 @@ const MENU_TEMPLATE = `ㅤ➢ㅤ◢𝟔𝟔 ; 𝟕𝟕◣ㅤ禍...ㅤ𝐁𝐎�
 {{cmd:anuncio}}
 {{cmd:close}}
 {{cmd:open}}
-
-ㅤㅤ࿙ׄ࿚ㅤ𓆩 ♱ 𓆪
-ㅤㅤㅤ(๑˃̵ᴗ˂̵)وㅤ⁙
-ㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙
-
-ㅤㅤㅤ◢ 𝟎𝟔 ◣
-🪙ㅤ׃ㅤ ~𝕰𝐂𝐎𝐍𝐎𝐌𝐈𝐀~ ㅤ׃
-ㅤㅤ𓂃 𝗏-𝖼𝗈𝗂𝗇𝗌 & 𝗅𝗈𝗈𝗍 𓂃
-ㅤㅤㅤ(づ｡◕‿‿◕｡)づ
-
-{{cmd:coins}}
-{{cmd:daily}}
-{{cmd:work}}
-{{cmd:robar}}
-{{cmd:rank}}
-{{cmd:tienda}}
-{{cmd:comprar}}
-
 ㅤㅤ࿚ׄ࿙ֹ࿚᮫᜔۬፟֟࿙ֹ࿚ׄ࿙
 
 ㅤㅤㅤ𓆩ㅤ禍ㅤ𓆪

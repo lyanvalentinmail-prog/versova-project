@@ -160,13 +160,6 @@ describe.skipIf(!enabled)('cuenta, tienda y sub-bots', () => {
       body: JSON.stringify({ itemId: 'no-existe' }),
     }, session);
     expect(bad.status).toBe(404);
-
-    const locked = await call('/api/store/checkout', {
-      method: 'POST',
-      body: JSON.stringify({ itemId: 'bot-ia' }),
-    }, session);
-    expect(locked.status).toBe(400);
-    expect(locked.body.error).toContain('no está disponible');
   });
 
   it('respeta el máximo de bots del plan free (3)', async () => {
@@ -184,7 +177,7 @@ describe.skipIf(!enabled)('cuenta, tienda y sub-bots', () => {
       body: JSON.stringify({ name: 'Bot de más', tier: 'free' }),
     }, session);
     expect(fourth.status).toBe(403);
-    expect(fourth.body.error).toContain('hasta 3 sub-bots');
+    expect(fourth.body.error).toContain('permite hasta 3 bots');
   });
 
   it('crea un sub-bot premium canjeando su token y rechaza reusarlo', async () => {

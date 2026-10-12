@@ -101,7 +101,7 @@ describe('páginas de la plataforma en el navegador', () => {
     const { dom, text, errores } = await openPage('index.html');
     expect(errores).toEqual([]);
     expect(text()).toContain('VÉRSOVA');
-    expect(dom.window.document.getElementById('statCommands')?.textContent).toContain('41');
+    expect(dom.window.document.getElementById('statCommands')?.textContent).toContain('34');
     expect(dom.window.document.getElementById('authModal')).toBeTruthy();
     expect(dom.window.document.getElementById('serverList')?.children.length).toBeGreaterThan(0);
     // El armazón (shell.js) queda disponible para las páginas.
@@ -128,11 +128,13 @@ describe('páginas de la plataforma en el navegador', () => {
     expect(dom.window.document.getElementById('saveBotOptions')).toBeTruthy();
   });
 
-  it('la tienda muestra el catálogo de bots y los artículos', async () => {
+  it('la tienda muestra el catálogo de bots (con los repos de GitHub) y los artículos gratis', async () => {
     const { dom, text, errores } = await openPage('store.html');
     expect(errores).toEqual([]);
     expect(text()).toContain('Catálogo de bots');
     expect(dom.window.document.getElementById('catalogList')?.textContent).toContain('VÉRSOVA');
+    expect(dom.window.document.getElementById('catalogList')?.textContent).toContain('Raiden WaBot');
+    expect(dom.window.document.getElementById('catalogList')?.textContent).toContain('Yae Miku Bot');
     expect(dom.window.document.getElementById('storeItems')?.textContent).toContain('Token');
   });
 
@@ -144,12 +146,12 @@ describe('páginas de la plataforma en el navegador', () => {
     expect(text()).toContain('CPU');
   });
 
-  it('el catálogo de comandos lista las seis categorías y los 41 comandos', async () => {
+  it('el catálogo de comandos lista las categorías y los 34 comandos', async () => {
     const { dom, text, errores } = await openPage('cmds.html');
     expect(errores).toEqual([]);
     expect(text()).toContain('Catálogo completo');
-    expect(text()).toContain('Economía');
-    expect(dom.window.document.getElementById('cmdCount')?.textContent).toContain('41');
+    expect(text()).toContain('Administración');
+    expect(dom.window.document.getElementById('cmdCount')?.textContent).toContain('34');
     expect(dom.window.document.getElementById('commandsList')?.children.length).toBeGreaterThan(30);
   });
 

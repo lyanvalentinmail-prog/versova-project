@@ -30,17 +30,6 @@ const person = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-const bankRow = (extra: Record<string, unknown> = {}) => ({
-  group_id: GROUP,
-  wa_id: TARGET,
-  coins: 500,
-  last_daily_at: null,
-  last_work_at: null,
-  last_rob_at: null,
-  inventory: [],
-  ...extra,
-});
-
 const pendingRequest = {
   id: 1,
   group_id: GROUP,
@@ -93,11 +82,6 @@ vi.mock('../src/database/repos.js', () => {
     findLatestPendingByTarget: async () => pendingRequest,
     findLatestPendingByUser: async () => pendingRequest,
     updatePartner: async () => undefined,
-    getBank: async () => bankRow(),
-    addBankCoins: async () => ({ ok: true, coins: 600 }),
-    stampBank: async () => undefined,
-    bankRank: async () => [bankRow({ coins: 900 }), bankRow({ coins: 400 })],
-    addInventoryItem: async () => undefined,
     getSetting: async () => null,
     setSetting: async () => undefined,
     getPlatformMetrics: async () => ({
@@ -205,13 +189,6 @@ const ARGS: Record<string, string> = {
   anuncio: 'Reunión del team hoy a las 21 h.',
   close: '',
   open: '',
-  coins: '@Ana',
-  daily: '',
-  work: '',
-  robar: '@Ana',
-  rank: '',
-  tienda: '',
-  comprar: 'coin-space-1gb',
 };
 
 /**
@@ -234,12 +211,12 @@ describe('todos los comandos del catálogo', () => {
     const inventory = getCommandInventory();
     const pendientes = inventory.filter((item) => !item.implemented).map((item) => item.name);
     expect(pendientes).toEqual([]);
-    expect(inventory.filter((item) => item.implemented).length).toBeGreaterThanOrEqual(41);
+    expect(inventory.filter((item) => item.implemented).length).toBeGreaterThanOrEqual(34);
   });
 
   it('ejecuta cada comando sin reventar y responde algo', async () => {
     const commands = allCommands();
-    expect(commands.length).toBeGreaterThanOrEqual(41);
+    expect(commands.length).toBeGreaterThanOrEqual(34);
 
     const fallos: string[] = [];
     for (const command of commands) {
@@ -254,21 +231,9 @@ describe('todos los comandos del catálogo', () => {
     expect(fallos).toEqual([]);
   });
 
-  it('muestra la tienda interna con los objetos que se pueden comprar', async () => {
-    const salidas = await runCommand('tienda');
-    expect(salidas[0]?.text).toContain('coin-space-1gb');
-    expect(salidas[0]?.text).toContain('V-Coins');
-  });
-
-  it('avisa cuando el objeto de la tienda no existe', async () => {
-    const salidas = await runCommand('comprar', 'no-existe');
-    expect(salidas[0]?.text).toContain('.comprar');
-  });
-
   it('responde al .menu con el catálogo completo', async () => {
     const salidas = await runCommand('menu');
     expect(salidas[0]?.text).toContain('𝓜𝓮𝓷𝓾 𝓭𝓮 𝓬𝓸𝓶𝓪𝓷𝓭𝓸𝓼');
-    expect(salidas[0]?.text).toContain('.coins');
-    expect(salidas[0]?.text).toContain('.comprar');
+    expect(salidas[0]?.text).toContain('.open');
   });
 });

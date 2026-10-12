@@ -16,7 +16,6 @@ export interface WebUser {
   password_hash: string | null;
   plan: WebPlan;
   extra_space_gb: number;
-  coins: number;
   handle: string | null;
   avatar_url: string | null;
   theme: string;

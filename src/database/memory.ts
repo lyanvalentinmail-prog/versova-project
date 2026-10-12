@@ -2,13 +2,11 @@
  * Implementación en memoria de las consultas que usa la web.
  *
  * Se activa cuando no hay DATABASE_URL (`config.database.memory`). Sirve para
- * probar la plataforma completa (cuentas, economía, catálogo, bots, reportes)
+ * probar la plataforma completa (cuentas, tienda, catálogo, bots, reportes)
  * sin levantar PostgreSQL. Los datos se pierden al reiniciar el proceso.
  */
 import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
 import type {
-  CoinItemRow,
-  CoinLedgerRow,
   CatalogRow,
   CatalogUseRow,
   PlatformCounts,
@@ -17,7 +15,7 @@ import type {
   SubBotGroupRow,
 } from './repos-platform.js';
 import type { PurchaseRow, SubBotOptionsPatch, SubBotRow, SubBotTier, TokenRow, WebPlan, WebUser } from './repos-web.js';
-import { BOT_CATALOG, COIN_ITEMS, PLATFORM_SERVERS } from '../web/platform-data.js';
+import { BOT_CATALOG, PLATFORM_SERVERS } from '../web/platform-data.js';
 
 interface SessionRow {
   token: string;
@@ -31,14 +29,12 @@ interface MemoryState {
   tokens: TokenRow[];
   subbots: SubBotRow[];
   purchases: Array<PurchaseRow & { user_id: number }>;
-  ledger: CoinLedgerRow[];
   catalogUses: CatalogUseRow[];
   groups: SubBotGroupRow[];
   reports: ReportRow[];
-  missions: Array<{ user_id: number; mission_id: string; reward: number }>;
   settings: Map<string, unknown>;
   audits: Array<{ group_id: string | null; actor: string; action: string; target: string | null; details: Record<string, unknown>; created_at: Date }>;
-  ids: Record<'user' | 'token' | 'bot' | 'purchase' | 'ledger' | 'use' | 'group' | 'report', number>;
+  ids: Record<'user' | 'token' | 'bot' | 'purchase' | 'use' | 'group' | 'report', number>;
 }
 
 const state: MemoryState = {
@@ -47,14 +43,12 @@ const state: MemoryState = {
   tokens: [],
   subbots: [],
   purchases: [],
-  ledger: [],
   catalogUses: [],
   groups: [],
   reports: [],
-  missions: [],
   settings: new Map(),
   audits: [],
-  ids: { user: 0, token: 0, bot: 0, purchase: 0, ledger: 0, use: 0, group: 0, report: 0 },
+  ids: { user: 0, token: 0, bot: 0, purchase: 0, use: 0, group: 0, report: 0 },
 };
 
 const nextId = (kind: keyof MemoryState['ids']): number => (state.ids[kind] += 1);
@@ -120,22 +114,12 @@ function seedDemo(): void {
     password_hash: hashMemoryPassword('versova'),
     plan: 'premium',
     extra_space_gb: 4,
-    coins: 1500,
     handle: 'demo',
     avatar_url: null,
     theme: 'dark',
     created_at: now(),
   };
   state.users.push(user);
-  state.ledger.push({
-    id: nextId('ledger'),
-    user_id: user.id,
-    amount: 1500,
-    kind: 'welcome',
-    detail: 'Bono de bienvenida de la demo',
-    meta: {},
-    created_at: now(),
-  });
 
   const bot: SubBotRow = {
     ...emptyBot(),
@@ -218,22 +202,12 @@ export async function createUser(data: {
     password_hash: data.passwordHash ?? null,
     plan: 'free',
     extra_space_gb: 0,
-    coins: 250,
     handle: null,
     avatar_url: null,
     theme: 'dark',
     created_at: now(),
   };
   state.users.push(user);
-  state.ledger.push({
-    id: nextId('ledger'),
-    user_id: user.id,
-    amount: 250,
-    kind: 'welcome',
-    detail: 'Bono de bienvenida',
-    meta: {},
-    created_at: now(),
-  });
   return user;
 }
 
@@ -509,58 +483,6 @@ export async function listPurchases(userId: number, limit = 25): Promise<Purchas
   return state.purchases.filter((row) => row.user_id === userId).slice(-limit).reverse();
 }
 
-/* ------------------------------- economía ------------------------------- */
-
-export async function addCoins(
-  userId: number,
-  amount: number,
-  kind: string,
-  detail: string,
-  meta: Record<string, unknown> = {},
-): Promise<{ ok: true; coins: number } | { ok: false; coins: number }> {
-  const user = await findUserById(userId);
-  if (!user) return { ok: false, coins: 0 };
-  if (user.coins + amount < 0) return { ok: false, coins: user.coins };
-  user.coins += amount;
-  state.ledger.push({
-    id: nextId('ledger'),
-    user_id: userId,
-    amount,
-    kind,
-    detail,
-    meta,
-    created_at: now(),
-  });
-  return { ok: true, coins: user.coins };
-}
-
-export async function getCoins(userId: number): Promise<number> {
-  return (await findUserById(userId))?.coins ?? 0;
-}
-
-export async function listLedger(userId: number, limit = 30): Promise<CoinLedgerRow[]> {
-  return state.ledger
-    .filter((row) => row.user_id === userId)
-    .slice()
-    .reverse()
-    .slice(0, limit);
-}
-
-export async function lastDailyClaim(userId: number): Promise<Date | null> {
-  const rows = state.ledger.filter((row) => row.user_id === userId && row.kind === 'daily');
-  return rows.length ? rows[rows.length - 1].created_at : null;
-}
-
-export async function listMissionClaims(userId: number): Promise<string[]> {
-  return state.missions.filter((row) => row.user_id === userId).map((row) => row.mission_id);
-}
-
-export async function claimMission(userId: number, missionId: string, reward: number): Promise<boolean> {
-  if (state.missions.some((row) => row.user_id === userId && row.mission_id === missionId)) return false;
-  state.missions.push({ user_id: userId, mission_id: missionId, reward });
-  return true;
-}
-
 /* ------------------------------- catálogo ------------------------------- */
 
 export async function listCatalogItems(): Promise<CatalogRow[]> {
@@ -582,6 +504,7 @@ export async function listCatalogItems(): Promise<CatalogRow[]> {
     featured: bot.featured,
     active: true,
     sort: bot.sort,
+    link: bot.link,
   }));
 }
 
@@ -614,31 +537,6 @@ export async function createCatalogUse(data: {
 
 export async function countCatalogUses(slug: string): Promise<number> {
   return state.catalogUses.filter((row) => row.bot_slug === slug).length;
-}
-
-/* --------------------------- tienda de monedas --------------------------- */
-
-function coinRow(item: (typeof COIN_ITEMS)[number]): CoinItemRow {
-  return {
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    price_coins: item.priceCoins,
-    kind: item.kind,
-    payload: item.payload,
-    badge: item.badge,
-    available: item.available,
-    sort: item.sort,
-  };
-}
-
-export async function listCoinItems(): Promise<CoinItemRow[]> {
-  return COIN_ITEMS.filter((item) => item.available).map((item) => coinRow(item));
-}
-
-export async function getCoinItem(id: string): Promise<CoinItemRow | null> {
-  const item = COIN_ITEMS.find((entry) => entry.id === id);
-  return item ? coinRow(item) : null;
 }
 
 /* ------------------------------ servidores ------------------------------- */

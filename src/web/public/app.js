@@ -9,7 +9,6 @@ const APP = {
   subbotsMeta: null,
   catalog: { bots: [], categories: [] },
   servers: [],
-  economy: null,
   selectedInstance: 'subbot',
   selectedServer: 'vrsov-01',
   selectedMethod: 'code',
@@ -90,7 +89,9 @@ function renderPairingControls(status = {}) {
     button.disabled = true;
     if (hint) {
       hint.hidden = false;
-      hint.textContent = 'La conexión está en modo vinculación: pide el código cuando aparezca el QR.';
+      hint.textContent = status.linked
+        ? 'Este bot ya está vinculado a WhatsApp.'
+        : 'Espera a que aparezca el QR (modo vinculación) y vuelve a intentar.';
     }
     return;
   }
@@ -210,7 +211,6 @@ async function renderHome() {
   }
 
   renderCollaborators();
-  await renderEconomyWidget();
   await renderAuthArea();
 }
 
@@ -244,7 +244,6 @@ const LINKS = [
   { ico: '🧩', title: 'Catálogo de bots', text: 'Bots gratis y de pago', href: '/store#catalogo' },
   { ico: '⌘', title: 'Comandos', text: 'Catálogo completo con categorías', href: '/cmds' },
   { ico: '📈', title: 'Estado del sistema', text: 'Telemetría y servidores en vivo', href: '/metrics' },
-  { ico: '🪙', title: 'Economía', text: 'Monedas, misiones y tienda interna', href: '/store' },
   { ico: '🎫', title: 'Reportes', text: 'Reporta un bug o sugiere una idea', href: '/ticket' },
 ];
 
@@ -276,76 +275,6 @@ function renderMenuPage() {
   );
 }
 
-async function renderEconomyWidget() {
-  const box = document.getElementById('economyWidget');
-  if (!box || !V.state.user) return;
-  try {
-    const economy = await V.api('/api/economy');
-    APP.economy = economy;
-    box.replaceChildren(
-      V.el('div', { class: 'row-between' }, [
-        V.el('div', {}, [
-          V.el('span', { class: 'label', text: 'Tu monedero' }),
-          V.el('h2', { text: `${V.num(economy.coins)} ${economy.coin.name}` }),
-          V.el('p', { class: 'small muted', text: `Monedas para el catálogo de bots y la tienda interna.` }),
-        ]),
-        V.el('span', { class: 'hero-avatar', style: 'width:64px;height:64px;font-size:26px', text: '🪙' }),
-      ]),
-      V.el('div', { class: 'row', style: 'margin-top:14px;flex-wrap:wrap' }, [
-        V.el('button', {
-          class: `btn btn-sm ${economy.daily.available ? 'btn-primary' : ''}`,
-          type: 'button',
-          text: economy.daily.available ? `Reclamar bono diario (+${economy.daily.reward})` : 'Bono diario reclamado',
-          disabled: !economy.daily.available,
-          onclick: async (event) => {
-            try {
-              const result = await V.api('/api/economy/daily', { body: {} });
-              V.toast('Bono reclamado', `+${result.reward} ${economy.coin.name} · saldo ${V.num(result.coins)}`, 'ok');
-              await renderEconomyWidget();
-            } catch (error) {
-              V.toast('No se pudo reclamar', error.message, 'err');
-            }
-          },
-        }),
-        V.el('a', { class: 'btn btn-sm btn-ghost', href: '/store', text: 'Ir a la tienda' }),
-        V.el('a', { class: 'btn btn-sm btn-ghost', href: '/store#catalogo', text: 'Catálogo de bots' }),
-      ]),
-      V.el('div', { class: 'grid grid-3', style: 'margin-top:14px' },
-        economy.missions.map((mission) =>
-          V.el('div', { class: 'card card-soft card-pad-sm' }, [
-            V.el('div', { class: 'row-between' }, [
-              V.el('b', { class: 'small', text: mission.name }),
-              V.el('span', { class: `pill ${mission.claimed ? 'green' : mission.ready ? 'accent' : 'amber'}`, text: mission.claimed ? 'Cobrada' : mission.ready ? `+${mission.reward}` : 'Pendiente' }),
-            ]),
-            V.el('p', { class: 'tiny muted', style: 'margin:6px 0 8px', text: mission.description }),
-            mission.claimed
-              ? V.el('span', { class: 'tiny muted', text: 'Misión completada' })
-              : V.el('button', {
-                  class: 'btn btn-sm btn-block',
-                  type: 'button',
-                  text: `Reclamar ${mission.reward} 🪙`,
-                  disabled: !mission.ready && mission.id !== 'daily',
-                  onclick: async () => {
-                    try {
-                      const path = mission.id === 'daily' ? '/api/economy/daily' : '/api/economy/mission';
-                      const body = mission.id === 'daily' ? {} : { missionId: mission.id };
-                      const result = await V.api(path, { body });
-                      V.toast('Recompensa cobrada', `+${result.reward} ${economy.coin.name}`, 'ok');
-                      await renderEconomyWidget();
-                    } catch (error) {
-                      V.toast('No se pudo cobrar', error.message, 'err');
-                    }
-                  },
-                }),
-          ]),
-        ),
-      ),
-    );
-  } catch (error) {
-    box.replaceChildren(V.note(`No se pudo cargar tu economía: ${error.message}`, 'warn'));
-  }
-}
-
 async function renderAuthArea() {
   const area = document.getElementById('authArea');
   if (!area) return;
@@ -356,7 +285,7 @@ async function renderAuthArea() {
   }
   if (V.state.user) {
     area.replaceChildren(
-      V.el('span', { class: 'pill accent', text: `${V.num(V.state.user.coins)} 🪙` }),
+      V.el('span', { class: 'pill green', text: 'Todo gratis · 0 $' }),
       V.el('span', { class: 'pill', text: V.state.user.planInfo?.name ?? V.state.user.plan }),
     );
     return;
@@ -399,6 +328,20 @@ function setAuthMode(mode) {
   if (error) error.hidden = true;
 }
 
+const AUTH_NEXT_PATHS = {
+  registrar: '/registrar',
+  bots: '/bots',
+  metrics: '/metrics',
+  store: '/store',
+  catalog: '/store',
+  ticket: '/ticket',
+};
+
+function redirectAfterLogin() {
+  const next = (new URLSearchParams(window.location.search).get('next') ?? '').replace(/^\//, '');
+  window.location.href = AUTH_NEXT_PATHS[next] ?? '/';
+}
+
 async function submitAuth(event) {
   event?.preventDefault?.();
   const modal = document.getElementById('authModal');
@@ -410,14 +353,28 @@ async function submitAuth(event) {
   try {
     await V.api(`/api/auth/${mode}`, { body: { email, password, name } });
     V.toast('Bienvenido', 'Sesión iniciada correctamente.', 'ok');
-    const next = new URLSearchParams(window.location.search).get('next');
-    window.location.href = next === 'store' ? '/store' : next === 'bots' ? '/bots' : next === 'registrar' ? '/registrar' : '/';
+    redirectAfterLogin();
   } catch (err) {
     if (error) {
       error.hidden = false;
       error.textContent = err.message;
     }
   }
+}
+
+/** Muestra el error que llegó en la URL (por ejemplo, un Google OAuth cancelado). */
+function showAuthErrorFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  if (!error) return;
+  const box = document.getElementById('authError');
+  if (box) {
+    box.hidden = false;
+    box.textContent = error;
+  }
+  params.delete('error');
+  const clean = params.toString();
+  window.history.replaceState({}, '', clean ? `/?${clean}` : '/');
 }
 
 /* ============================== ASISTENTE ================================= */
@@ -467,7 +424,7 @@ async function renderRegistrar() {
   const max = subbots.usage?.botsMax ?? 3;
   const limitNote = document.getElementById('wizardLimit');
   if (limitNote) {
-    limitNote.textContent = `Plan ${subbots.plan?.name ?? user.plan} · ${used}/${max} bots · ${V.num(user.coins)} 🪙 disponibles`;
+    limitNote.textContent = `Plan ${subbots.plan?.name ?? user.planInfo?.name ?? user.plan} · ${used}/${max} bots · 0 $`;
   }
 
   // Paso 1 · instancias
@@ -811,7 +768,7 @@ async function renderBots() {
   APP.subbots = data.bots ?? [];
   APP.subbotsMeta = data;
   V.setText('botsCount', String(APP.subbots.length));
-  V.setText('botsPlan', `Plan ${data.plan?.name ?? user.plan} · ${data.usage.botsUsed}/${data.usage.botsMax} bots · ${V.num(user.coins)} 🪙`);
+  V.setText('botsPlan', `Plan ${data.plan?.name ?? user.planInfo?.name ?? user.plan} · ${data.usage.botsUsed}/${data.usage.botsMax} bots · 0 $`);
 
   const list = document.getElementById('botsList');
   if (!list) return;
@@ -912,7 +869,12 @@ async function openBotOptions(id) {
   set('optShortName', bot.short_name);
   set('optLongName', bot.long_name);
   set('optCurrency', bot.currency);
-  V.setText('optOwnerValue', bot.owner_hidden ? 'Oculto por privacidad' : bot.owner_number || '—');
+  // El número del owner se pinta en el input real (value): con textContent no se veía.
+  const ownerInput = document.getElementById('optOwnerValue');
+  if (ownerInput) {
+    ownerInput.value = bot.owner_hidden ? '' : (bot.owner_number || '');
+    ownerInput.placeholder = bot.owner_hidden ? 'Oculto por privacidad' : '+598 99 000 111';
+  }
   set('optBotLink', bot.bot_link);
   set('optChannel', bot.channel_url);
   set('optBanner', bot.banner_url);
@@ -926,7 +888,7 @@ async function openBotOptions(id) {
   const catalogSelect = document.getElementById('optCatalog');
   if (catalogSelect) {
     catalogSelect.replaceChildren(
-      ...catalog.map((entry) => V.el('option', { value: entry.slug, text: `${entry.emoji} ${entry.name} · ${entry.pricing === 'free' ? 'gratis' : entry.pricing === 'coins' ? `${entry.priceCoins} 🪙` : `$${Number(entry.price_usd).toFixed(2)}`}` })),
+      ...catalog.map((entry) => V.el('option', { value: entry.slug, text: `${entry.emoji} ${entry.name} · gratis` })),
     );
     catalogSelect.value = bot.catalog_slug || 'versova';
   }
@@ -938,7 +900,11 @@ async function openBotOptions(id) {
       const current = V.$('optOwnerHidden');
       const hidden = current ? current.value !== '1' : true;
       if (V.$('optOwnerHidden')) V.$('optOwnerHidden').value = hidden ? '0' : '1';
-      V.setText('optOwnerValue', hidden ? '—' : bot.owner_number || '—');
+      const ownerInput = V.$('optOwnerValue');
+      if (ownerInput) {
+        ownerInput.value = hidden ? '' : (bot.owner_number || '');
+        ownerInput.placeholder = hidden ? 'Oculto por privacidad' : '+598 99 000 111';
+      }
       ownerToggle.textContent = hidden ? '👁 Visible' : '👁 Oculto';
     };
   }
@@ -985,12 +951,16 @@ function renderPrefixPicker(selected) {
 
 async function saveBotOptions() {
   if (!editingBotId) return;
+  const editing = APP.subbots.find((bot) => bot.id === editingBotId);
+  const ownerHidden = document.getElementById('optOwnerHidden')?.value !== '0';
+  const ownerInput = document.getElementById('optOwnerValue');
   const body = {
     shortName: document.getElementById('optShortName')?.value ?? '',
     longName: document.getElementById('optLongName')?.value ?? '',
     currency: document.getElementById('optCurrency')?.value ?? '',
-    ownerNumber: document.getElementById('optOwnerValue')?.textContent?.includes('Oculto') ? (APP.subbots.find((bot) => bot.id === editingBotId)?.owner_number ?? '') : (document.getElementById('optOwnerValue')?.textContent ?? ''),
-    ownerHidden: document.getElementById('optOwnerHidden')?.value !== '0',
+    // Cuando el owner está oculto no se toca el número; visible se guarda lo escrito en el input.
+    ownerNumber: ownerHidden ? (editing?.owner_number ?? '') : ((ownerInput?.value ?? '').trim()),
+    ownerHidden,
     botLink: document.getElementById('optBotLink')?.value ?? '',
     channelUrl: document.getElementById('optChannel')?.value ?? '',
     bannerUrl: document.getElementById('optBanner')?.value ?? '',
@@ -1076,17 +1046,14 @@ async function openBotServer(id) {
 async function renderStore() {
   const user = await V.ensureSession();
   if (!user) return;
-  const [store, catalog, economy] = await Promise.all([
+  const [store, catalog] = await Promise.all([
     V.api('/api/store/catalog'),
     V.api('/api/catalog'),
-    V.api('/api/economy'),
   ]);
   APP.catalog = catalog;
-  APP.economy = economy;
-  V.setText('storeCoins', `${V.num(economy.coins)} ${economy.coin.name}`);
-  V.setText('storePlan', `${store.plan?.name ?? user.plan} · ${store.usage.botsUsed}/${store.usage.botsMax} bots · ${store.usage.extraSpaceFree} GB libres`);
+  V.setText('storePlan', `Plan ${user.planInfo?.name ?? user.plan} · ${store.usage.botsUsed}/${store.usage.botsMax} bots · ${store.usage.extraSpaceFree} GB libres · 0 $`);
 
-  // Packs de monedas y productos de pago (USD)
+  // Productos gratuitos (tokens, espacio, planes)
   const items = store.items ?? [];
   const usd = document.getElementById('storeItems');
   if (usd) {
@@ -1094,11 +1061,11 @@ async function renderStore() {
       ...items.map((item) =>
         V.el('div', { class: 'card catalog-card' }, [
           V.el('div', { class: 'catalog-top' }, [
-            V.el('span', { class: 'catalog-emoji', text: item.kind === 'token' ? '🎟️' : item.kind === 'space' ? '💾' : item.kind === 'plan' ? '👑' : item.kind === 'coins' ? '🪙' : '🧩' }),
+            V.el('span', { class: 'catalog-emoji', text: item.kind === 'token' ? '🎟️' : item.kind === 'space' ? '💾' : item.kind === 'plan' ? '👑' : '🧩' }),
             V.el('div', { class: 'grow' }, [
               V.el('div', { class: 'row-between' }, [
                 V.el('b', { text: item.name }),
-                V.el('span', { class: 'price-tag usd', text: `$${Number(item.priceUsd).toFixed(2)}` }),
+                V.el('span', { class: 'price-tag free', text: Number(item.priceUsd) > 0 ? `$${Number(item.priceUsd).toFixed(2)}` : 'GRATIS' }),
               ]),
               V.el('p', { class: 'small muted', style: 'margin:6px 0 0', text: item.description }),
             ]),
@@ -1108,18 +1075,18 @@ async function renderStore() {
             V.el('button', {
               class: 'btn btn-sm btn-primary',
               type: 'button',
-              text: 'Comprar',
+              text: 'Reclamar gratis',
               disabled: !item.available,
               onclick: async () => {
                 try {
                   const result = await V.api('/api/store/checkout', { body: { itemId: item.id, quantity: 1 } });
-                  V.toast('Compra realizada', result.receipt?.message ?? 'Listo.', 'ok');
+                  V.toast('Listo', result.receipt?.message ?? 'Entregado.', 'ok');
                   if (result.receipt?.tokens?.length) {
                     V.toast('Tu token', result.receipt.tokens.map((token) => token.code).join(' · '), 'ok');
                   }
                   await renderStore();
                 } catch (error) {
-                  V.toast('No se pudo comprar', error.message, 'err');
+                  V.toast('No se pudo completar', error.message, 'err');
                 }
               },
             }),
@@ -1129,45 +1096,7 @@ async function renderStore() {
     );
   }
 
-  // Tienda de monedas (economía)
-  const coinShop = document.getElementById('coinShop');
-  if (coinShop) {
-    coinShop.replaceChildren(
-      ...economy.items.map((item) =>
-        V.el('div', { class: 'card catalog-card' }, [
-          V.el('div', { class: 'catalog-top' }, [
-            V.el('span', { class: 'catalog-emoji', text: item.kind === 'space' ? '💾' : item.kind === 'token' ? '🎟️' : item.kind === 'plan' ? '👑' : '✨' }),
-            V.el('div', { class: 'grow' }, [
-              V.el('div', { class: 'row-between' }, [
-                V.el('b', { text: item.name }),
-                V.el('span', { class: 'price-tag coins', text: `${V.num(item.price_coins)} 🪙` }),
-              ]),
-              V.el('p', { class: 'small muted', style: 'margin:6px 0 0', text: item.description }),
-            ]),
-          ]),
-          V.el('div', { class: 'row-between' }, [
-            item.badge ? V.el('span', { class: 'pill accent', text: item.badge }) : V.el('span', {}),
-            V.el('button', {
-              class: 'btn btn-sm',
-              type: 'button',
-              text: 'Comprar con monedas',
-              onclick: async () => {
-                try {
-                  const result = await V.api('/api/economy/buy', { body: { itemId: item.id } });
-                  V.toast('Compra realizada', result.receipt?.message ?? 'Listo.', 'ok');
-                  await renderStore();
-                } catch (error) {
-                  V.toast('No se pudo comprar', error.message, 'err');
-                }
-              },
-            }),
-          ]),
-        ]),
-      ),
-    );
-  }
-
-  // Catálogo de bots (gratis / monedas / pago)
+  // Catálogo de bots (todo gratis, con repo en GitHub)
   renderCatalogFilters(catalog.categories ?? []);
   renderCatalogList('Todos');
 
@@ -1183,7 +1112,7 @@ async function renderStore() {
               V.el('span', { class: `pill ${token.type === 'vip' ? 'accent' : 'amber'}`, text: `${token.type.toUpperCase()} · ${token.space_gb} GB` }),
             ]),
           )
-        : [V.note('No tienes tokens sin usar. Compra uno para activar instancias Premium o VIP.')]),
+        : [V.note('No tienes tokens sin usar. Reclama uno gratis para activar instancias Premium o VIP.')]),
     );
   }
 
@@ -1196,11 +1125,11 @@ async function renderStore() {
             V.el('div', { class: 'kv' }, [
               V.el('div', {}, [
                 V.el('span', { text: `${purchase.item_name} ×${purchase.quantity}` }),
-                V.el('span', { class: 'mono tiny', text: Number(purchase.price_usd) > 0 ? `$${Number(purchase.price_usd).toFixed(2)}` : 'V-Coins' }),
+                V.el('span', { class: 'mono tiny', text: Number(purchase.price_usd) > 0 ? `$${Number(purchase.price_usd).toFixed(2)}` : 'GRATIS' }),
               ]),
             ]),
           )
-        : [V.note('Todavía no compraste nada.')]),
+        : [V.note('Todavía no reclamaste nada.')]),
     );
   }
 }
@@ -1230,7 +1159,8 @@ function renderCatalogList(category) {
   const bots = (APP.catalog.bots ?? []).filter((bot) => category === 'Todos' || bot.category === category);
   box.replaceChildren(
     ...bots.map((bot) => {
-      const price = bot.pricing === 'free' ? 'GRATIS' : bot.pricing === 'coins' ? `${V.num(bot.price_coins)} 🪙` : `$${Number(bot.priceUsd).toFixed(2)}`;
+      const paid = Number(bot.priceUsd) > 0;
+      const price = paid ? `$${Number(bot.priceUsd).toFixed(2)}` : 'GRATIS';
       return V.el('div', { class: 'card catalog-card' }, [
         V.el('div', { class: 'catalog-top' }, [
           V.el('span', { class: 'catalog-emoji', style: `box-shadow:0 0 0 1px ${bot.accent}55, 0 10px 26px ${bot.accent}33`, text: bot.emoji }),
@@ -1240,7 +1170,7 @@ function renderCatalogList(category) {
                 V.el('b', { text: bot.name }),
                 V.el('div', { class: 'tiny muted', text: bot.tagline }),
               ]),
-              V.el('span', { class: `price-tag ${bot.pricing}`, text: price }),
+              V.el('span', { class: `price-tag ${paid ? 'usd' : 'free'}`, text: price }),
             ]),
             V.el('div', { class: 'chips', style: 'margin-top:8px' }, [
               V.el('span', { class: 'pill', text: bot.category }),
@@ -1253,11 +1183,11 @@ function renderCatalogList(category) {
         V.el('p', { class: 'small muted', style: 'margin:0', text: bot.description }),
         V.el('ul', { class: 'feature-list' }, (bot.features ?? []).slice(0, 4).map((feature) => V.el('li', { text: feature }))),
         V.el('div', { class: 'row wrap-text' }, (bot.commands ?? []).slice(0, 6).map((command) => V.el('span', { class: 'pill mono', text: `/${command}` }))),
-        V.el('div', { class: 'row' }, [
+        V.el('div', { class: 'row', style: 'flex-wrap:wrap' }, [
           V.el('button', {
-            class: `btn btn-sm ${bot.pricing === 'free' ? 'btn-primary' : ''}`,
+            class: 'btn btn-sm btn-primary',
             type: 'button',
-            text: bot.owned ? 'Ya activado' : bot.pricing === 'free' ? 'Activar gratis' : bot.pricing === 'coins' ? 'Activar con monedas' : 'Comprar y activar',
+            text: bot.owned ? 'Ya activado' : 'Activar gratis',
             disabled: bot.owned,
             onclick: async () => {
               try {
@@ -1266,12 +1196,12 @@ function renderCatalogList(category) {
                 await renderStore();
               } catch (error) {
                 V.toast('No se pudo activar', error.message, 'err');
-                if (error.status === 402) {
-                  V.toast('Faltan monedas', `Necesitas ${V.num(error.data?.priceCoins ?? bot.price_coins)} 🪙. Compra un pack o reclama misiones.`, 'err');
-                }
               }
             },
           }),
+          bot.link
+            ? V.el('a', { class: 'btn btn-sm btn-ghost', href: bot.link, target: '_blank', rel: 'noopener', text: '⌥ Ver en GitHub' })
+            : null,
           V.el('a', { class: 'btn btn-sm btn-ghost', href: '/registrar', text: 'Registrar instancia' }),
         ]),
       ]);
@@ -1552,6 +1482,7 @@ async function boot() {
   }
 
   if (new URLSearchParams(window.location.search).has('login')) openAuth('login');
+  showAuthErrorFromUrl();
   document.getElementById('themeToggle')?.addEventListener('click', () => V.applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
   document.getElementById('wizardCreate')?.addEventListener('click', createBotFromWizard);
   document.getElementById('wizardConfirm')?.addEventListener('click', confirmPairing);

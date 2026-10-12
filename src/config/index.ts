@@ -30,11 +30,23 @@ export const config = {
   server: {
     port: Number(process.env.PORT ?? 3000),
   },
-  owners: (process.env.OWNER_NUMBERS ?? '')
-    .split(',')
-    .map(onlyDigits)
-    .filter(Boolean),
+  owners: (() => {
+    const fromEnv = (process.env.OWNER_NUMBERS ?? '').split(',').map(onlyDigits).filter(Boolean);
+    // El owner por defecto de la plataforma: a él van los tickets.
+    return fromEnv.length ? fromEnv : ['59896719709'];
+  })(),
+  /** Correo del owner donde se mandan los tickets. */
+  ownerEmail: process.env.OWNER_EMAIL?.trim() || 'lyanvalentinmail@gmail.com',
   pairingPhone: onlyDigits(process.env.BOT_PHONE ?? ''),
+  /** SMTP opcional para el aviso de tickets por email. Sin él solo se avisa por WhatsApp. */
+  mail: {
+    host: process.env.MAIL_HOST?.trim() ?? '',
+    port: Number(process.env.MAIL_PORT ?? 587),
+    secure: process.env.MAIL_SECURE === 'true',
+    user: process.env.MAIL_USER?.trim() ?? '',
+    pass: process.env.MAIL_PASS ?? '',
+    from: process.env.MAIL_FROM?.trim() ?? 'Versova <no-reply@versova.app>',
+  },
   defaults: {
     inactivityDays: 7,
     minAge: 1,

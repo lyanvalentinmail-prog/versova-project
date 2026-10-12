@@ -31,7 +31,7 @@ export interface Ctx {
 
 export interface Command {
   name: string;
-  category: 'Registro' | 'Roles' | 'General' | 'Equipo' | 'Social' | 'Economía' | 'Administración';
+  category: 'Registro' | 'Roles' | 'General' | 'Equipo' | 'Social' | 'Administración';
   usage: string;
   description: string;
   groupOnly?: boolean;

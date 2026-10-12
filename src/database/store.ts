@@ -14,8 +14,6 @@ import * as mem from './memory.js';
 
 export type { WebPlan, SubBotTier, TokenType, WebUser, SubBotRow, TokenRow, PurchaseRow } from './repos-web.js';
 export type {
-  CoinItemRow,
-  CoinLedgerRow,
   CatalogRow,
   CatalogUseRow,
   PlatformCounts,
@@ -66,23 +64,11 @@ export const bumpSubBotUptime: typeof pgWeb.bumpSubBotUptime = pick(pgWeb.bumpSu
 export const recordPurchase: typeof pgWeb.recordPurchase = pick(pgWeb.recordPurchase, mem.recordPurchase);
 export const listPurchases: typeof pgWeb.listPurchases = pick(pgWeb.listPurchases, mem.listPurchases);
 
-/* -------------------------------- economía ------------------------------- */
-export const addCoins: typeof pgPlatform.addCoins = pick(pgPlatform.addCoins, mem.addCoins);
-export const getCoins: typeof pgPlatform.getCoins = pick(pgPlatform.getCoins, mem.getCoins);
-export const listLedger: typeof pgPlatform.listLedger = pick(pgPlatform.listLedger, mem.listLedger);
-export const lastDailyClaim: typeof pgPlatform.lastDailyClaim = pick(pgPlatform.lastDailyClaim, mem.lastDailyClaim);
-export const listMissionClaims: typeof pgPlatform.listMissionClaims = pick(pgPlatform.listMissionClaims, mem.listMissionClaims);
-export const claimMission: typeof pgPlatform.claimMission = pick(pgPlatform.claimMission, mem.claimMission);
-
 /* --------------------------- catálogo de bots ---------------------------- */
 export const listCatalogItems: typeof pgPlatform.listCatalogItems = pick(pgPlatform.listCatalogItems, mem.listCatalogItems);
 export const listCatalogUses: typeof pgPlatform.listCatalogUses = pick(pgPlatform.listCatalogUses, mem.listCatalogUses);
 export const createCatalogUse: typeof pgPlatform.createCatalogUse = pick(pgPlatform.createCatalogUse, mem.createCatalogUse);
 export const countCatalogUses: typeof pgPlatform.countCatalogUses = pick(pgPlatform.countCatalogUses, mem.countCatalogUses);
-
-/* --------------------------- tienda de monedas --------------------------- */
-export const listCoinItems: typeof pgPlatform.listCoinItems = pick(pgPlatform.listCoinItems, mem.listCoinItems);
-export const getCoinItem: typeof pgPlatform.getCoinItem = pick(pgPlatform.getCoinItem, mem.getCoinItem);
 
 /* ------------------------------- servidores ------------------------------ */
 export const listServers: typeof pgPlatform.listServers = pick(pgPlatform.listServers, mem.listServers);

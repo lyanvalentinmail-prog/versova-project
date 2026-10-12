@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 /**
- * Ejercita la ruta PostgreSQL de verdad: se aplica el esquema completo (versión 4) y se
+ * Ejercita la ruta PostgreSQL de verdad: se aplica el esquema completo (versión 5) y se
  * siembran los catálogos sobre un emulador de PostgreSQL en memoria (pg-mem), y luego se
  * ejecutan los repositorios reales. Así se comprueba el SQL sin necesitar un servidor.
  */
@@ -51,7 +51,7 @@ const WA_B = '59899000222@s.whatsapp.net';
 
 await db.migrate();
 
-describe('esquema PostgreSQL (v4) y repositorios', () => {
+describe('esquema PostgreSQL (v5) y repositorios', () => {
   it('aplica el esquema completo y siembra catálogo, tienda y servidores', async () => {
     const tables = await db.pool.query<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
@@ -59,20 +59,28 @@ describe('esquema PostgreSQL (v4) y repositorios', () => {
     const names = tables.rows.map((row) => row.table_name);
     for (const table of [
       'web_users', 'web_sessions', 'subbots', 'store_tokens', 'purchases',
-      'bot_catalog', 'catalog_uses', 'coin_ledger', 'coin_items', 'mission_claims',
-      'platform_servers', 'reports', 'subbot_groups', 'group_bank', 'group_blocks',
+      'bot_catalog', 'catalog_uses',
+      'platform_servers', 'reports', 'subbot_groups', 'group_blocks',
       'groups', 'members', 'users', 'characters', 'requests', 'warnings', 'settings', 'audit_log',
     ]) {
       expect(names).toContain(table);
     }
+    // La economía quedó eliminada por completo: sus tablas no deben existir.
+    for (const table of ['coin_ledger', 'coin_items', 'mission_claims', 'group_bank']) {
+      expect(names).not.toContain(table);
+    }
 
     const catalog = await platform.listCatalogItems(db.pool);
-    expect(catalog.length).toBe(1); // solo VÉRSOVA: el resto del catálogo fue retirado
-    expect(catalog[0].slug).toBe('versova');
-
-    const items = await platform.listCoinItems(db.pool);
-    expect(items.length).toBe(7);
-    expect(items.some((item) => item.id === 'coin-token-premium')).toBe(true);
+    // VÉRSOVA + los bots abiertos de GitHub (Raiden WaBot y Yae Miku Bot).
+    expect(catalog.length).toBe(3);
+    expect(catalog.map((bot) => bot.slug)).toEqual(['versova', 'raiden', 'yae-miku']);
+    // Todo el catálogo es gratis (0 $) y apunta a su repo en GitHub.
+    for (const bot of catalog) {
+      expect(bot.pricing).toBe('free');
+      expect(Number(bot.price_usd)).toBe(0);
+      expect(bot.price_coins).toBe(0);
+      expect(bot.link).toMatch(/^https:\/\/github\.com\//);
+    }
 
     const servers = await platform.listServers(db.pool);
     expect(servers.length).toBe(6);
@@ -138,71 +146,24 @@ describe('esquema PostgreSQL (v4) y repositorios', () => {
     expect(await web.countSubBots(user.id)).toBe(1);
   });
 
-  it('acredita V-Coins, misiones y usos del catálogo', async () => {
+  it('registra los usos del catálogo (todo gratis)', async () => {
     const user = await web.findUserByEmail('esquema@test.dev');
     expect(user).not.toBeNull();
     const id = user!.id;
 
-    const sumado = await platform.addCoins(id, 300, 'welcome', 'Bono de bienvenida');
-    expect(sumado).toEqual({ ok: true, coins: 300 });
-    expect(await platform.getCoins(id)).toBe(300);
-
-    const gastado = await platform.addCoins(id, -100, 'shop', 'Compra interna');
-    expect(gastado).toEqual({ ok: true, coins: 200 });
-
-    const rechazado = await platform.addCoins(id, -9999, 'shop', 'Compra imposible');
-    expect(rechazado.ok).toBe(false);
-    expect(rechazado.coins).toBe(200);
-
-    const libro = await platform.listLedger(id, 10);
-    // El intento rechazado no deja movimiento en el libro.
-    expect(libro.length).toBe(2);
-    expect(libro[0].detail).toBe('Compra interna');
-
-    expect(await platform.claimMission(id, 'daily', 25)).toBe(true);
-    expect(await platform.claimMission(id, 'daily', 25)).toBe(false);
-    expect(await platform.listMissionClaims(id)).toEqual(['daily']);
-
-    const uso = await platform.createCatalogUse({ userId: id, slug: 'versova', subbotId: null, paidCoins: 0 });
-    expect(uso.bot_slug).toBe('versova');
-    await platform.createCatalogUse({ userId: id, slug: 'versova', subbotId: null, paidCoins: 0 });
-    expect(await platform.countCatalogUses('versova')).toBe(1);
+    const uso = await platform.createCatalogUse({ userId: id, slug: 'raiden', subbotId: null, paidCoins: 0 });
+    expect(uso.bot_slug).toBe('raiden');
+    await platform.createCatalogUse({ userId: id, slug: 'raiden', subbotId: null, paidCoins: 0 });
+    expect(await platform.countCatalogUses('raiden')).toBe(1);
     expect((await platform.listCatalogUses(id)).length).toBe(1);
-
-    const item = await platform.getCoinItem('coin-space-1gb');
-    expect(item?.price_coins).toBe(300);
-    const faltante = await platform.getCoinItem('no-existe');
-    expect(faltante).toBeNull();
   });
 
-  it('lleva el banco del grupo: bono, trabajo, robo, ranking e inventario', async () => {
+  it('maneja grupos y administradores del team', async () => {
     await core.ensureGroup(GROUP, 'Team de prueba');
     await core.saveGroupAdmins(GROUP, [WA_A]);
     const grupo = await core.getGroup(GROUP);
     expect(grupo?.name).toBe('Team de prueba');
     expect(grupo?.admins).toEqual([WA_A]);
-
-    const inicial = await core.getBank(GROUP, WA_A);
-    expect(inicial.coins).toBe(100);
-
-    await core.addBankCoins(GROUP, WA_A, 250);
-    await core.stampBank(GROUP, WA_A, 'last_daily_at');
-    const despues = await core.getBank(GROUP, WA_A);
-    expect(despues.coins).toBe(350);
-    expect(despues.last_daily_at).not.toBeNull();
-
-    const sinSaldo = await core.addBankCoins(GROUP, WA_A, -10_000);
-    expect(sinSaldo.ok).toBe(false);
-    expect(sinSaldo.coins).toBe(350);
-
-    await core.addInventoryItem(GROUP, WA_A, { id: 'coin-space-1gb', name: '1 GB extra' });
-    const conItem = await core.getBank(GROUP, WA_A);
-    expect(conItem.inventory.length).toBe(1);
-    expect(conItem.inventory[0]).toMatchObject({ id: 'coin-space-1gb', name: '1 GB extra' });
-
-    await core.addBankCoins(GROUP, WA_B, 900);
-    const ranking = await core.bankRank(GROUP, 10);
-    expect(ranking.map((row) => row.wa_id)).toEqual([WA_B, WA_A]);
   });
 
   it('guarda reglas, bloqueos, parejas, advertencias y ajustes', async () => {
@@ -289,17 +250,19 @@ describe('esquema PostgreSQL (v4) y repositorios', () => {
     expect(totales.totalBots).toBe(1);
   });
 
-  it('allana el centro de la economía interna (efectivo en la tienda de V-Coins)', async () => {
+  it('registra espacio extra y compras gratuitas en la tienda', async () => {
     const user = await web.findUserByEmail('esquema@test.dev');
     const antes = (await web.findUserById(user!.id))!.extra_space_gb;
     await db.tx(async (client) => {
       await web.addExtraSpace(user!.id, 1, client as never);
       await web.recordPurchase(
-        { userId: user!.id, itemId: 'space-1gb', itemName: '1 GB extra', quantity: 1, priceUsd: 1 },
+        { userId: user!.id, itemId: 'space-1gb', itemName: '1 GB extra', quantity: 1, priceUsd: 0 },
         client as never,
       );
     });
     const actualizado = await web.findUserById(user!.id);
     expect(actualizado?.extra_space_gb).toBe(antes + 1);
+    const compra = (await web.listPurchases(user!.id))[0];
+    expect(Number(compra.price_usd)).toBe(0);
   });
 });
