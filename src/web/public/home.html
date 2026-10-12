@@ -4,14 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#05060f" />
-  <meta name="description" content="Panel público de control del bot VÉRSOVA: conexión, bots, comandos, identidad, telemetría y consola." />
+  <meta name="description" content="Panel de control del bot VÉRSOVA: sesión de usuario, sub-bots, tienda de tokens, conexión, comandos, identidad y telemetría." />
   <title>VÉRSOVA — Panel de control</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cff'/%3E%3Cstop offset='1' stop-color='%2326e0ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="nav-backdrop" id="navBackdrop" aria-hidden="true"></div>
+
   <div class="app">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar" aria-label="Barra lateral">
       <a class="brand" href="/" aria-label="VÉRSOVA, inicio">
         <span class="brand-mark" aria-hidden="true">V</span>
         <span>
@@ -21,11 +23,18 @@
       </a>
 
       <div>
+        <p class="side-nav-label">Cuenta</p>
+        <nav class="nav" aria-label="Cuenta">
+          <a href="/store"><span class="ico" aria-hidden="true">⛶</span> Tienda <span class="tag">tokens</span></a>
+        </nav>
+      </div>
+
+      <div>
         <p class="side-nav-label">Principal</p>
         <nav class="nav" aria-label="Secciones del panel">
           <a href="#inicio" data-view="inicio" class="is-active"><span class="ico" aria-hidden="true">⌂</span> Inicio</a>
+          <a href="#subbots" data-view="subbots"><span class="ico" aria-hidden="true">◈</span> Mis Sub-Bots <span class="tag" id="navSubbotCount">—</span></a>
           <a href="#conexion" data-view="conexion"><span class="ico" aria-hidden="true">⌁</span> Conexión</a>
-          <a href="#bots" data-view="bots"><span class="ico" aria-hidden="true">◈</span> Mis Bots</a>
           <a href="#comandos" data-view="comandos"><span class="ico" aria-hidden="true">⌘</span> Comandos <span class="tag" id="navCommandCount">—</span></a>
           <a href="#identidad" data-view="identidad"><span class="ico" aria-hidden="true">✎</span> Identidad</a>
         </nav>
@@ -50,15 +59,19 @@
         <p class="muted small" style="margin-top:10px" id="sideDetail">Buscando estado…</p>
       </div>
 
-      <p class="sidebar-foot">VÉRSOVA · v1.0<br />Panel público, sin contraseña.</p>
+      <p class="sidebar-foot" id="sidebarFoot">VÉRSOVA · v1.0</p>
     </aside>
 
     <main class="main">
       <div class="panel-top">
+        <button id="menuToggle" class="hamburger" type="button" aria-label="Abrir pestañas" aria-expanded="false" aria-controls="sidebar">
+          <span></span><span></span><span></span>
+        </button>
         <span class="breadcrumb" id="viewName">Inicio</span>
-        <span class="pill accent">Plataforma oficial</span>
         <span class="spacer"></span>
+        <span class="pill" id="planPill">Plan —</span>
         <span class="pill" id="statusPill"><span class="live-dot off"></span><span>Conectando…</span></span>
+        <div id="authArea" class="auth-area"></div>
         <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema" aria-pressed="true">
           <span class="switch-track" aria-hidden="true">
             <span class="switch-icon sun">☀</span>
@@ -77,23 +90,23 @@
             <span class="pill" id="heroTeamPill">◢禍◣ Versova</span>
           </div>
           <h1 id="greeting">BUENAS NOCHES</h1>
-          <p class="hello">Hola, bienvenido al panel de <strong id="heroBotName">VÉRSOVA</strong>. Desde aquí vinculas el número, personalizas el menú y observas el servidor en vivo.</p>
+          <p class="hello" id="helloLine">Cargando tu sesión…</p>
           <div class="row" style="margin-top:22px">
-            <a class="btn btn-primary" href="#conexion">Vincular dispositivo</a>
-            <a class="btn btn-ghost" href="#monitor">Ver telemetría</a>
-            <a class="btn btn-ghost" href="#comandos">Personalizar comandos</a>
+            <a class="btn btn-primary" href="#subbots">Mis Sub-Bots</a>
+            <a class="btn btn-ghost" href="/store">Tienda de tokens</a>
+            <a class="btn btn-ghost" href="#conexion">Vincular dispositivo</a>
           </div>
         </div>
 
         <div class="stat-grid">
+          <div class="stat"><span>Sub-bots</span><b id="statSubBots">0</b><small id="statSubBotsNote">de tu plan</small></div>
+          <div class="stat"><span>Mi plan</span><b id="statPlan" class="stat-plan">Free</b><small id="statPlanNote">cámbialo en la tienda</small></div>
+          <div class="stat"><span>Espacio extra</span><b id="statExtraSpace">0 GB</b><small id="statExtraNote">disponible para repartir</small></div>
           <div class="stat"><span>Comandos</span><b id="statCommands" data-count-to="0">0</b><small id="statCommandsNote">disponibles en el menú</small></div>
           <div class="stat"><span>Registros</span><b id="statUsers" data-count-to="0">0</b><small>integrantes registrados</small></div>
-          <div class="stat"><span>Personajes</span><b id="statCharacters" data-count-to="0">0</b><small id="statCharactersNote">— ocupados</small></div>
           <div class="stat"><span>Grupos</span><b id="statGroups" data-count-to="0">0</b><small>grupos con el bot</small></div>
-          <div class="stat"><span>Integrantes</span><b id="statMembers" data-count-to="0">0</b><small id="statMembersNote">— activos en 7 días</small></div>
-          <div class="stat"><span>Solicitudes</span><b id="statRequests" data-count-to="0">0</b><small>pendientes de aprobar</small></div>
-          <div class="stat"><span>Advertencias</span><b id="statWarns" data-count-to="0">0</b><small>emitidas por admins</small></div>
           <div class="stat"><span>Uptime</span><b id="statUptime">—</b><small id="statUptimeNote">desde el arranque</small></div>
+          <div class="stat"><span>Tokens sin usar</span><b id="statTokens">0</b><small id="statTokensNote">en tu cuenta</small></div>
         </div>
 
         <div class="grid two">
@@ -129,17 +142,17 @@
               </div>
             </div>
             <div class="link-grid" style="grid-template-columns:minmax(0,1fr)">
-              <a class="link-card card tight hoverable" href="#conexion">
-                <span class="icon" aria-hidden="true">⌁</span>
-                <b>Vincular dispositivo</b>
-                <p>QR o código de 8 dígitos para conectar el número del bot.</p>
+              <a class="link-card card tight hoverable" href="#subbots">
+                <span class="icon" aria-hidden="true">◈</span>
+                <b>Mis Sub-Bots</b>
+                <p>Crea, edita y administra tus sub-bots free, premium y vip.</p>
                 <span class="go">Abrir sección →</span>
               </a>
-              <a class="link-card card tight hoverable" href="/cmds">
-                <span class="icon" aria-hidden="true">⌘</span>
-                <b>Catálogo de comandos</b>
-                <p>Todo lo que el bot sabe hacer, con categorías y búsqueda.</p>
-                <span class="go">Ver catálogo →</span>
+              <a class="link-card card tight hoverable" href="/store">
+                <span class="icon" aria-hidden="true">⛶</span>
+                <b>Tienda de tokens</b>
+                <p>Tokens premium y vip, espacio extra y mejora de plan.</p>
+                <span class="go">Ir a la tienda →</span>
               </a>
             </div>
           </article>
@@ -157,9 +170,41 @@
             <div class="team-card"><span class="avatar">◈</span><b>Baileys</b><span>WhatsApp API</span></div>
             <div class="team-card"><span class="avatar">⛁</span><b>PostgreSQL</b><span>Datos y sesión</span></div>
             <div class="team-card"><span class="avatar">☁</span><b>Render</b><span>Despliegue</span></div>
-            <div class="team-card"><span class="avatar">⌘</span><b>Panel público</b><span>Sin autenticación</span></div>
+            <div class="team-card"><span class="avatar">⛶</span><b>Tienda</b><span>Tokens y espacio</span></div>
           </div>
         </div>
+      </section>
+
+      <!-- ---------------------------- MIS SUB-BOTS --------------------------- -->
+      <section class="view" id="view-subbots">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Tus bots</p>
+              <h2 class="card-title">Mis Sub-Bots</h2>
+              <p class="muted small" style="margin-top:6px">Crea, edita y administra tus sub-bots. El tipo premium y vip se activa canjeando un token de la tienda.</p>
+            </div>
+            <div class="row">
+              <span class="count-pill" id="subbotQuota">—</span>
+              <button id="createSubBot" class="btn btn-primary btn-sm" type="button">＋ Crear sub-bot</button>
+            </div>
+          </div>
+
+          <div class="subbot-summary">
+            <div class="card inset quota-row">
+              <div class="kv" style="gap:6px">
+                <div><span>Bots usados</span><span id="quotaBots">—</span></div>
+                <div><span>Plan actual</span><span id="quotaPlan">—</span></div>
+                <div><span>Espacio extra sin asignar</span><span id="quotaExtra">—</span></div>
+              </div>
+              <a class="btn btn-sm btn-ghost" href="/store#planes">Mejorar plan</a>
+            </div>
+          </div>
+
+          <div id="subbotList" class="subbot-grid" style="margin-top:16px" aria-live="polite">
+            <p class="empty-state">Cargando sub-bots…</p>
+          </div>
+        </article>
       </section>
 
       <!-- ------------------------------ CONEXIÓN ----------------------------- -->
@@ -209,59 +254,8 @@
 
         <aside class="public-notice">
           <span class="notice-icon" aria-hidden="true">⚠</span>
-          <p><strong>Este panel no tiene contraseña.</strong> Cualquiera con el enlace puede editar el menú y el banner, ver la actividad, consultar QR o códigos activos y vincular o cerrar la sesión de WhatsApp.</p>
+          <p><strong>Estás en tu propia sesión.</strong> Solo tu cuenta puede usar este panel. Quien tenga acceso a tu cuenta puede editar el menú, ver la actividad y vincular o cerrar la sesión de WhatsApp.</p>
         </aside>
-      </section>
-
-      <!-- -------------------------------- BOTS ------------------------------- -->
-      <section class="view" id="view-bots">
-        <div class="card">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Sesiones</p>
-              <h2 class="card-title">Mis Bots</h2>
-              <p class="muted small">gestiona tus sesiones activas</p>
-            </div>
-            <span class="pill" id="botCount">SubBots registrados · 1</span>
-          </div>
-
-          <article class="bot-card card inset">
-            <div class="row">
-              <span class="bot-avatar">V</span>
-              <div>
-                <b id="botName">VÉRSOVA</b>
-                <p class="muted small" id="botNumber">Número —</p>
-              </div>
-              <span class="spacer"></span>
-              <span class="status-badge" id="botBadge"><span class="status-dot"></span><span>…</span></span>
-            </div>
-            <div class="kv">
-              <div><span>Prefijo</span><span id="botPrefix">.</span></div>
-              <div><span>Equipo</span><span id="botTeam">—</span></div>
-              <div><span>Grupos conectados</span><span id="botGroups">—</span></div>
-              <div><span>Registros</span><span id="botUsers">—</span></div>
-              <div><span>Personajes ocupados</span><span id="botCharacters">—</span></div>
-              <div><span>Última actividad</span><span id="botActivity">—</span></div>
-            </div>
-            <div class="bot-flags">
-              <span class="pill ok" id="botFlagSession">Sesión en PostgreSQL</span>
-              <span class="pill">Anti-duplicados</span>
-              <span class="pill">Límite por usuario</span>
-              <span class="pill">Auditoría de admins</span>
-            </div>
-            <div class="row">
-              <a class="btn btn-primary btn-sm" href="#conexion">Gestionar vinculación</a>
-              <a class="btn btn-sm btn-ghost" href="#comandos">Configurar comandos</a>
-              <a class="btn btn-sm btn-ghost" href="/cmds">Ver catálogo</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="grid three">
-          <div class="stat"><span>Grupos</span><b id="cardGroups">0</b><small>con el bot dentro</small></div>
-          <div class="stat"><span>Activos 7 días</span><b id="cardActive">0</b><small>integrantes con actividad</small></div>
-          <div class="stat"><span>Acciones auditadas</span><b id="cardActions">0</b><small>registradas por admins</small></div>
-        </div>
       </section>
 
       <!-- ------------------------------ COMANDOS ----------------------------- -->
@@ -438,7 +432,13 @@
             <a class="link-card card tight hoverable" href="/">
               <span class="icon" aria-hidden="true">⌂</span>
               <b>Página principal</b>
-              <p>Presentación del bot, ventajas y preguntas frecuentes.</p>
+              <p>Presentación del bot, planes y preguntas frecuentes.</p>
+              <span class="go">Abrir →</span>
+            </a>
+            <a class="link-card card tight hoverable" href="/store">
+              <span class="icon" aria-hidden="true">⛶</span>
+              <b>Tienda</b>
+              <p>Tokens premium/vip, espacio extra y otros bots.</p>
               <span class="go">Abrir →</span>
             </a>
             <a class="link-card card tight hoverable" href="/cmds">
@@ -465,12 +465,6 @@
               <p>Código fuente, guía de despliegue y registro de cambios.</p>
               <span class="go">Abrir →</span>
             </a>
-            <a class="link-card card tight hoverable" href="/health">
-              <span class="icon" aria-hidden="true">♥</span>
-              <b>Salud del servicio</b>
-              <p>Respuesta JSON con el estado de la base y de WhatsApp.</p>
-              <span class="go">Consultar →</span>
-            </a>
           </div>
         </div>
       </section>
@@ -486,7 +480,7 @@
               <li>Comprueba el estado de WhatsApp en la sección <a href="#conexion">Conexión</a>.</li>
               <li>Mira la telemetría en <a href="#monitor">Monitor</a> para descartar caídas del servidor.</li>
               <li>Si el bot no responde, ciérrale la sesión y vuelve a vincularlo.</li>
-              <li>Revisa las variables del servicio (DATABASE_URL, OWNER_NUMBERS) en el panel de Render.</li>
+              <li>Para problemas con tokens o compras, revisa <a href="/store#mis-tokens">Mis tokens</a> en la tienda.</li>
             </ol>
             <div class="row" style="margin-top:18px">
               <a class="btn btn-primary btn-sm" href="#monitor">Abrir consola</a>
@@ -498,10 +492,10 @@
             <p class="eyebrow">Antes de escribir</p>
             <h3 class="card-title">Preguntas rápidas</h3>
             <div class="faq" style="margin-top:14px">
-              <details open><summary>¿El panel es privado?</summary><p>No. No pide contraseña ni autentica visitantes: quien tenga la URL puede administrar el bot. Los cambios se limitan por IP para evitar abusos.</p></details>
+              <details open><summary>¿Necesito iniciar sesión?</summary><p>Sí. El panel y la tienda requieren cuenta (Google o email). Así tus tokens y sub-bots quedan ligados solo a ti.</p></details>
               <details><summary>¿Cuánto dura el código de vinculación?</summary><p>Unos 60 segundos. El panel lo retira al expirar para que no ingreses un código que WhatsApp rechazaría.</p></details>
               <details><summary>¿Por qué el botón de código está deshabilitado?</summary><p>WhatsApp solo acepta un código por teléfono cuando la conexión está en modo vinculación (el mismo momento en que aparece el QR).</p></details>
-              <details><summary>¿Se pierde la sesión al reiniciar?</summary><p>No. La sesión se guarda en PostgreSQL y el bot la recupera al arrancar de nuevo.</p></details>
+              <details><summary>¿Puedo recuperar un token usado?</summary><p>No. Cada token se canjea una sola vez al crear un sub-bot. Si eliminas el sub-bot, el token queda consumido.</p></details>
             </div>
           </article>
         </div>
@@ -509,9 +503,76 @@
 
       <footer class="footer">
         <span>VÉRSOVA · est. 2026</span>
-        <span>Panel público · sin autenticación</span>
+        <span id="footSession">Sesión iniciada</span>
       </footer>
     </main>
+  </div>
+
+  <!-- --------------------- Modal: crear / editar sub-bot -------------------- -->
+  <div class="modal-overlay" id="subbotOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="subbotModalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Mis Sub-Bots</p>
+          <h3 class="card-title" id="subbotModalTitle">Crear sub-bot</h3>
+        </div>
+        <button class="modal-close" id="subbotClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="subbotForm" novalidate>
+        <div class="stack" style="gap:14px">
+          <div>
+            <label class="field-label" for="subbotName">Nombre del sub-bot</label>
+            <input id="subbotName" type="text" maxlength="40" placeholder="Ej: Versova Rol UY" required />
+          </div>
+
+          <div>
+            <label class="field-label">Tipo de sub-bot</label>
+            <div class="tier-picker" id="tierPicker">
+              <button type="button" class="tier-option tier-free is-active" data-tier="free">
+                <b>Free</b><span>1 GB · sin token</span>
+              </button>
+              <button type="button" class="tier-option tier-premium" data-tier="premium">
+                <b>Premium</b><span>2 GB · token</span>
+              </button>
+              <button type="button" class="tier-option tier-vip" data-tier="vip">
+                <b>VIP</b><span>4 GB · token</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="tokenField" hidden>
+            <label class="field-label" for="subbotToken">Código del token</label>
+            <div class="input-action">
+              <input id="subbotToken" type="text" placeholder="VRSOV-PREM-XXXX-XXXX" autocomplete="off" class="mono" />
+              <button id="useLastToken" class="btn btn-sm" type="button" title="Usar el primer token sin usar de mi cuenta">Usar mío</button>
+            </div>
+            <p class="muted small" id="tokenHint" style="margin-top:8px">Compra un token en la <a class="gradient-text" href="/store">tienda</a> y pega su código aquí.</p>
+          </div>
+
+          <div>
+            <label class="field-label" for="subbotPhone">Número de WhatsApp (opcional)</label>
+            <input id="subbotPhone" type="tel" inputmode="tel" placeholder="59899999999" />
+          </div>
+
+          <div>
+            <label class="field-label" for="subbotDescription">Descripción (opcional)</label>
+            <textarea id="subbotDescription" rows="2" maxlength="300" placeholder="Para qué vas a usar este sub-bot"></textarea>
+          </div>
+
+          <div id="extraField" hidden>
+            <label class="field-label" for="subbotExtra">Espacio extra asignado: <span id="subbotExtraValue">0 GB</span></label>
+            <input id="subbotExtra" type="range" min="0" max="0" step="1" value="0" style="width:100%" />
+            <p class="muted small" id="subbotExtraHint">Sin espacio extra disponible.</p>
+          </div>
+        </div>
+
+        <p id="subbotError" class="form-message error" hidden></p>
+        <div class="row" style="margin-top:18px">
+          <button id="subbotSubmit" class="btn btn-primary" type="submit" style="flex:1">Crear sub-bot</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

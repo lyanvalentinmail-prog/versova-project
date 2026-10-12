@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { statfs } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import type { Server as HttpServer } from 'node:http';
 import { arch, cpus, hostname, loadavg, platform, release, totalmem, freemem, uptime as osUptime } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -10,11 +11,48 @@ import { getCommandSettings, saveCommandSettings } from '../core/command-setting
 import { allCommands } from '../core/router.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
 import { getPlatformMetrics, getSetting, setSetting } from '../database/repos.js';
-import { pool } from '../database/db.js';
+import { pool, tx } from '../database/db.js';
+import {
+  addExtraSpace,
+  allocatedExtraGb,
+  countSubBots,
+  countUnusedTokens,
+  createSubBot,
+  createTokens,
+  deleteSubBot,
+  findUserByEmail,
+  getSubBot,
+  getTokenByCode,
+  listPurchases,
+  listSubBots,
+  listTokensByOwner,
+  recordPurchase,
+  redeemToken,
+  updateUserPlan,
+  updateSubBot,
+  type SubBotRow,
+  type WebPlan,
+} from '../database/repos-web.js';
 import { logBus, logger, recentLogs, type LogEntry } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
 import { maskPhone } from '../utils/text.js';
 import { buildMenu, DEFAULT_BANNER_TEXT, type Banner } from '../commands/general/menu.js';
+import {
+  attachUser,
+  authLogin,
+  authLogout,
+  authMe,
+  authRegister,
+  BOT_TIERS,
+  PLANS,
+  googleCallback,
+  googleStart,
+  hasSession,
+  limitAuth,
+  requireUser,
+  STORE_ITEMS,
+  toSafeUser,
+} from './auth.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const startedAt = new Date();
@@ -33,6 +71,31 @@ function publicWriteLimit(scope: string, max = 30, windowMs = 60_000) {
 
 const limitWrites = publicWriteLimit('writes', 30, 60_000);
 const limitPairing = publicWriteLimit('pairing', 4, 60_000);
+const limitCheckout = publicWriteLimit('checkout', 12, 60_000);
+
+/* ------------------------------ tienda/sub-bots --------------------------- */
+const TOKEN_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I, O, 0, 1 para leerlos mejor
+
+function tokenBlock(): string {
+  const bytes = randomBytes(4);
+  return [...bytes].map((byte) => TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length]).join('');
+}
+
+/** Código tipo VRSOV-PREM-7K2M-9QX4 para tokens de la tienda. */
+function generateTokenCode(tier: 'premium' | 'vip'): string {
+  const prefix = tier === 'vip' ? 'VIP' : 'PREM';
+  return `VRSOV-${prefix}-${tokenBlock()}-${tokenBlock()}`;
+}
+
+/** Espacio total de un sub-bot: el mayor entre su tipo y el plan del usuario, más el extra asignado. */
+function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
+  const baseSpaceGb = Math.max(BOT_TIERS[bot.tier].spaceGb, PLANS[plan].spacePerBotGb);
+  return {
+    ...bot,
+    baseSpaceGb,
+    totalSpaceGb: baseSpaceGb + bot.extra_gb,
+  };
+}
 
 export function startWeb(): HttpServer {
   const app = express();
@@ -40,13 +103,243 @@ export function startWeb(): HttpServer {
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '3mb' }));
   const publicDir = join(here, 'public');
-  app.use(express.static(publicDir, { index: 'index.html', extensions: ['html'] }));
+  // Sin «extensions»: /home y /store deben pasar por sus rutas con control de sesión.
+  app.use(express.static(publicDir, { index: 'index.html' }));
+  app.use(attachUser);
 
   // Páginas del panel (una sola app, varias rutas como en la web de referencia).
-  app.get('/home', (_req, res) => res.sendFile(join(publicDir, 'home.html')));
+  // El panel y la tienda requieren cuenta: sin sesión se manda a la portada a iniciar sesión.
+  app.get('/home', (req, res) => {
+    if (!hasSession(req)) return res.redirect(302, '/?login=1');
+    res.sendFile(join(publicDir, 'home.html'));
+  });
+  app.get('/store', (req, res) => {
+    if (!hasSession(req)) return res.redirect(302, '/?login=1&next=store');
+    res.sendFile(join(publicDir, 'store.html'));
+  });
   app.get('/cmds', (_req, res) => res.sendFile(join(publicDir, 'cmds.html')));
   app.get('/status', (_req, res) => res.redirect(302, '/home#monitor'));
 
+  // ------------------------------ cuenta ------------------------------
+  app.get('/api/auth/me', (req, res) => void authMe(req, res));
+  app.post('/api/auth/register', limitAuth, (req, res) => void authRegister(req, res));
+  app.post('/api/auth/login', limitAuth, (req, res) => void authLogin(req, res));
+  app.post('/api/auth/logout', limitAuth, (req, res) => void authLogout(req, res));
+  app.get('/api/auth/google/start', googleStart);
+  app.get('/api/auth/google/callback', googleCallback);
+
+  // ------------------------------- tienda -------------------------------
+  app.get('/api/store/catalog', requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const [tokens, subBots, allocated, purchases] = await Promise.all([
+      listTokensByOwner(user.id),
+      countSubBots(user.id),
+      allocatedExtraGb(user.id),
+      listPurchases(user.id),
+    ]);
+    res.json({
+      items: STORE_ITEMS,
+      plans: PLANS,
+      tiers: BOT_TIERS,
+      user: toSafeUser(user),
+      usage: {
+        botsUsed: subBots,
+        botsMax: PLANS[user.plan].maxBots,
+        extraSpaceGb: user.extra_space_gb,
+        extraSpaceFree: Math.max(0, user.extra_space_gb - allocated),
+      },
+      tokens,
+      purchases,
+    });
+  });
+
+  app.post('/api/store/checkout', limitCheckout, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const itemId = typeof req.body?.itemId === 'string' ? req.body.itemId : '';
+    const quantityRaw = Number(req.body?.quantity ?? 1);
+    const quantity = Number.isInteger(quantityRaw) ? Math.min(10, Math.max(1, quantityRaw)) : 1;
+    const item = STORE_ITEMS.find((entry) => entry.id === itemId);
+
+    if (!item) return void res.status(404).json({ error: 'Ese producto no existe.' });
+    if (!item.available) return void res.status(400).json({ error: `${item.name} todavía no está disponible.` });
+    if (item.kind === 'space' && quantity < 1) return void res.status(400).json({ error: 'Cantidad inválida.' });
+
+    // Los planes se pueden "recomprar" para ampliar; los tokens y el espacio admiten cantidad.
+    if (item.kind === 'plan' && item.plan && PLANS[item.plan].priceUsd <= PLANS[user.plan].priceUsd) {
+      return void res.status(400).json({ error: `Ya tienes el plan ${PLANS[user.plan].name} o uno igual o superior.` });
+    }
+
+    const priceUsd = item.priceUsd * quantity;
+    const receipt: Record<string, unknown> = { itemId: item.id, name: item.name, quantity, priceUsd };
+
+    if (item.kind === 'plan' && item.plan) {
+      await updateUserPlan(user.id, item.plan);
+      receipt.plan = item.plan;
+      receipt.message = `Plan ${PLANS[item.plan].name} activo: hasta ${PLANS[item.plan].maxBots} bots y ${PLANS[item.plan].spacePerBotGb} GB por bot.`;
+    } else if (item.kind === 'space') {
+      await addExtraSpace(user.id, item.spaceGb! * quantity);
+      receipt.spaceGb = item.spaceGb! * quantity;
+      receipt.message = `Se añadieron ${item.spaceGb! * quantity} GB a tu pool de espacio.`;
+    } else if (item.kind === 'token') {
+      const created = await createTokens(
+        Array.from({ length: quantity }, () => ({
+          code: generateTokenCode(item.tier!),
+          type: item.tier!,
+          spaceGb: item.spaceGb!,
+          ownerId: user.id,
+        })),
+      );
+      receipt.tokens = created.map((token) => ({ code: token.code, type: token.type, spaceGb: token.space_gb }));
+      receipt.message =
+        quantity === 1
+          ? `Tu token ${item.name} está listo. Úsalo al crear un sub-bot ${item.tier!.toUpperCase()}.`
+          : `${quantity} tokens ${item.name} están listos.`;
+    } else {
+      return void res.status(400).json({ error: 'Ese producto todavía no está disponible.' });
+    }
+
+    await recordPurchase({
+      userId: user.id,
+      itemId: item.id,
+      itemName: item.name,
+      quantity,
+      priceUsd,
+      details: item.kind === 'token' ? { codes: (receipt.tokens as Array<{ code: string }>).map((token) => token.code) } : {},
+    });
+    logger.info('tienda', `${user.email} compró ${item.name} x${quantity} ($${priceUsd}).`);
+    res.json({ ok: true, receipt });
+  });
+
+  app.get('/api/store/tokens', requireUser, async (req, res) => {
+    res.json({ tokens: await listTokensByOwner(req.webUser!.id) });
+  });
+
+  // ------------------------------ sub-bots ------------------------------
+  app.get('/api/subbots', requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const [bots, used, allocated, tokens] = await Promise.all([
+      listSubBots(user.id),
+      countSubBots(user.id),
+      allocatedExtraGb(user.id),
+      listTokensByOwner(user.id),
+    ]);
+    res.json({
+      bots: bots.map((bot) => withSpace(bot, user.plan)),
+      plan: PLANS[user.plan],
+      tiers: BOT_TIERS,
+      usage: {
+        botsUsed: used,
+        botsMax: PLANS[user.plan].maxBots,
+        extraSpaceGb: user.extra_space_gb,
+        extraSpaceFree: Math.max(0, user.extra_space_gb - allocated),
+      },
+      tokens: tokens.filter((token) => token.status === 'unused'),
+    });
+  });
+
+  app.post('/api/subbots', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const tier = typeof req.body?.tier === 'string' ? (req.body.tier as keyof typeof BOT_TIERS) : 'free';
+    const phone = typeof req.body?.phone === 'string' ? req.body.phone.replace(/[^\d+]/g, '').slice(0, 20) : '';
+    const description = typeof req.body?.description === 'string' ? req.body.description.trim().slice(0, 300) : '';
+    const tokenCode = typeof req.body?.tokenCode === 'string' ? req.body.tokenCode.trim().toUpperCase() : '';
+
+    if (name.length < 2 || name.length > 40) {
+      return void res.status(400).json({ error: 'El nombre del sub-bot necesita entre 2 y 40 caracteres.' });
+    }
+    if (!BOT_TIERS[tier]) return void res.status(400).json({ error: 'Tipo de sub-bot inválido.' });
+
+    const planInfo = PLANS[user.plan];
+    const used = await countSubBots(user.id);
+    if (used >= planInfo.maxBots) {
+      return void res.status(403).json({
+        error: `Tu plan ${planInfo.name} permite hasta ${planInfo.maxBots} sub-bots. Mejora de plan en la tienda para crear más.`,
+      });
+    }
+
+    if (BOT_TIERS[tier].requiresToken) {
+      const token = tokenCode ? await getTokenByCode(tokenCode) : null;
+      if (!tokenCode) {
+        return void res.status(400).json({ error: `Para un sub-bot ${BOT_TIERS[tier].name} necesitas el código de un token.` });
+      }
+      if (!token || token.status !== 'unused' || token.type !== tier) {
+        return void res.status(400).json({ error: 'Ese token no es válido (revisa el código, que no esté usado y que sea del mismo tipo).' });
+      }
+      if (token.owner_id !== user.id) {
+        return void res.status(403).json({ error: 'Ese token no pertenece a tu cuenta.' });
+      }
+
+      const bot = await tx(async (client) => {
+        const created = await createSubBot(
+          { userId: user.id, name, tier, tokenCode: token.code, phone, description },
+          client,
+        );
+        const redeemed = await redeemToken(token.code, user.id, created.id, client);
+        if (!redeemed) throw new Error('El token acaba de canjearse en otra sesión.');
+        return created;
+      });
+      logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, token ${token.code}).`);
+      return void res.status(201).json({ bot: withSpace(bot, user.plan) });
+    }
+
+    const bot = await createSubBot({ userId: user.id, name, tier, tokenCode: null, phone, description });
+    logger.info('subbots', `${user.email} creó el sub-bot «${name}» (free).`);
+    res.status(201).json({ bot: withSpace(bot, user.plan) });
+  });
+
+  app.put('/api/subbots/:id', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Sub-bot inválido.' });
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
+
+    const patch: { name?: string; phone?: string; description?: string; status?: SubBotRow['status']; extraGb?: number } = {};
+    if (typeof req.body?.name === 'string') {
+      const name = req.body.name.trim();
+      if (name.length < 2 || name.length > 40) return void res.status(400).json({ error: 'El nombre necesita entre 2 y 40 caracteres.' });
+      patch.name = name;
+    }
+    if (typeof req.body?.phone === 'string') patch.phone = req.body.phone.replace(/[^\d+]/g, '').slice(0, 20);
+    if (typeof req.body?.description === 'string') patch.description = req.body.description.trim().slice(0, 300);
+    if (typeof req.body?.status === 'string' && ['online', 'offline', 'paused'].includes(req.body.status)) {
+      patch.status = req.body.status as SubBotRow['status'];
+    }
+    if (req.body?.extraGb !== undefined) {
+      const extraGb = Number(req.body.extraGb);
+      if (!Number.isInteger(extraGb) || extraGb < 0 || extraGb > 1024) {
+        return void res.status(400).json({ error: 'Espacio extra inválido.' });
+      }
+      const allocatedOthers = await allocatedExtraGb(user.id, id);
+      if (extraGb + allocatedOthers > user.extra_space_gb) {
+        const free = Math.max(0, user.extra_space_gb - allocatedOthers);
+        return void res.status(400).json({ error: `Solo tienes ${free} GB sin asignar en tu pool. Cómalos en la tienda.` });
+      }
+      patch.extraGb = extraGb;
+    }
+
+    const updated = await updateSubBot(id, user.id, patch);
+    if (!updated) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
+    logger.info('subbots', `${user.email} editó el sub-bot «${updated.name}».`);
+    res.json({ bot: withSpace(updated, user.plan) });
+  });
+
+  app.delete('/api/subbots/:id', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Sub-bot inválido.' });
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
+    await deleteSubBot(id, user.id);
+    logger.info('subbots', `${user.email} eliminó el sub-bot «${bot.name}».`);
+    res.json({
+      ok: true,
+      note: bot.token_code ? 'El token usado por este sub-bot queda consumido y no se puede reutilizar.' : null,
+    });
+  });
+
+  // ------------------------- consola de WhatsApp -------------------------
   // Salud del servicio (Render y monitores externos).
   app.get('/health', async (_req, res) => {
     let db = 'ok';

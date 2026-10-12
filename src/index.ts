@@ -5,6 +5,7 @@ import { loadCommandSettings } from './core/command-settings.js';
 import { config } from './config/index.js';
 import { migrate, pool } from './database/db.js';
 import { purgeOldMessages, releaseExpiredReservations } from './database/repos.js';
+import { purgeExpiredSessions } from './database/repos-web.js';
 import { startConnection } from './core/connection.js';
 import { startWeb } from './web/server.js';
 import { logger } from './utils/logger.js';
@@ -16,12 +17,13 @@ async function main(): Promise<void> {
   const server = startWeb();
   await startConnection();
 
-  // Tareas de mantenimiento: reservas vencidas y registro de mensajes procesados.
+  // Tareas de mantenimiento: reservas vencidas, registro de mensajes y sesiones web vencidas.
   setInterval(() => {
     releaseExpiredReservations()
       .then((n) => n > 0 && logger.info('reservas', `Se liberaron ${n} reservas vencidas.`))
       .catch((err) => logger.error('reservas', (err as Error).message));
     purgeOldMessages().catch((err) => logger.error('mant', (err as Error).message));
+    purgeExpiredSessions().catch((err) => logger.error('sesiones', (err as Error).message));
   }, 60_000);
 
   const shutdown = async (signal: string) => {

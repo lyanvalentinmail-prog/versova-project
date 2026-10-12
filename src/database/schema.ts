@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS groups (
@@ -110,4 +110,71 @@ CREATE TABLE IF NOT EXISTS settings (
   key    TEXT PRIMARY KEY,
   value  JSONB NOT NULL
 );
+
+-- ============================= CUENTAS DE LA WEB =============================
+
+-- Cuentas de la plataforma (inicio de sesión con Google o email + clave).
+CREATE TABLE IF NOT EXISTS web_users (
+  id             SERIAL PRIMARY KEY,
+  email          TEXT NOT NULL UNIQUE,
+  name           TEXT NOT NULL DEFAULT '',
+  picture        TEXT,
+  google_sub     TEXT UNIQUE,
+  password_hash  TEXT,
+  plan           TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free','premium','vip')),
+  extra_space_gb INTEGER NOT NULL DEFAULT 0,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Sesiones de la web (cookie httpOnly).
+CREATE TABLE IF NOT EXISTS web_sessions (
+  token       TEXT PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at  TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS web_sessions_user ON web_sessions (user_id);
+
+-- Tokens de la tienda (premium / vip) que se canjean al crear un sub-bot.
+CREATE TABLE IF NOT EXISTS store_tokens (
+  code            TEXT PRIMARY KEY,
+  type            TEXT NOT NULL CHECK (type IN ('premium','vip')),
+  space_gb        INTEGER NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'unused' CHECK (status IN ('unused','redeemed')),
+  owner_id        INTEGER REFERENCES web_users(id) ON DELETE SET NULL,
+  redeemed_by_bot INTEGER,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  redeemed_at     TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS store_tokens_owner ON store_tokens (owner_id);
+
+-- Sub-bots creados por cada usuario (free / premium / vip).
+CREATE TABLE IF NOT EXISTS subbots (
+  id           SERIAL PRIMARY KEY,
+  user_id      INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  name         TEXT NOT NULL,
+  tier         TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free','premium','vip')),
+  token_code   TEXT,
+  phone        TEXT NOT NULL DEFAULT '',
+  description  TEXT NOT NULL DEFAULT '',
+  status       TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('online','offline','paused')),
+  extra_gb     INTEGER NOT NULL DEFAULT 0,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS subbots_user ON subbots (user_id);
+
+-- Historial de compras de la tienda (pago simulado en modo demo).
+CREATE TABLE IF NOT EXISTS purchases (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  item_id    TEXT NOT NULL,
+  item_name  TEXT NOT NULL,
+  quantity   INTEGER NOT NULL DEFAULT 1,
+  price_usd  NUMERIC(10,2) NOT NULL DEFAULT 0,
+  details    JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS purchases_user ON purchases (user_id);
 `;
