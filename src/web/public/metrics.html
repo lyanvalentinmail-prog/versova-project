@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es" data-page="metrics" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050506" />
+  <title>Métricas y telemetría — VÉRSOVA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238b5cf6'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap stack">
+    <div>
+      <span class="label">📊 Monitor del sistema</span>
+      <h2>Telemetría y rendimiento</h2>
+      <p class="lead">Estado en tiempo real: CPU, memoria, disco, base de datos, servidores y bots conectados.</p>
+    </div>
+
+    <section class="grid grid-3">
+      <div class="stat-tile"><span class="label">Uptime</span><b id="mUptime">—</b><span class="tiny">Proceso Node</span></div>
+      <div class="stat-tile"><span class="label">Plataforma</span><b id="mMode">—</b><span class="tiny">Almacenamiento</span></div>
+      <div class="stat-tile"><span class="label">Base de datos</span><b id="mDb">—</b><span class="tiny">Latencia</span></div>
+      <div class="stat-tile"><span class="label">Total bots</span><b id="mBots">0</b><span class="tiny" id="mBotsDetail">—</span></div>
+      <div class="stat-tile"><span class="label">Comandos</span><b id="mCommands">0</b><span class="tiny">Implementados</span></div>
+      <div class="stat-tile"><span class="label">Catálogo</span><b id="mCatalog">0</b><span class="tiny">Bots disponibles</span></div>
+    </section>
+
+    <section class="card glow-top">
+      <div class="grid grid-3">
+        <div>
+          <span class="label">CPU <b id="mCpu">0%</b></span>
+          <div class="meter" id="mCpuMeter"><i style="width:0%"></i></div>
+          <p class="tiny muted" id="mCpuCoresWrap"><span id="mCpuCores">—</span> núcleos · <span id="mNode">—</span></p>
+        </div>
+        <div>
+          <span class="label">Memoria RAM <b id="mRam">0%</b></span>
+          <div class="meter" id="mRamMeter"><i style="width:0%"></i></div>
+          <p class="tiny muted" id="mRamDetail">—</p>
+        </div>
+        <div>
+          <span class="label">Almacenamiento <b id="mDisk">0%</b></span>
+          <div class="meter" id="mDiskMeter"><i style="width:0%"></i></div>
+          <p class="tiny muted" id="mDiskDetail">—</p>
+        </div>
+      </div>
+      <div class="kv" style="margin-top:16px">
+        <div><span>Sistema</span><span id="mPlatform" class="mono">—</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="label">Datos de la plataforma</span>
+      <div class="grid grid-3" style="margin-top:12px">
+        <div class="stat-tile"><span class="label">Grupos</span><b id="mgGroups">0</b></div>
+        <div class="stat-tile"><span class="label">Integrantes</span><b id="mgMembers">0</b></div>
+        <div class="stat-tile"><span class="label">Activos (7d)</span><b id="mgActive">0</b></div>
+        <div class="stat-tile"><span class="label">Registros</span><b id="mgUsers">0</b></div>
+        <div class="stat-tile"><span class="label">Personajes</span><b id="mgCharacters">0</b></div>
+        <div class="stat-tile"><span class="label">Advertencias</span><b id="mgWarnings">0</b></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="label">Servidores</span>
+      <div class="grid grid-2" id="mServers" style="margin-top:12px"></div>
+    </section>
+
+    <section class="card">
+      <div class="row-between">
+        <span class="label">Registro en vivo</span>
+        <span class="tiny muted" id="logState">Conectado</span>
+      </div>
+      <div class="log-box" id="logBox" style="margin-top:12px"></div>
+    </section>
+  </main>
+
+  <script src="shell.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

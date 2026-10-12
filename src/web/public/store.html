@@ -3,292 +3,81 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#05060f" />
-  <meta name="description" content="Tienda VÉRSOVA: tokens premium y vip para sub-bots, espacio extra y planes. El código del token se entrega al instante." />
-  <title>Tienda · VÉRSOVA</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cff'/%3E%3Cstop offset='1' stop-color='%2326e0ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#050506" />
+  <title>Tienda y catálogo — VÉRSOVA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238b5cf6'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="VÉRSOVA, inicio">
-      <span class="brand-mark" aria-hidden="true">V</span>
-      <span>
-        <span class="brand-name">VÉRSOVA</span>
-        <small>TIENDA</small>
-      </span>
-    </a>
-    <div class="top-actions">
-      <span class="pill" id="storePlanPill">Plan —</span>
-      <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema" aria-pressed="true">
-        <span class="switch-track" aria-hidden="true">
-          <span class="switch-icon sun">☀</span>
-          <span class="switch-icon moon">☾</span>
-          <span class="switch-thumb"></span>
-        </span>
-      </button>
-      <div id="authArea" class="auth-area"></div>
-      <button id="menuToggle" class="hamburger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuOverlay">
-        <span></span><span></span><span></span>
-      </button>
+  <main class="wrap stack">
+    <div>
+      <span class="label">Bot access</span>
+      <h2>Tienda</h2>
+      <p class="lead">Tokens, espacio extra, monedas y el catálogo completo de bots.</p>
+      <div class="row" style="flex-wrap:wrap">
+        <span class="pill accent" id="storeCoins">—</span>
+        <span class="pill" id="storePlan">—</span>
+      </div>
     </div>
-  </header>
 
-  <!-- Menú de pestañas: se abre con las 3 líneas de arriba -->
-  <div class="menu-overlay" id="menuOverlay" aria-hidden="true">
-    <nav class="menu-sheet" aria-label="Secciones de la tienda">
-      <p class="side-nav-label">Pestañas de la tienda</p>
-      <nav class="nav" aria-label="Pestañas">
-        <a href="#planes"><span class="ico" aria-hidden="true">◍</span> Planes</a>
-        <a href="#tokens"><span class="ico" aria-hidden="true">◈</span> Tokens</a>
-        <a href="#espacio"><span class="ico" aria-hidden="true">⛁</span> Espacio</a>
-        <a href="#otros"><span class="ico" aria-hidden="true">✦</span> Otros bots</a>
-        <a href="#mis-tokens"><span class="ico" aria-hidden="true">✪</span> Mis tokens</a>
-        <a href="#mis-compras"><span class="ico" aria-hidden="true">⧉</span> Mis compras</a>
-      </nav>
-      <p class="side-nav-label" style="margin-top:18px">Más</p>
-      <nav class="nav" aria-label="Más secciones">
-        <a href="/home"><span class="ico" aria-hidden="true">⌂</span> Panel</a>
-        <a href="/home#subbots"><span class="ico" aria-hidden="true">◈</span> Mis Sub-Bots</a>
-        <a href="/"><span class="ico" aria-hidden="true">↩</span> Página principal</a>
-      </nav>
-      <div class="menu-sheet-foot">
-        <span>VÉRSOVA · est. 2026</span>
-        <button class="text-button" id="menuClose" type="button">Cerrar ✕</button>
+    <!-- Monedero y misiones -->
+    <section class="card" id="economyWidget">
+      <div class="card-head"><span class="ico">🪙</span><span class="card-title">Economía V-Coin</span></div>
+      <p class="muted small">Cargando tu monedero…</p>
+    </section>
+
+    <!-- Catálogo de bots -->
+    <section class="card glow-top" id="catalogo">
+      <span class="label">🧩 Catálogo de bots</span>
+      <h2>Bots gratis y de pago</h2>
+      <p class="lead">
+        Activa cualquier bot de la plataforma: los marcados como <strong>gratis</strong> se activan al instante,
+        los de <strong>monedas</strong> se pagan con V-Coins y los <strong>PRO</strong> con compra en dólares.
+      </p>
+      <div class="tabs" id="catalogFilters" style="margin-top:14px"></div>
+      <div class="grid grid-2" id="catalogList" style="margin-top:14px"></div>
+    </section>
+
+    <!-- Tienda de monedas -->
+    <section class="card">
+      <span class="label">🛒 Comprar con monedas</span>
+      <h2>Tienda de V-Coins</h2>
+      <p class="lead">Gasta tus monedas en espacio, tokens, planes y mejoras.</p>
+      <div class="grid grid-2" id="coinShop" style="margin-top:14px"></div>
+    </section>
+
+    <!-- Productos en dólares -->
+    <section class="card">
+      <span class="label">💳 Pago en dólares (demo)</span>
+      <h2>Tokens, espacio y planes</h2>
+      <p class="lead">La entrega es instantánea. El cobro es de demostración: no se cobra dinero real.</p>
+      <div class="grid grid-2" id="storeItems" style="margin-top:14px"></div>
+    </section>
+
+    <section class="grid grid-2">
+      <div class="card">
+        <span class="label">Mis tokens</span>
+        <div class="grid" id="myTokens" style="margin-top:10px"></div>
       </div>
-    </nav>
-  </div>
-
-  <main class="shell">
-    <section class="hero" style="padding-bottom:18px">
-      <div class="section-head" style="max-width:none">
-        <span class="pill accent">Tienda oficial</span>
-        <h1 style="margin-top:16px">Compra tokens y <span class="gradient-text">mejora tus sub-bots</span></h1>
-        <p class="hero-lead">Tokens premium y vip con entrega instantánea del código, espacio extra para repartir y planes que amplían tu límite de bots.</p>
-        <div class="store-stats" style="margin-top:18px">
-          <div class="stat"><span>Mi plan</span><b id="storePlan">—</b><small id="storePlanNote">—</small></div>
-          <div class="stat"><span>Mis bots</span><b id="storeBots">—</b><small id="storeBotsNote">—</small></div>
-          <div class="stat"><span>Espacio extra</span><b id="storeExtra">—</b><small id="storeExtraNote">sin asignar</small></div>
-          <div class="stat"><span>Tokens sin usar</span><b id="storeTokensFree">—</b><small>listos para canjear</small></div>
-        </div>
+      <div class="card">
+        <span class="label">Historial de compras</span>
+        <div class="grid" id="purchaseHistory" style="margin-top:10px"></div>
       </div>
     </section>
 
-    <section class="section" id="planes" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Planes</p>
-        <h2>Elige tu plan</h2>
-        <p>El plan define cuántos bots puedes tener y el espacio base por bot. Cámbiate cuando quieras.</p>
-      </div>
-      <div class="grid three" id="planGrid">
-        <article class="card hoverable plan-card" data-plan="free">
-          <div class="plan-head">
-            <span class="tier-badge tier-free">Free</span>
-            <div class="price"><b>$0</b><span class="muted">base</span></div>
-          </div>
-          <ul class="checklist">
-            <li><span><strong>1 GB</strong> por bot</span></li>
-            <li><span>Hasta <strong>3 sub-bots</strong></span></li>
-          </ul>
-          <div class="row" style="margin-top:18px"><button class="btn btn-sm buy-button" data-item="plan-free" disabled>Plan actual</button></div>
-        </article>
-        <article class="card hoverable plan-card featured" data-plan="premium">
-          <span class="plan-flag pill accent">Popular</span>
-          <div class="plan-head">
-            <span class="tier-badge tier-premium">Premium</span>
-            <div class="price"><b>$1</b><span class="muted">pago único</span></div>
-          </div>
-          <ul class="checklist">
-            <li><span><strong>2 GB</strong> por bot</span></li>
-            <li><span>Hasta <strong>5 sub-bots</strong></span></li>
-          </ul>
-          <div class="row" style="margin-top:18px"><button class="btn btn-sm btn-primary buy-button" data-item="plan-premium">Activar Premium</button></div>
-        </article>
-        <article class="card hoverable plan-card" data-plan="vip">
-          <div class="plan-head">
-            <span class="tier-badge tier-vip">VIP</span>
-            <div class="price"><b>$5</b><span class="muted">pago único</span></div>
-          </div>
-          <ul class="checklist">
-            <li><span><strong>5 GB</strong> por bot</span></li>
-            <li><span>Hasta <strong>10 sub-bots</strong></span></li>
-          </ul>
-          <div class="row" style="margin-top:18px"><button class="btn btn-sm btn-primary buy-button" data-item="plan-vip">Activar VIP</button></div>
-        </article>
-      </div>
+    <section class="card">
+      <span class="label">Pagos por método</span>
+      <h3>Métodos oficiales</h3>
+      <ul class="feature-list" style="margin-top:10px">
+        <li>Página principal: <span class="mono">tu-dominio/store</span></li>
+        <li>Patreon y Ko-fi del proyecto</li>
+        <li>Grupo oficial de soporte</li>
+      </ul>
+      <p class="tiny muted" style="margin-top:10px">Comprar a terceros no es válido y no respondemos sus reportes.</p>
     </section>
-
-    <section class="section" id="tokens" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Tokens</p>
-        <h2>Tokens para sub-bots</h2>
-        <p>Al comprar, el código del token aparece al instante. Canjéalo en <a class="gradient-text" href="/home#subbots">Mis Sub-Bots</a> al crear un bot de ese tipo.</p>
-      </div>
-      <div class="grid three" id="tokenGrid">
-        <article class="card hoverable product-card">
-          <div class="row">
-            <span class="tier-badge tier-premium">Token Premium</span>
-            <span class="spacer"></span>
-            <b class="price-tag">$1</b>
-          </div>
-          <p class="muted">Sub-bot <strong>Premium · 2 GB</strong>. El token se canjea una vez al crear el bot.</p>
-          <div class="row">
-            <button class="btn btn-sm btn-primary buy-button" data-item="token-premium">Comprar token</button>
-          </div>
-        </article>
-        <article class="card hoverable product-card">
-          <div class="row">
-            <span class="tier-badge tier-vip">Token VIP</span>
-            <span class="spacer"></span>
-            <b class="price-tag">$5</b>
-          </div>
-          <p class="muted">Sub-bot <strong>VIP · 4 GB</strong>. El token se canjea una vez al crear el bot.</p>
-          <div class="row">
-            <button class="btn btn-sm btn-primary buy-button" data-item="token-vip">Comprar token</button>
-          </div>
-        </article>
-        <article class="card hoverable product-card is-locked">
-          <div class="row">
-            <span class="tier-badge">Tokens de otros bots</span>
-            <span class="spacer"></span>
-            <b class="price-tag">—</b>
-          </div>
-          <p class="muted">Los tokens para bots de música, juegos e IA llegarán con su lanzamiento.</p>
-          <div class="row"><button class="btn btn-sm" disabled>Muy pronto</button></div>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="espacio" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Espacio</p>
-        <h2>Compra espacio extra</h2>
-        <p>El espacio extra entra a tu pool y lo repartes entre tus sub-bots desde <a class="gradient-text" href="/home#subbots">Mis Sub-Bots</a>.</p>
-      </div>
-      <div class="grid three">
-        <article class="card hoverable product-card">
-          <div class="row">
-            <span class="tier-badge">+ Espacio</span>
-            <span class="spacer"></span>
-            <b class="price-tag">$1<small>/GB</small></b>
-          </div>
-          <p class="muted">Cada unidad añade <strong>1 GB</strong> a tu pool. Máximo 10 por compra.</p>
-          <div class="input-action" style="margin-top:6px">
-            <input id="spaceQty" type="number" min="1" max="10" step="1" value="1" aria-label="Cantidad de GB" />
-            <button class="btn btn-sm btn-primary buy-button" data-item="space-1gb" data-qty="spaceQty">Comprar espacio</button>
-          </div>
-        </article>
-        <article class="card inset" style="grid-column: span 2; min-width: 0">
-          <p class="eyebrow">Tu pool</p>
-          <div class="kv">
-            <div><span>Espacio extra comprado</span><span id="poolTotal">—</span></div>
-            <div><span>Ya asignado a bots</span><span id="poolUsed">—</span></div>
-            <div><span>Disponible para repartir</span><span id="poolFree">—</span></div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="otros" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Catálogo ampliado</p>
-        <h2>Otros tipos de bots</h2>
-        <p>Estos bots están en desarrollo. Cuando salgan, se compran igual que los tokens.</p>
-      </div>
-      <div class="grid three" id="otherBotsGrid">
-        <article class="card hoverable product-card is-locked">
-          <div class="row"><span class="tier-badge">Sub-bot de Música</span><span class="spacer"></span><b class="price-tag">$3</b></div>
-          <p class="muted">Descargas, playlists y radio para tu grupo.</p>
-          <div class="row"><span class="pill warn">Próximamente</span></div>
-        </article>
-        <article class="card hoverable product-card is-locked">
-          <div class="row"><span class="tier-badge">Sub-bot de Juegos</span><span class="spacer"></span><b class="price-tag">$3</b></div>
-          <p class="muted">Trivia, dados y rankings para tu team.</p>
-          <div class="row"><span class="pill warn">Próximamente</span></div>
-        </article>
-        <article class="card hoverable product-card is-locked">
-          <div class="row"><span class="tier-badge">Sub-bot IA</span><span class="spacer"></span><b class="price-tag">$8</b></div>
-          <p class="muted">Chat inteligente, resúmenes e imágenes.</p>
-          <div class="row"><span class="pill warn">Próximamente</span></div>
-        </article>
-        <article class="card hoverable product-card is-locked">
-          <div class="row"><span class="tier-badge">Sub-bot de Stickers</span><span class="spacer"></span><b class="price-tag">$2</b></div>
-          <p class="muted">Crea stickers desde fotos y videos.</p>
-          <div class="row"><span class="pill warn">Próximamente</span></div>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="mis-tokens" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Tu inventario</p>
-        <h2>Mis tokens</h2>
-        <p>Toca un código para copiarlo. Los tokens sin usar se canjean al crear un sub-bot.</p>
-      </div>
-      <div id="myTokens" class="stack" style="gap:12px">
-        <p class="empty-state">Cargando tokens…</p>
-      </div>
-    </section>
-
-    <section class="section" id="mis-compras" style="padding-top:34px">
-      <div class="section-head">
-        <p class="eyebrow">Historial</p>
-        <h2>Mis compras</h2>
-      </div>
-      <div id="myPurchases" class="stack" style="gap:12px">
-        <p class="empty-state">Cargando compras…</p>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <span>VÉRSOVA · est. 2026</span>
-      <span>Pagos demo · los tokens se entregan al instante</span>
-    </footer>
   </main>
 
-  <!-- --------------------------- Modal de compra --------------------------- -->
-  <div class="modal-overlay" id="checkoutOverlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
-      <div id="checkoutStep1">
-        <div class="modal-head">
-          <div>
-            <p class="eyebrow">Tienda VÉRSOVA</p>
-            <h3 class="card-title" id="checkoutTitle">Confirmar compra</h3>
-          </div>
-          <button class="modal-close" id="checkoutClose" type="button" aria-label="Cerrar">✕</button>
-        </div>
-        <div class="kv" style="margin-top:6px">
-          <div><span>Producto</span><span id="checkoutItem">—</span></div>
-          <div><span>Detalle</span><span id="checkoutDetail">—</span></div>
-          <div><span>Cantidad</span><span id="checkoutQty">1</span></div>
-          <div><span>Total</span><span id="checkoutTotal">—</span></div>
-        </div>
-        <p class="muted small" style="margin-top:14px">Pago <strong>demo</strong>: no se cobra nada real. La compra queda registrada en tu historial.</p>
-        <p id="checkoutError" class="form-message error" hidden></p>
-        <div class="row" style="margin-top:18px">
-          <button id="checkoutPay" class="btn btn-primary" style="flex:1" type="button">Pagar y recibir</button>
-        </div>
-      </div>
-
-      <div id="checkoutStep2" hidden>
-        <div class="modal-head">
-          <div>
-            <p class="eyebrow">¡Compra lista!</p>
-            <h3 class="card-title" id="successTitle">Tu token está listo</h3>
-          </div>
-          <button class="modal-close" id="checkoutClose2" type="button" aria-label="Cerrar">✕</button>
-        </div>
-        <p class="muted" id="successMessage" style="margin-top:4px">—</p>
-        <div id="successTokens" class="stack" style="gap:10px;margin-top:16px"></div>
-        <div class="row" style="margin-top:20px">
-          <a class="btn btn-primary btn-sm" href="/home#subbots" id="successCreate">Crear sub-bot con este token</a>
-          <button class="btn btn-sm btn-ghost" id="successClose" type="button">Seguir en la tienda</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="shell.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

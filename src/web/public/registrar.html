@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es" data-page="registrar" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050506" />
+  <title>Registrar bot — VÉRSOVA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238b5cf6'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap stack">
+    <div class="row-between">
+      <div>
+        <span class="label">Asistente</span>
+        <h2>Registrar un bot</h2>
+      </div>
+      <span class="pill" id="wizardLimit">—</span>
+    </div>
+
+    <div class="steps" id="wizardSteps"></div>
+    <span class="paso-pill" id="pasoPill">Paso 1 de 5</span>
+
+    <!-- Paso 1 · instancia -->
+    <section class="card glow-top" id="step0">
+      <h2>Elige tu instancia</h2>
+      <p class="lead">Selecciona el tipo de instancia que deseas activar.</p>
+      <span class="label" style="margin-top:14px">Instancia</span>
+      <div class="grid" id="instanceOptions"></div>
+      <p class="tiny muted" id="instanceHint" style="margin-top:10px"></p>
+      <div class="field" id="tokenField" hidden style="margin-top:14px">
+        <label for="tokenSelect">Token de acceso</label>
+        <select id="tokenSelect"></select>
+        <p class="tiny muted">Los tokens se compran en la tienda y se canjean una sola vez.</p>
+      </div>
+      <div class="wizard-actions">
+        <button class="btn btn-primary btn-block btn-arrow" id="wizardNext1" type="button">Continuar</button>
+      </div>
+    </section>
+
+    <!-- Paso 2 · servidor -->
+    <section class="card glow-top" id="step1" hidden>
+      <h2>Elige tu servidor</h2>
+      <p class="lead">Selecciona el proveedor y el servidor donde correrá tu bot.</p>
+      <span class="label" style="margin-top:14px">Conexión</span>
+      <input type="text" value="Versova Cloud" readonly />
+      <span class="label" style="margin-top:14px">Servidor</span>
+      <select id="serverSelect"></select>
+      <p class="tiny muted" id="serverHint" style="margin-top:8px">Se muestran cupos disponibles y servidores llenos deshabilitados.</p>
+      <div class="wizard-actions">
+        <button class="btn" id="wizardBack1" type="button">← Atrás</button>
+        <button class="btn btn-primary btn-arrow" id="wizardNext2" type="button">Continuar</button>
+      </div>
+    </section>
+
+    <!-- Paso 3 · vinculación -->
+    <section class="card glow-top" id="step2" hidden>
+      <h2>Vinculación</h2>
+      <p class="lead">Ingresa el número del bot y elige cómo vincularlo.</p>
+      <div class="field" style="margin-top:14px">
+        <label for="wizardPhone">Número del bot</label>
+        <input id="wizardPhone" type="tel" inputmode="tel" placeholder="+57 301 944 8245" />
+        <p class="tiny muted">WhatsApp enviará el código de vinculación a este número.</p>
+      </div>
+      <span class="label" style="margin-top:14px">Cómo quieres vincularlo</span>
+      <div class="grid" id="methodOptions"></div>
+      <div class="wizard-actions">
+        <button class="btn" id="wizardBack2" type="button">← Atrás</button>
+        <button class="btn btn-primary btn-arrow" id="wizardNext3" type="button">Continuar</button>
+      </div>
+    </section>
+
+    <!-- Paso 4 · nombre -->
+    <section class="card glow-top" id="step3" hidden>
+      <h2>Nombre del bot</h2>
+      <p class="lead">Ponle un nombre para identificar tu bot.</p>
+      <div class="field" style="margin-top:14px">
+        <label for="botName">Nombre / etiqueta</label>
+        <input id="botName" type="text" placeholder="Ej: Mi Bot Versova" maxlength="40" />
+      </div>
+      <p class="tiny muted" style="margin-top:10px">
+        Después podrás editar nombre corto, nombre largo, moneda, owner, enlaces, canal, prefijos y banner
+        desde <strong>Mis Bots → Config</strong>.
+      </p>
+      <div class="wizard-actions">
+        <button class="btn" id="wizardBack3" type="button">← Atrás</button>
+        <button class="btn btn-primary btn-arrow" id="wizardCreate" type="button">Crear y vincular</button>
+      </div>
+    </section>
+
+    <!-- Paso 5 · código -->
+    <section class="card glow-top" id="step4" hidden>
+      <span class="paso-pill">Paso 5</span>
+      <h2 id="wizardStepTitle">Ingresa el código</h2>
+      <p class="lead" id="wizardStepText">Desde el teléfono que va a ser el bot, abre WhatsApp y escribe este código.</p>
+      <div class="code-box" id="wizardCode" style="margin-top:16px"></div>
+      <p class="countdown" id="wizardCountdown" hidden></p>
+      <div class="note err" id="wizardError" hidden style="margin-top:10px"></div>
+      <div class="row" style="margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-sm" type="button" onclick="V.copy(document.getElementById('wizardCode')?.textContent?.trim() || '')">📋 Copiar código</button>
+        <button class="btn btn-sm btn-ghost" type="button" id="regenerateCode">↻ Generar otro</button>
+        <button class="btn btn-sm btn-primary" type="button" id="wizardConfirm">✓ Ya lo vinculé</button>
+      </div>
+      <div id="wizardQr" hidden style="margin-top:14px"></div>
+      <ul class="howto" style="margin-top:18px;padding:0">
+        <li><span class="num">1</span><span>Abre WhatsApp en el teléfono del bot.</span></li>
+        <li><span class="num">2</span><span>En Android toca <b>Menú ⋮</b>; en iPhone, <b>Ajustes</b>.</span></li>
+        <li><span class="num">3</span><span>Entra en <b>Dispositivos vinculados</b> y toca <b>Vincular dispositivo</b>.</span></li>
+        <li><span class="num">4</span><span>Toca <b>Vincular con el número de teléfono</b> e ingresa el código.</span></li>
+      </ul>
+      <div class="wizard-actions">
+        <button class="btn" id="wizardBack4" type="button">← Cambiar datos</button>
+      </div>
+      <div id="wizardSuccess" class="card card-soft" hidden style="margin-top:16px"></div>
+    </section>
+
+    <section class="card">
+      <div class="row-between">
+        <span class="label">Atajos</span>
+        <a class="btn btn-sm btn-ghost" href="/bots">Ver mis bots</a>
+      </div>
+      <p class="small muted" style="margin:10px 0 0">
+        ¿Sin tokens? Compra en la tienda con dólares o con <strong>V-Coins</strong>, o reclama misiones para ganar monedas.
+      </p>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <a class="btn btn-sm" href="/store">Ir a la tienda</a>
+        <a class="btn btn-sm btn-ghost" href="/store#catalogo">Catálogo de bots</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="shell.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

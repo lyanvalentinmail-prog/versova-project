@@ -1,4 +1,5 @@
-import { getSetting, setSetting } from '../database/repos.js';
+// Se usa la capa de datos (store) para que el panel funcione también en modo memoria.
+import { getSetting, setSetting } from '../database/store.js';
 
 export const COMMAND_SETTINGS_KEY = 'command-settings';
 export const DEFAULT_COMMAND_DECORATION = 'ㅤ୨ৎㅤ.';

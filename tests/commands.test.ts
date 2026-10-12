@@ -9,8 +9,10 @@ describe('configuración del catálogo de comandos', () => {
 
   it('registra cada comando implementado desde su propio archivo', () => {
     const inventory = getCommandInventory();
-    expect(inventory.filter((command) => command.implemented).map((command) => command.name)).toHaveLength(14);
+    // Todos los comandos del menú tienen módulo propio: ninguno queda pendiente.
+    expect(inventory.filter((command) => !command.implemented)).toEqual([]);
     expect(inventory.some((command) => command.name === 'menu' && command.implemented)).toBe(true);
+    expect(inventory.some((command) => command.name === 'comprar' && command.implemented)).toBe(true);
   });
 
   it('usa valores por defecto seguros para el formato del menú', () => {

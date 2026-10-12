@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS groups (
@@ -183,4 +183,161 @@ ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_type       TEXT NOT NULL DEFAUL
 ALTER TABLE subbots ADD COLUMN IF NOT EXISTS display_name  TEXT NOT NULL DEFAULT '';
 ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_prefix    TEXT NOT NULL DEFAULT '.';
 ALTER TABLE subbots ADD COLUMN IF NOT EXISTS banner_text   TEXT NOT NULL DEFAULT '';
+
+-- Economía dentro de cada grupo (bot de economía / monedas del team).
+CREATE TABLE IF NOT EXISTS group_bank (
+  group_id      TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  wa_id         TEXT NOT NULL,
+  coins         INTEGER NOT NULL DEFAULT 0,
+  last_daily_at TIMESTAMPTZ,
+  last_work_at  TIMESTAMPTZ,
+  last_rob_at   TIMESTAMPTZ,
+  inventory     JSONB NOT NULL DEFAULT '[]',
+  PRIMARY KEY (group_id, wa_id)
+);
+CREATE INDEX IF NOT EXISTS group_bank_coins ON group_bank (group_id, coins DESC);
+
+-- Reglas y anuncios configurables por grupo.
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS rules TEXT NOT NULL DEFAULT '';
+
+-- ===================== v4: economía, catálogo y opciones del bot =====================
+
+-- Monedas y perfil público de la cuenta.
+ALTER TABLE web_users ADD COLUMN IF NOT EXISTS coins        INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE web_users ADD COLUMN IF NOT EXISTS handle       TEXT;
+ALTER TABLE web_users ADD COLUMN IF NOT EXISTS avatar_url   TEXT;
+ALTER TABLE web_users ADD COLUMN IF NOT EXISTS theme        TEXT NOT NULL DEFAULT 'dark';
+ALTER TABLE web_users ADD COLUMN IF NOT EXISTS referral     TEXT;
+
+-- Opciones completas de cada bot (lo que se edita en «Opciones del bot»).
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS short_name     TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS long_name      TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS currency       TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS owner_number   TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS owner_hidden   BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_link       TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS channel_url    TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS prefixes       JSONB NOT NULL DEFAULT '["."]';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS banner_url     TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS username       TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS status_info    TEXT NOT NULL DEFAULT 'online';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS instance_type  TEXT NOT NULL DEFAULT 'subbot';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS server_id      TEXT NOT NULL DEFAULT 'vrsov-01';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS server_name    TEXT NOT NULL DEFAULT 'Vrsov Srv Asuna';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS pairing_code   TEXT;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS pairing_expires_at TIMESTAMPTZ;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS linked_at      TIMESTAMPTZ;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS synced_at      TIMESTAMPTZ;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS uptime_seconds INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS avatar_url     TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS catalog_slug   TEXT NOT NULL DEFAULT 'versova';
+
+-- Catálogo de bots de la plataforma (gratis, con monedas o con USD).
+CREATE TABLE IF NOT EXISTS bot_catalog (
+  slug         TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  emoji        TEXT NOT NULL DEFAULT '🤖',
+  tagline      TEXT NOT NULL DEFAULT '',
+  description  TEXT NOT NULL DEFAULT '',
+  category     TEXT NOT NULL DEFAULT 'Utilidades',
+  pricing      TEXT NOT NULL DEFAULT 'free' CHECK (pricing IN ('free','coins','usd')),
+  price_coins  INTEGER NOT NULL DEFAULT 0,
+  price_usd    NUMERIC(10,2) NOT NULL DEFAULT 0,
+  badge        TEXT,
+  accent       TEXT NOT NULL DEFAULT '#8b5cf6',
+  features     JSONB NOT NULL DEFAULT '[]',
+  commands     JSONB NOT NULL DEFAULT '[]',
+  popularity   INTEGER NOT NULL DEFAULT 0,
+  featured     BOOLEAN NOT NULL DEFAULT false,
+  active       BOOLEAN NOT NULL DEFAULT true,
+  sort         INTEGER NOT NULL DEFAULT 100,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Bots del catálogo que cada cuenta ya activó.
+CREATE TABLE IF NOT EXISTS catalog_uses (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  bot_slug   TEXT NOT NULL REFERENCES bot_catalog(slug) ON DELETE CASCADE,
+  subbot_id  INTEGER REFERENCES subbots(id) ON DELETE SET NULL,
+  paid_coins INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, bot_slug)
+);
+CREATE INDEX IF NOT EXISTS catalog_uses_user ON catalog_uses (user_id);
+
+-- Movimientos de monedas (economía de la plataforma).
+CREATE TABLE IF NOT EXISTS coin_ledger (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  amount     INTEGER NOT NULL,
+  kind       TEXT NOT NULL,
+  detail     TEXT NOT NULL DEFAULT '',
+  meta       JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS coin_ledger_user ON coin_ledger (user_id, created_at DESC);
+
+-- Tienda de la economía: lo que se compra con monedas.
+CREATE TABLE IF NOT EXISTS coin_items (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  price_coins INTEGER NOT NULL DEFAULT 0,
+  kind        TEXT NOT NULL DEFAULT 'space',
+  payload     JSONB NOT NULL DEFAULT '{}',
+  badge       TEXT,
+  available   BOOLEAN NOT NULL DEFAULT true,
+  sort        INTEGER NOT NULL DEFAULT 100
+);
+
+-- Misiones reclamadas (una vez por misión).
+CREATE TABLE IF NOT EXISTS mission_claims (
+  user_id    INTEGER NOT NULL REFERENCES web_users(id) ON DELETE CASCADE,
+  mission_id TEXT NOT NULL,
+  reward     INTEGER NOT NULL DEFAULT 0,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, mission_id)
+);
+
+-- Grupos vinculados a cada bot.
+CREATE TABLE IF NOT EXISTS subbot_groups (
+  id         SERIAL PRIMARY KEY,
+  subbot_id  INTEGER NOT NULL REFERENCES subbots(id) ON DELETE CASCADE,
+  group_jid  TEXT NOT NULL,
+  name       TEXT NOT NULL DEFAULT '',
+  members    INTEGER NOT NULL DEFAULT 0,
+  active     BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (subbot_id, group_jid)
+);
+CREATE INDEX IF NOT EXISTS subbot_groups_bot ON subbot_groups (subbot_id);
+
+-- Servidores de instancias (paso 2 del asistente y monitor).
+CREATE TABLE IF NOT EXISTS platform_servers (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  provider   TEXT NOT NULL DEFAULT 'Versova Cloud',
+  region     TEXT NOT NULL DEFAULT '',
+  capacity   INTEGER NOT NULL DEFAULT 60,
+  used       INTEGER NOT NULL DEFAULT 0,
+  cpu        INTEGER NOT NULL DEFAULT 0,
+  ram        INTEGER NOT NULL DEFAULT 0,
+  disk       INTEGER NOT NULL DEFAULT 0,
+  status     TEXT NOT NULL DEFAULT 'online' CHECK (status IN ('online','full','maintenance')),
+  ip         TEXT NOT NULL DEFAULT ''
+);
+
+-- Reportes y sugerencias enviadas desde la web.
+CREATE TABLE IF NOT EXISTS reports (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER REFERENCES web_users(id) ON DELETE SET NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('report','suggestion')),
+  username   TEXT NOT NULL DEFAULT '',
+  whatsapp   TEXT NOT NULL DEFAULT '',
+  text       TEXT NOT NULL,
+  status     TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','reviewing','done')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
 `;

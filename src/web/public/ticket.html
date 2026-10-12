@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es" data-page="ticket" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050506" />
+  <title>Reportes y sugerencias — VÉRSOVA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238b5cf6'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap stack">
+    <div>
+      <span class="label">🎫 Soporte</span>
+      <h2>Reportes y sugerencias</h2>
+      <p class="lead">Envía tu reporte o sugerencia directamente al equipo de moderadores y revisa tus envíos.</p>
+    </div>
+
+    <section class="card glow-top">
+      <form id="reportForm" class="grid" style="gap:14px">
+        <div class="field">
+          <label for="reportKind">Tipo</label>
+          <select id="reportKind">
+            <option value="report">Reporte · problema o bug</option>
+            <option value="suggestion">Sugerencia · nueva idea</option>
+          </select>
+        </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="reportName">Nombre de usuario (opcional)</label>
+            <input id="reportName" type="text" placeholder="Tu nombre" maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="reportPhone">WhatsApp (opcional)</label>
+            <input id="reportPhone" type="tel" placeholder="+598 99 000 111" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="reportText">Texto</label>
+          <textarea id="reportText" placeholder="Mínimo 10 caracteres" maxlength="1200"></textarea>
+          <p class="tiny muted">Describe el problema o la idea con el mayor detalle posible.</p>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Enviar</button>
+      </form>
+    </section>
+
+    <section class="grid grid-3" id="reportStats"></section>
+
+    <section class="card">
+      <span class="label">Mis envíos</span>
+      <div class="grid" id="reportsList" style="margin-top:12px"></div>
+    </section>
+  </main>
+
+  <script src="shell.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

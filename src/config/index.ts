@@ -6,6 +6,12 @@ function required(name: string): string {
   return value;
 }
 
+/**
+ * La base de datos es opcional: sin DATABASE_URL la plataforma arranca en modo
+ * memoria (todo funciona, pero los datos se pierden al reiniciar).
+ */
+const databaseUrl = process.env.DATABASE_URL?.trim() ?? '';
+
 export const config = {
   bot: {
     name: 'VÉRSOVA',
@@ -16,7 +22,8 @@ export const config = {
     locale: 'es-UY',
   },
   database: {
-    url: required('DATABASE_URL'),
+    url: databaseUrl,
+    memory: databaseUrl.length === 0,
     ssl: process.env.DB_SSL !== 'false',
     poolMax: Number(process.env.DB_POOL_MAX ?? 8),
   },

@@ -340,16 +340,158 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
       (SELECT max(last_activity_at) FROM members) AS last_activity_at
   `);
   const row = r.rows[0];
-  return {
-    groups: row?.groups ?? 0,
-    members: row?.members ?? 0,
-    activeMembers: row?.active_members ?? 0,
-    users: row?.users ?? 0,
-    characters: row?.characters ?? 0,
-    charactersOccupied: row?.characters_occupied ?? 0,
-    pendingRequests: row?.pending_requests ?? 0,
-    warnings: row?.warnings ?? 0,
-    actions: row?.actions ?? 0,
-    lastActivityAt: row?.last_activity_at ? new Date(row.last_activity_at).toISOString() : null,
+  // El controlador puede devolver los totales como texto o como arreglo: se normalizan.
+  const total = (value: unknown): number => {
+    const parsed = Number(Array.isArray(value) ? value[0] : (value ?? 0));
+    return Number.isFinite(parsed) ? parsed : 0;
   };
+  return {
+    groups: total(row?.groups),
+    members: total(row?.members),
+    activeMembers: total(row?.active_members),
+    users: total(row?.users),
+    characters: total(row?.characters),
+    charactersOccupied: total(row?.characters_occupied),
+    pendingRequests: total(row?.pending_requests),
+    warnings: total(row?.warnings),
+    actions: total(row?.actions),
+    // Una fecha inválida no debe tumbar la telemetría del panel.
+    lastActivityAt: (() => {
+      if (!row?.last_activity_at) return null;
+      const date = new Date(row.last_activity_at as string | number | Date);
+      return Number.isNaN(date.getTime()) ? null : date.toISOString();
+    })(),
+  };
+}
+
+/* ------------------------- economía del grupo (V-Coins) ------------------------- */
+
+export interface BankRow {
+  group_id: string;
+  wa_id: string;
+  coins: number;
+  last_daily_at: Date | null;
+  last_work_at: Date | null;
+  last_rob_at: Date | null;
+  inventory: Array<{ id: string; name: string; at: string }>;
+}
+
+export async function getBank(groupId: string, waId: string, q: Q = pool): Promise<BankRow> {
+  const r = await q.query<BankRow>(
+    `INSERT INTO group_bank (group_id, wa_id, coins) VALUES ($1, $2, 100)
+     ON CONFLICT (group_id, wa_id) DO UPDATE SET wa_id = EXCLUDED.wa_id
+     RETURNING *`,
+    [groupId, waId],
+  );
+  return r.rows[0];
+}
+
+export async function addBankCoins(
+  groupId: string,
+  waId: string,
+  amount: number,
+  q: Q = pool,
+): Promise<{ ok: boolean; coins: number }> {
+  await getBank(groupId, waId, q);
+  if (amount < 0) {
+    const current = await q.query<{ coins: number }>('SELECT coins FROM group_bank WHERE group_id = $1 AND wa_id = $2', [groupId, waId]);
+    if ((current.rows[0]?.coins ?? 0) + amount < 0) return { ok: false, coins: current.rows[0]?.coins ?? 0 };
+  }
+  const r = await q.query<{ coins: number }>(
+    'UPDATE group_bank SET coins = coins + $3 WHERE group_id = $1 AND wa_id = $2 RETURNING coins',
+    [groupId, waId, amount],
+  );
+  return { ok: true, coins: r.rows[0]?.coins ?? 0 };
+}
+
+export async function stampBank(groupId: string, waId: string, field: 'last_daily_at' | 'last_work_at' | 'last_rob_at'): Promise<void> {
+  await pool.query(`UPDATE group_bank SET ${field} = now() WHERE group_id = $1 AND wa_id = $2`, [groupId, waId]);
+}
+
+export async function bankRank(groupId: string, limit = 10): Promise<BankRow[]> {
+  const r = await pool.query<BankRow>(
+    'SELECT * FROM group_bank WHERE group_id = $1 ORDER BY coins DESC LIMIT $2',
+    [groupId, limit],
+  );
+  return r.rows;
+}
+
+export async function addInventoryItem(groupId: string, waId: string, item: { id: string; name: string }): Promise<void> {
+  // Se lee y se reescribe la lista en vez de encadenar jsonb: así funciona igual en
+  // cualquier motor compatible y el inventario queda siempre como un arreglo válido.
+  const bank = await getBank(groupId, waId);
+  const inventario = Array.isArray(bank.inventory) ? bank.inventory : [];
+  await pool.query('UPDATE group_bank SET inventory = $3::jsonb WHERE group_id = $1 AND wa_id = $2', [
+    groupId,
+    waId,
+    JSON.stringify([...inventario, { ...item, at: new Date().toISOString() }]),
+  ]);
+}
+
+export async function getGroupRules(groupId: string): Promise<string> {
+  const r = await pool.query<{ rules: string }>('SELECT rules FROM groups WHERE id = $1', [groupId]);
+  return r.rows[0]?.rules ?? '';
+}
+
+export async function setGroupRules(groupId: string, rules: string): Promise<void> {
+  await pool.query('UPDATE groups SET rules = $2, updated_at = now() WHERE id = $1', [groupId, rules]);
+}
+
+/** Guarda (o borra) la pareja de un integrante. */
+export async function updatePartner(groupId: string, waId: string, partnerId: string | null): Promise<void> {
+  await pool.query(
+    `UPDATE users SET partner_id = $3, partner_since = CASE WHEN $3::text IS NULL THEN NULL ELSE now() END, updated_at = now()
+     WHERE group_id = $1 AND wa_id = $2`,
+    [groupId, waId, partnerId],
+  );
+}
+
+/** Última solicitud pendiente de cierto tipo dirigida a alguien (o del autor indicado). */
+export async function findLatestPendingByTarget(
+  groupId: string,
+  targetId: string,
+  type: RequestRow['type'],
+): Promise<RequestRow | null> {
+  const r = await pool.query<RequestRow>(
+    `SELECT * FROM requests
+     WHERE group_id = $1 AND target_id = $2 AND type = $3 AND status = 'pending'
+     ORDER BY created_at DESC LIMIT 1`,
+    [groupId, targetId, type],
+  );
+  return r.rows[0] ?? null;
+}
+
+/** Última solicitud pendiente enviada por alguien. */
+export async function findLatestPendingByUser(
+  groupId: string,
+  userId: string,
+  type: RequestRow['type'],
+): Promise<RequestRow | null> {
+  const r = await pool.query<RequestRow>(
+    `SELECT * FROM requests
+     WHERE group_id = $1 AND user_id = $2 AND type = $3 AND status = 'pending'
+     ORDER BY created_at DESC LIMIT 1`,
+    [groupId, userId, type],
+  );
+  return r.rows[0] ?? null;
+}
+
+/* ------------------------------ bloqueos ------------------------------ */
+
+export async function blockUser(groupId: string, waId: string, reason: string, blockedBy: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO group_blocks (group_id, wa_id, reason, blocked_by) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (group_id, wa_id) DO UPDATE SET reason = EXCLUDED.reason, blocked_by = EXCLUDED.blocked_by`,
+    [groupId, waId, reason, blockedBy],
+  );
+}
+
+export async function unblockUser(groupId: string, waId: string): Promise<boolean> {
+  const r = await pool.query('DELETE FROM group_blocks WHERE group_id = $1 AND wa_id = $2', [groupId, waId]);
+  return (r.rowCount ?? 0) > 0;
+}
+
+export async function isBlocked(groupId: string, waId: string): Promise<boolean> {
+  const r = await pool.query('SELECT 1 FROM group_blocks WHERE group_id = $1 AND wa_id = $2', [groupId, waId]);
+  return (r.rowCount ?? 0) > 0;
 }
