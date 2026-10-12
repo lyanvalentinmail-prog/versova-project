@@ -16,6 +16,8 @@ const APP = {
   wizardStep: 0,
   wizard: { instance: 'subbot', serverId: 'vrsov-01', serverName: '', phone: '', method: 'code', name: '', botId: null, tokenCode: '' },
   pairing: { code: null, expiresAt: null, timer: null },
+  wizardPoll: null,
+  wizardRun: 0,
   stream: null,
 };
 
@@ -436,6 +438,10 @@ function renderSteps() {
 
 function showWizardStep(step) {
   APP.wizardStep = Math.max(0, Math.min(WIZARD_STEPS.length - 1, step));
+  if (APP.wizardStep !== 4) {
+    stopWizardPolling();
+    APP.wizardRun += 1;
+  }
   renderSteps();
   for (let index = 0; index < WIZARD_STEPS.length; index += 1) {
     const panel = document.getElementById(`step${index}`);
@@ -611,15 +617,96 @@ async function createBotFromWizard() {
   }
 }
 
+/* El QR y el estado de WhatsApp vienen de la misma conexión que usa la consola (/api/status). */
+const WIZARD_WAIT_MS = 2000;
+const WIZARD_WAIT_TRIES = 30;
+
+function stopWizardPolling() {
+  clearInterval(APP.wizardPoll);
+  APP.wizardPoll = null;
+}
+
+function wizardSleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWhatsappStatus() {
+  const response = await fetch('/api/status', { credentials: 'same-origin' });
+  return response.json();
+}
+
+/** Muestra el QR real de WhatsApp y lo renueva mientras el paso está abierto. */
+function startWizardQrPolling() {
+  stopWizardPolling();
+  let lastQr = null;
+  const tick = async () => {
+    if (APP.wizard.method !== 'qr' || APP.wizardStep !== 4) return stopWizardPolling();
+    const qrBox = document.getElementById('wizardQr');
+    try {
+      const status = await fetchWhatsappStatus();
+      if (!qrBox) return;
+      qrBox.hidden = false;
+      if (status.linked) {
+        lastQr = null;
+        qrBox.replaceChildren(V.el('div', { class: 'pill green', text: 'WhatsApp ya está en línea. Pulsa «Ya lo vinculé».' }));
+      } else if (status.qr) {
+        if (status.qr !== lastQr) {
+          lastQr = status.qr;
+          qrBox.replaceChildren(
+            V.el('div', { class: 'center' }, [
+              V.el('img', { src: status.qr, alt: 'Código QR de WhatsApp', style: 'width:220px;border-radius:16px' }),
+              V.el('div', { class: 'mono tiny muted', style: 'margin-top:10px', text: 'WhatsApp › Dispositivos vinculados › Vincular dispositivo' }),
+            ]),
+          );
+        }
+      } else {
+        lastQr = null;
+        qrBox.replaceChildren(V.el('p', { class: 'muted small', text: 'Preparando el QR de WhatsApp…' }));
+      }
+    } catch {
+      /* se reintenta en el siguiente tick */
+    }
+  };
+  tick();
+  APP.wizardPoll = setInterval(tick, WIZARD_WAIT_MS);
+}
+
+/** Espera a que WhatsApp esté en modo vinculación (QR listo) antes de pedir el código. */
+async function waitForWhatsappReady(run) {
+  const countdown = document.getElementById('wizardCountdown');
+  for (let attempt = 0; attempt < WIZARD_WAIT_TRIES; attempt += 1) {
+    if (run !== APP.wizardRun) return null;
+    const status = await fetchWhatsappStatus();
+    if (status.linked) throw new Error('Este bot ya está vinculado a WhatsApp. Cierra sesión antes de vincular otro número.');
+    if (status.pairingReady) return status;
+    if (countdown) {
+      countdown.hidden = false;
+      countdown.textContent = 'PREPARANDO WHATSAPP…';
+    }
+    await wizardSleep(WIZARD_WAIT_MS);
+  }
+  throw new Error('WhatsApp tardó demasiado en quedar listo para vincular. Pulsa «Generar otro» para intentarlo de nuevo.');
+}
+
 async function showPairingStep() {
   showWizardStep(4);
+  const run = (APP.wizardRun = (APP.wizardRun ?? 0) + 1);
   const box = document.getElementById('wizardCode');
   const error = document.getElementById('wizardError');
   const countdown = document.getElementById('wizardCountdown');
   const confirm = document.getElementById('wizardConfirm');
+  const qrBox = document.getElementById('wizardQr');
   const method = APP.wizard.method;
+  stopWizardPolling();
+  clearInterval(APP.pairing.timer);
   if (error) error.hidden = true;
-  if (confirm) confirm.hidden = method !== 'code';
+  if (countdown) countdown.hidden = true;
+  if (confirm) confirm.hidden = false;
+  if (box) box.replaceChildren();
+  if (qrBox) {
+    qrBox.hidden = method !== 'qr';
+    qrBox.replaceChildren();
+  }
   V.setText('wizardStepTitle', method === 'code' ? 'Ingresa el código' : 'Escanea el código');
   V.setText(
     'wizardStepText',
@@ -629,20 +716,17 @@ async function showPairingStep() {
   );
 
   if (method === 'qr') {
-    if (box) box.replaceChildren(V.el('div', { class: 'pill accent', text: 'QR de vinculación' }), V.el('img', { src: '/api/qr/demo.svg', alt: 'Código QR', style: 'width:200px;margin-top:12px;border-radius:16px' }));
-    const qrBox = document.getElementById('wizardQr');
-    if (qrBox) {
-      qrBox.hidden = false;
-      qrBox.replaceChildren(V.el('div', { class: 'center' }, [
-        V.el('div', { class: 'mono tiny muted', text: 'Vincula desde WhatsApp › Dispositivos vinculados' }),
-        V.el('div', { class: 'pill accent', style: 'margin-top:10px', text: 'Código QR generado' }),
-      ]));
-    }
+    startWizardQrPolling();
+    return;
   }
 
   try {
+    await waitForWhatsappReady(run);
+    if (run !== APP.wizardRun) return;
+    // El servidor pide el código a WhatsApp; solo se muestra si WhatsApp lo aceptó.
     const pairing = await V.api(`/api/subbots/${APP.wizard.botId}/pair`, { body: { phone: APP.wizard.phone } });
-    if (method === 'code' && box) {
+    if (run !== APP.wizardRun) return;
+    if (box) {
       box.replaceChildren(
         ...String(pairing.code).split('').map((char) => (char === '-' ? V.el('span', { class: 'code-sep', text: '–' }) : V.el('span', { class: 'code-char', text: char }))),
       );
@@ -656,9 +740,10 @@ async function showPairingStep() {
         if (left < -1) {
           clearInterval(APP.pairing.timer);
           countdown.hidden = true;
+          if (box) box.replaceChildren();
           if (error) {
             error.hidden = false;
-            error.textContent = 'El código expiró. Usa «Cambiar datos» para generar otro.';
+            error.textContent = 'El código expiró. Pulsa «Generar otro» para pedir uno nuevo.';
           }
         }
       };
@@ -667,10 +752,12 @@ async function showPairingStep() {
       APP.pairing.timer = setInterval(paint, 1000);
     }
   } catch (err) {
+    if (run !== APP.wizardRun) return;
     if (error) {
       error.hidden = false;
       error.textContent = err.message;
     }
+    if (countdown) countdown.hidden = true;
   }
 }
 
@@ -678,6 +765,7 @@ async function confirmPairing() {
   try {
     const result = await V.api(`/api/subbots/${APP.wizard.botId}/pair/confirm`, { body: {} });
     clearInterval(APP.pairing.timer);
+    stopWizardPolling();
     V.toast('¡Listo!', 'Tu bot ya está en línea.', 'ok');
     const success = document.getElementById('wizardSuccess');
     if (success) {

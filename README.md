@@ -15,9 +15,10 @@ bots de WhatsApp (SubBots). Incluye catálogo de bots **gratis y de pago**, econ
 
 - **Cuentas**: registro y acceso con email (demo) o **Google** (OAuth 2.0). Sesiones con cookie
   `HttpOnly` (`versova_session`, 30 días).
-- **Catálogo de bots** (`/store`): 12 bots con precio **gratis**, **en V-Coins** o **en USD**
-  (VÉRSOVA, Moderador, Economía, IA, Música, Juegos, Stickers, Descargas, Bienvenidas, Encuestas,
-  Ventas, Auditoría). Activar un bot de catálogo lo deja ligado a la cuenta y a uno de sus SubBots.
+- **Catálogo de bots** (`/store`): por ahora solo **VÉRSOVA** (gratis). El resto de bots se retiró del
+  catálogo; al arrancar, el seed desactiva en la base de datos los que ya no están en `platform-data.ts`
+  (no los borra, para conservar las activaciones existentes). Activar un bot de catálogo lo deja ligado
+  a la cuenta y a uno de sus SubBots.
 - **Economía**: monedero de **V-Coins 🪙**, bono diario, 6 misiones con recompensa, tienda interna
   (7 objetos) y compra de bots con monedas. Todo movimiento queda en el libro de movimientos.
 - **Tienda de tokens y espacio**: token Premium ($1), token VIP ($5), espacio extra (1 GB = $1),

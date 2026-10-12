@@ -119,19 +119,14 @@ function generateTokenCode(tier: 'premium' | 'vip'): string {
   return `VRSOV-${prefix}-${tokenBlock()}-${tokenBlock()}`;
 }
 
-/** Código de vinculación de 8 caracteres con el formato ABCD-1234. */
-function generatePairingCode(): string {
-  const block = () => [...randomBytes(4)].map((byte) => TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length]).join('');
-  return `${block()}-${block()}`;
+/** Código de vinculación de WhatsApp (8 caracteres) con el formato ABCD-1234 para mostrarlo. */
+function formatPairingCode(raw: string): string {
+  const clean = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  return clean.length === 8 ? `${clean.slice(0, 4)}-${clean.slice(4)}` : clean;
 }
 
 const AVAILABLE_BOT_TYPES = [
   { id: 'versova', name: 'VÉRSOVA', description: 'Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.', recommended: true },
-  { id: 'moderador', name: 'Moderador Pro', description: 'Antilink, antispam y administración automática del grupo.', recommended: false },
-  { id: 'economia', name: 'Economía V-Coin', description: 'Monedas, tienda interna y ranking para tu grupo.', recommended: false },
-  { id: 'ia', name: 'IA Assistant', description: 'Respuestas con inteligencia artificial dentro del grupo.', recommended: false },
-  { id: 'musica', name: 'Música', description: 'Reproductor de música en grupos.', recommended: false },
-  { id: 'juegos', name: 'Juegos', description: 'Minijuegos, trivia y economía.', recommended: false },
 ];
 
 function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
@@ -830,8 +825,17 @@ export function startWeb(): HttpServer {
     if (phone.replace(/\D/g, '').length < 8) {
       return void res.status(400).json({ error: 'El número del bot necesita código de país (mínimo 8 dígitos).' });
     }
-    const code = generatePairingCode();
-    const expiresAt = new Date(Date.now() + 60_000);
+    // El código lo emite WhatsApp (mismo flujo que la consola de vinculación). Antes se generaba
+    // localmente y nunca llegaba al servidor de WhatsApp, por eso el teléfono lo rechazaba.
+    let raw: string;
+    try {
+      raw = await requestPairing(phone);
+    } catch (err) {
+      logger.warn('subbots', `Código de vinculación rechazado para «${bot.name}»: ${(err as Error).message}`);
+      return void res.status(400).json({ error: (err as Error).message });
+    }
+    const code = formatPairingCode(raw);
+    const expiresAt = new Date(conn.pairingExpiresAt ?? Date.now() + 60_000);
     await setSubBotPairing(id, user.id, code, expiresAt);
     res.json({ code, formatted: code, expiresAt: expiresAt.getTime(), phone, expired: false });
   });
