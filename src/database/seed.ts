@@ -41,6 +41,12 @@ export async function seedPlatform(q: Q): Promise<void> {
     );
   }
 
+  // Los bots que ya no están en el catálogo se desactivan (no se borran: borrarlos eliminaría
+  // también las activaciones que las cuentas ya tenían en catalog_uses).
+  const keep = BOT_CATALOG.map((bot) => bot.slug);
+  const placeholders = keep.map((_, index) => `$${index + 1}`).join(', ');
+  await q.query(`UPDATE bot_catalog SET active = false, updated_at = now() WHERE slug NOT IN (${placeholders})`, keep);
+
   for (const item of COIN_ITEMS) {
     await q.query(
       `INSERT INTO coin_items (id, name, description, price_coins, kind, payload, badge, available, sort)

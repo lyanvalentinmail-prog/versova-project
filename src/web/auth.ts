@@ -136,10 +136,6 @@ export const STORE_ITEMS: StoreItem[] = [
     coins: 4500,
     badge: '+500 BONUS',
   },
-  { id: 'bot-musica', kind: 'bot', name: 'Sub-bot de Música', description: 'Descargas, playlists y radio en tu grupo.', priceUsd: 3, available: false, badge: 'Próximamente' },
-  { id: 'bot-juegos', kind: 'bot', name: 'Sub-bot de Juegos', description: 'Trivia, dados y rankings para tu team.', priceUsd: 3, available: false, badge: 'Próximamente' },
-  { id: 'bot-ia', kind: 'bot', name: 'Sub-bot IA', description: 'Chat inteligente, resúmenes e imágenes.', priceUsd: 8, available: false, badge: 'Próximamente' },
-  { id: 'bot-stickers', kind: 'bot', name: 'Sub-bot de Stickers', description: 'Crea stickers desde fotos y videos.', priceUsd: 2, available: false, badge: 'Próximamente' },
 ];
 
 /* ------------------------------ contraseñas ------------------------------ */

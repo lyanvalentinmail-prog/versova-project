@@ -67,7 +67,7 @@ describe('esquema PostgreSQL (v4) y repositorios', () => {
     }
 
     const catalog = await platform.listCatalogItems(db.pool);
-    expect(catalog.length).toBe(12);
+    expect(catalog.length).toBe(1); // solo VÉRSOVA: el resto del catálogo fue retirado
     expect(catalog[0].slug).toBe('versova');
 
     const items = await platform.listCoinItems(db.pool);
@@ -163,10 +163,10 @@ describe('esquema PostgreSQL (v4) y repositorios', () => {
     expect(await platform.claimMission(id, 'daily', 25)).toBe(false);
     expect(await platform.listMissionClaims(id)).toEqual(['daily']);
 
-    const uso = await platform.createCatalogUse({ userId: id, slug: 'moderador', subbotId: null, paidCoins: 0 });
-    expect(uso.bot_slug).toBe('moderador');
-    await platform.createCatalogUse({ userId: id, slug: 'moderador', subbotId: null, paidCoins: 0 });
-    expect(await platform.countCatalogUses('moderador')).toBe(1);
+    const uso = await platform.createCatalogUse({ userId: id, slug: 'versova', subbotId: null, paidCoins: 0 });
+    expect(uso.bot_slug).toBe('versova');
+    await platform.createCatalogUse({ userId: id, slug: 'versova', subbotId: null, paidCoins: 0 });
+    expect(await platform.countCatalogUses('versova')).toBe(1);
     expect((await platform.listCatalogUses(id)).length).toBe(1);
 
     const item = await platform.getCoinItem('coin-space-1gb');

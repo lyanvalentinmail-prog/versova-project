@@ -161,6 +161,72 @@ describe('panel web: emparejamiento', () => {
   });
 });
 
+describe('panel web: asistente de registro', () => {
+  it('el código del asistente lo emite WhatsApp (no se inventa en el servidor)', async () => {
+    await boot();
+    harness.reply = 'result';
+
+    const email = `wizard-${Date.now()}@versova.dev`;
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'secreto-123', name: 'Asistente' }),
+    });
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+    expect(register.status).toBe(201);
+
+    const created = await fetch(`${BASE}/api/subbots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Bot Prueba', phone: '59899000111', instanceType: 'subbot', serverId: 'vrsov-01' }),
+    });
+    expect(created.status).toBe(201);
+    const { bot } = await created.json();
+
+    const response = await fetch(`${BASE}/api/subbots/${bot.id}/pair`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ phone: '+598 99 000 111' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.code).toBe('QRTP-7788');
+    expect(body.expiresAt).toBeGreaterThan(Date.now());
+    expect(harness.sockets[harness.sockets.length - 1].requested).toEqual(['59899000111']);
+  });
+
+  it('responde 400 con el motivo de WhatsApp si rechaza el código del asistente', async () => {
+    await boot();
+    harness.reply = 'error';
+
+    const email = `wizard-err-${Date.now()}@versova.dev`;
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'secreto-123', name: 'Asistente' }),
+    });
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+    const created = await fetch(`${BASE}/api/subbots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Bot Error', phone: '59899000222', instanceType: 'subbot', serverId: 'vrsov-01' }),
+    });
+    const { bot } = await created.json();
+
+    const response = await fetch(`${BASE}/api/subbots/${bot.id}/pair`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({}),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain('rechazó la solicitud de emparejamiento');
+    harness.reply = 'result';
+  });
+});
+
 describe('panel web: páginas y telemetría', () => {
   it('sirve la portada, el panel y el catálogo de comandos con una sesión activa', async () => {
     await boot();
