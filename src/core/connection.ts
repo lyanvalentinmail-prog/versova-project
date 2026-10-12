@@ -36,6 +36,8 @@ let sock: WASocket | null = null;
 let attempts = 0;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let autoPairTimer: NodeJS.Timeout | null = null;
+/** Socket que ya programó su pedido automático: cada vinculación pide un solo código. */
+let autoPairedSocket: WASocket | null = null;
 const silentLogger = pino({ level: 'silent' });
 
 export const getSocket = (): WASocket | null => sock;
@@ -66,6 +68,7 @@ export async function startConnection(): Promise<void> {
     clearTimeout(autoPairTimer);
     autoPairTimer = null;
   }
+  autoPairedSocket = null;
   let { state, saveCreds } = await usePgAuthState();
 
   // Un emparejamiento abandonado deja creds.me a medio escribir; con eso Baileys intenta iniciar
@@ -134,6 +137,7 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
     conn.status = 'qr';
     conn.qrDataUrl = await QRCode.toDataURL(qr, { margin: 1, width: 320 });
     logger.info('conn', 'Código QR listo. Usa el panel para elegir QR o código de 8 dígitos.');
+    scheduleAutoPair(s);
   }
 
   if (connection === 'open') {
@@ -172,6 +176,33 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
     scheduleReconnect(Math.min(60_000, 2_000 * 2 ** attempts));
     attempts += 1;
   }
+}
+
+/**
+ * Si BOT_PHONE está configurado, pide un código de emparejamiento 2 s después del primer QR.
+ * Se hace una sola vez por socket: Baileys renueva el QR cada ~20 s y cada renovación no debe
+ * generar un código nuevo (pisaría el que alguien pidió desde el panel).
+ */
+function scheduleAutoPair(s: WASocket): void {
+  if (!config.pairingPhone || autoPairTimer || autoPairedSocket === s) return;
+  if (conn.status !== 'qr') return;
+  autoPairedSocket = s;
+  autoPairTimer = setTimeout(() => {
+    autoPairTimer = null;
+    if (s !== sock || conn.status !== 'qr') return;
+    pairWithCode(
+      { socket: s, ready: conn.status === 'qr', linked: hasLinkedSession(s.authState.creds) },
+      config.pairingPhone,
+    )
+      .then(({ code, expiresAt }) => {
+        if (s !== sock) return;
+        conn.pairingCode = code;
+        conn.pairingExpiresAt = expiresAt;
+        logger.info('conn', `Código automático para ${maskPhone(config.pairingPhone)} listo en el panel.`);
+      })
+      .catch((err) => logger.warn('conn', `No se pudo pedir el código automático: ${(err as Error).message}`));
+  }, 2000);
+  if (typeof autoPairTimer.unref === 'function') autoPairTimer.unref();
 }
 
 function scheduleReconnect(delayMs: number): void {

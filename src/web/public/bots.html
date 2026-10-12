@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es" data-page="bots" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050506" />
+  <title>Mis Bots — VÉRSOVA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238b5cf6'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Arial' font-size='34' font-weight='bold' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap stack">
+    <div>
+      <span class="label">🤖 Sesiones</span>
+      <h2>Mis Bots</h2>
+      <p class="lead">gestiona tus sesiones activas</p>
+      <span class="pill" id="botsPlan">—</span>
+    </div>
+
+    <section class="card glow-top">
+      <div class="row-between">
+        <div class="card-head" style="margin:0"><span class="ico">🤖</span><span>SubBots registrados</span></div>
+        <div class="row">
+          <span class="pill" id="botsCount">0</span>
+          <button class="icon-btn" type="button" onclick="location.reload()" aria-label="Recargar">↻</button>
+        </div>
+      </div>
+      <div class="grid" id="botsList" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:14px;flex-wrap:wrap">
+        <a class="btn btn-primary btn-sm" href="/registrar">＋ Crear bot</a>
+        <a class="btn btn-sm btn-ghost" href="/store">Comprar tokens</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="label">Seguridad</span>
+      <p class="small muted">
+        Cada bot tiene su propia ficha: nombre corto y largo, moneda, owner, enlace del bot, canal de WhatsApp,
+        prefijos (<span class="mono">/ # ! + - . * ~</span>), banner, username y estado. Se guarda todo desde
+        <strong>Config</strong>. Si pierdes el acceso, usa <span class="mono">/miclave</span> desde el número del bot.
+      </p>
+    </section>
+  </main>
+
+  <!-- Opciones del bot -->
+  <div class="modal" id="botModal">
+    <div class="modal-backdrop" onclick="V.closeModal('botModal')"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span class="ico" style="font-size:20px">⚙️</span>
+        <div class="grow">
+          <h3 id="botModalTitle">Opciones del bot</h3>
+          <div class="sub" id="botModalSub">ID ····0000 · SUBBOT · SERVIDOR</div>
+        </div>
+        <button class="icon-btn" type="button" onclick="V.closeModal('botModal')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="section-sep"><span class="label">Info del socket</span><hr /></div>
+
+        <div class="field">
+          <label for="optShortName">Nombre corto</label>
+          <input id="optShortName" type="text" maxlength="30" placeholder="Rikka" />
+        </div>
+        <div class="field">
+          <label for="optLongName">Nombre largo</label>
+          <input id="optLongName" type="text" maxlength="60" placeholder="Rikka Takanashi" />
+        </div>
+        <div class="field">
+          <label for="optCurrency">Moneda</label>
+          <input id="optCurrency" type="text" maxlength="30" placeholder="¥enes" />
+        </div>
+
+        <div class="field">
+          <label for="optOwnerValue">Owner (número)</label>
+          <div class="row">
+            <input id="optOwnerValue" type="text" inputmode="tel" placeholder="Oculto por privacidad" />
+            <button class="icon-btn" id="optOwnerToggle" type="button" title="Mostrar u ocultar el número">👁</button>
+          </div>
+          <input id="optOwnerHidden" type="hidden" value="1" />
+          <p class="tiny muted">El número del dueño se oculta por privacidad hasta que lo hagas visible.</p>
+        </div>
+
+        <div class="field">
+          <label for="optBotLink">Link del bot</label>
+          <input id="optBotLink" type="url" placeholder="https://web.versova.app/cmds" />
+        </div>
+
+        <div class="field">
+          <label for="optChannel">Canal del bot (URL)</label>
+          <div class="row">
+            <input id="optChannel" type="url" placeholder="https://whatsapp.com/channel/..." />
+            <button class="icon-btn" type="button" title="Usar el canal por defecto" onclick="document.getElementById('optChannel').value='https://whatsapp.com/channel/0029VbAp'">↻</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="optPrefixes">Prefijo</label>
+          <div class="chips" id="optPrefixes"></div>
+          <div class="chips" id="optPrefixChips" style="margin-top:10px"></div>
+          <p class="tiny muted">Puedes activar varios prefijos a la vez: /, #, !, +, -, ., *, ~. El primero es el principal.</p>
+        </div>
+
+        <div class="section-sep"><span class="label">Banner</span><hr /></div>
+        <div class="tabs">
+          <button class="tab is-active" type="button">URL</button>
+          <button class="tab" type="button" onclick="V.toast('Subir imagen','Usa la URL del banner o súbela desde la tienda de banners.','')">SUBIR</button>
+        </div>
+        <div class="field">
+          <label for="optBanner">Banner (imagen, gif o video)</label>
+          <input id="optBanner" type="url" placeholder="https://cloud.versova.app/banner.jpeg" />
+        </div>
+
+        <div class="section-sep"><span class="label">Información</span><hr /></div>
+        <div class="field">
+          <label for="optUsername">Username</label>
+          <input id="optUsername" type="text" maxlength="40" placeholder="versova" />
+        </div>
+        <div class="field">
+          <label for="optStatus">Estado / info</label>
+          <input id="optStatus" type="text" maxlength="40" placeholder="online" />
+        </div>
+        <div class="field">
+          <label for="optCatalog">Bot del catálogo</label>
+          <select id="optCatalog"></select>
+          <p class="tiny muted">Puedes cambiar el tipo de bot que corre en esta instancia.</p>
+        </div>
+        <p class="center tiny muted" id="optSync">Sync: —</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" type="button" onclick="V.closeModal('botModal')">✕ Cancelar</button>
+        <button class="btn btn-primary" id="saveBotOptions" type="button">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grupos -->
+  <div class="modal" id="groupsModal">
+    <div class="modal-backdrop" onclick="V.closeModal('groupsModal')"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span class="ico" style="font-size:20px">👥</span>
+        <div class="grow"><h3>Grupos del bot</h3><div class="sub">Grupos donde está activo</div></div>
+        <button class="icon-btn" type="button" onclick="V.closeModal('groupsModal')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body" id="groupsList"></div>
+      <div class="modal-foot"><button class="btn btn-block" type="button" onclick="V.closeModal('groupsModal')">Cerrar</button></div>
+    </div>
+  </div>
+
+  <!-- Servidores -->
+  <div class="modal" id="serverModal">
+    <div class="modal-backdrop" onclick="V.closeModal('serverModal')"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span class="ico" style="font-size:20px">🌐</span>
+        <div class="grow"><h3>Cambiar de servidor</h3><div class="sub">Selecciona dónde corre tu bot</div></div>
+        <button class="icon-btn" type="button" onclick="V.closeModal('serverModal')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body" id="serverPickList"></div>
+      <div class="modal-foot"><button class="btn btn-block" type="button" onclick="V.closeModal('serverModal')">Cerrar</button></div>
+    </div>
+  </div>
+
+  <script src="shell.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

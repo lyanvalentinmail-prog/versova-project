@@ -10,29 +10,54 @@ import { conn, currentPairing, getSocket, logoutBot, requestPairing } from '../c
 import { getCommandSettings, saveCommandSettings } from '../core/command-settings.js';
 import { allCommands } from '../core/router.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
-import { getPlatformMetrics, getSetting, setSetting } from '../database/repos.js';
-import { pool, tx } from '../database/db.js';
+import { memoryMode, pool } from '../database/db.js';
 import {
+  addCoins,
   addExtraSpace,
   allocatedExtraGb,
+  auditLog,
+  bumpSubBotUptime,
+  countCatalogUses,
   countSubBots,
   countUnusedTokens,
+  createCatalogUse,
+  createReport,
   createSubBot,
+  createSubBotWithToken,
   createTokens,
+  claimMission,
   deleteSubBot,
   findUserByEmail,
+  getCoinItem,
+  getCoins,
+  getPlatformCounts,
+  getPlatformMetrics,
+  getServer,
+  getSetting,
   getSubBot,
   getTokenByCode,
+  lastDailyClaim,
+  listCatalogItems,
+  listCatalogUses,
+  listCoinItems,
+  listLedger,
+  listMissionClaims,
   listPurchases,
+  listReports,
+  listServers,
+  listSubBotGroups,
   listSubBots,
   listTokensByOwner,
+  markSubBotLinked,
   recordPurchase,
-  redeemToken,
+  setSetting,
+  setSubBotPairing,
+  updateSubBotOptions,
   updateUserPlan,
-  updateSubBot,
+  upsertSubBotGroup,
   type SubBotRow,
   type WebPlan,
-} from '../database/repos-web.js';
+} from '../database/store.js';
 import { logBus, logger, recentLogs, type LogEntry } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
 import { maskPhone } from '../utils/text.js';
@@ -53,6 +78,13 @@ import {
   STORE_ITEMS,
   toSafeUser,
 } from './auth.js';
+import {
+  COIN,
+  INSTANCE_TYPES,
+  MISSIONS,
+  PREFIX_CHOICES,
+  catalogBotBySlug,
+} from './platform-data.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const startedAt = new Date();
@@ -69,9 +101,9 @@ function publicWriteLimit(scope: string, max = 30, windowMs = 60_000) {
   };
 }
 
-const limitWrites = publicWriteLimit('writes', 30, 60_000);
-const limitPairing = publicWriteLimit('pairing', 4, 60_000);
-const limitCheckout = publicWriteLimit('checkout', 12, 60_000);
+const limitWrites = publicWriteLimit('writes', 60, 60_000);
+const limitPairing = publicWriteLimit('pairing', 6, 60_000);
+const limitCheckout = publicWriteLimit('checkout', 20, 60_000);
 
 /* ------------------------------ tienda/sub-bots --------------------------- */
 const TOKEN_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I, O, 0, 1 para leerlos mejor
@@ -87,21 +119,81 @@ function generateTokenCode(tier: 'premium' | 'vip'): string {
   return `VRSOV-${prefix}-${tokenBlock()}-${tokenBlock()}`;
 }
 
-/** Espacio total de un sub-bot: el mayor entre su tipo y el plan del usuario, más el extra asignado. */
-/** Tipos de bot que el usuario puede elegir al crear uno. */
+/** Código de vinculación de 8 caracteres con el formato ABCD-1234. */
+function generatePairingCode(): string {
+  const block = () => [...randomBytes(4)].map((byte) => TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length]).join('');
+  return `${block()}-${block()}`;
+}
+
 const AVAILABLE_BOT_TYPES = [
   { id: 'versova', name: 'VÉRSOVA', description: 'Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.', recommended: true },
-  { id: 'musica', name: 'Música', description: 'Reproductor de música en grupos (próximamente).', comingSoon: true },
-  { id: 'ia', name: 'IA', description: 'Chat con inteligencia artificial (próximamente).', comingSoon: true },
-  { id: 'juegos', name: 'Juegos', description: 'Minijuegos, trivia y economía (próximamente).', comingSoon: true },
+  { id: 'moderador', name: 'Moderador Pro', description: 'Antilink, antispam y administración automática del grupo.', recommended: false },
+  { id: 'economia', name: 'Economía V-Coin', description: 'Monedas, tienda interna y ranking para tu grupo.', recommended: false },
+  { id: 'ia', name: 'IA Assistant', description: 'Respuestas con inteligencia artificial dentro del grupo.', recommended: false },
+  { id: 'musica', name: 'Música', description: 'Reproductor de música en grupos.', recommended: false },
+  { id: 'juegos', name: 'Juegos', description: 'Minijuegos, trivia y economía.', recommended: false },
 ];
 
 function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
   const baseSpaceGb = Math.max(BOT_TIERS[bot.tier].spaceGb, PLANS[plan].spacePerBotGb);
+  return { ...bot, baseSpaceGb, totalSpaceGb: baseSpaceGb + bot.extra_gb };
+}
+
+function str(value: unknown, max = 200): string {
+  return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+function cleanPhone(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/[^\d+]/g, '').slice(0, 20) : '';
+}
+
+function cleanUrl(value: unknown, max = 300): string {
+  const raw = str(value, max);
+  return /^https?:\/\//i.test(raw) ? raw : '';
+}
+
+function cleanPrefixes(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const allowed = new Set<string>(PREFIX_CHOICES);
+  const list = [...new Set(value.map((item) => String(item).slice(0, 2)))].filter((item) => allowed.has(item));
+  return list.slice(0, 8);
+}
+
+/** Estado del saldo y las misiones del usuario, tal como lo ve la web. */
+async function economyFor(userId: number, botCount: number, uses: number, purchases: number) {
+  const [coins, ledger, items, claimed, daily] = await Promise.all([
+    getCoins(userId),
+    listLedger(userId, 40),
+    listCoinItems(),
+    listMissionClaims(userId),
+    lastDailyClaim(userId),
+  ]);
+  const dailyAvailable = !daily || Date.now() - new Date(daily).getTime() >= 24 * 60 * 60 * 1000;
+  const progress: Record<string, boolean> = {
+    daily: dailyAvailable,
+    profile: false,
+    'first-bot': botCount > 0,
+    'first-catalog': uses > 0,
+    'first-purchase': purchases > 0,
+    'three-bots': botCount >= 3,
+  };
   return {
-    ...bot,
-    baseSpaceGb,
-    totalSpaceGb: baseSpaceGb + bot.extra_gb,
+    coin: COIN,
+    coins,
+    ledger,
+    items,
+    daily: {
+      available: dailyAvailable,
+      lastClaimAt: daily ? new Date(daily).toISOString() : null,
+      nextAt: daily ? new Date(new Date(daily).getTime() + 24 * 60 * 60 * 1000).toISOString() : null,
+      reward: MISSIONS.find((mission) => mission.id === 'daily')?.reward ?? 25,
+    },
+    missions: MISSIONS.map((mission) => ({
+      ...mission,
+      claimed: claimed.includes(mission.id),
+      ready: Boolean(progress[mission.id]) && !claimed.includes(mission.id),
+      available: mission.id === 'daily' ? true : Boolean(progress[mission.id]),
+    })),
   };
 }
 
@@ -109,26 +201,37 @@ export function startWeb(): HttpServer {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '3mb' }));
+  app.use(express.json({ limit: '4mb' }));
   const publicDir = join(here, 'public');
-  // Sin «extensions»: /home y /store deben pasar por sus rutas con control de sesión.
+  // Sin «extensions»: /registrar y /store deben pasar por sus rutas con control de sesión.
   app.use(express.static(publicDir, { index: 'index.html' }));
   app.use(attachUser);
 
-  // Páginas del panel (una sola app, varias rutas como en la web de referencia).
-  // El panel y la tienda requieren cuenta: sin sesión se manda a la portada a iniciar sesión.
-  app.get('/home', (req, res) => {
-    if (!hasSession(req)) return res.redirect(302, '/?login=1');
-    res.sendFile(join(publicDir, 'home.html'));
-  });
-  app.get('/store', (req, res) => {
-    if (!hasSession(req)) return res.redirect(302, '/?login=1&next=store');
-    res.sendFile(join(publicDir, 'store.html'));
-  });
-  app.get('/cmds', (_req, res) => res.sendFile(join(publicDir, 'cmds.html')));
-  app.get('/status', (_req, res) => res.redirect(302, '/home#monitor'));
+  // --------------------------------- páginas ---------------------------------
+  const page = (file: string, needsSession = false, next = '') =>
+    (req: Request, res: Response): void => {
+      if (needsSession && !hasSession(req)) {
+        res.redirect(302, `/?login=1${next ? `&next=${next}` : ''}`);
+        return;
+      }
+      res.sendFile(join(publicDir, file));
+    };
 
-  // ------------------------------ cuenta ------------------------------
+  app.get('/', page('index.html'));
+  app.get('/registrar', page('registrar.html', true, 'registrar'));
+  app.get('/bots', page('bots.html', true, 'bots'));
+  app.get('/metrics', page('metrics.html', true, 'metrics'));
+  app.get('/store', page('store.html', true, 'store'));
+  app.get('/catalog', page('store.html', true, 'store'));
+  app.get('/cmds', page('cmds.html'));
+  app.get('/links', page('links.html'));
+  app.get('/menu', page('menu.html'));
+  app.get('/ticket', page('ticket.html', true, 'ticket'));
+  // Ruta histórica del panel: ahora la portada hace de panel.
+  app.get('/home', (_req, res) => res.redirect(302, '/'));
+  app.get('/status', (_req, res) => res.redirect(302, '/metrics'));
+
+  // --------------------------------- cuenta ---------------------------------
   app.get('/api/auth/me', (req, res) => void authMe(req, res));
   app.post('/api/auth/register', limitAuth, (req, res) => void authRegister(req, res));
   app.post('/api/auth/login', limitAuth, (req, res) => void authLogin(req, res));
@@ -136,7 +239,205 @@ export function startWeb(): HttpServer {
   app.get('/api/auth/google/start', googleStart);
   app.get('/api/auth/google/callback', googleCallback);
 
-  // ------------------------------- tienda -------------------------------
+  // -------------------------------- plataforma -------------------------------
+  // Datos públicos que alimentan la portada, el monitor y el asistente.
+  app.get('/api/platform', async (req, res) => {
+    const counts = await getPlatformCounts().catch(() => ({
+      totalBots: 0, main: 0, premium: 0, subs: 0, users: 0, tokens: 0, catalogUses: 0, online: 0,
+    }));
+    const catalog = await listCatalogItems().catch(() => []);
+    const servers = await listServers().catch(() => []);
+    const bots = await Promise.all(
+      catalog.map(async (bot) => ({ slug: bot.slug, uses: await countCatalogUses(bot.slug).catch(() => 0) })),
+    );
+    res.json({
+      bot: config.bot.name,
+      team: config.bot.team,
+      version: config.bot.version,
+      prefix: config.bot.prefix,
+      memoryMode,
+      uptimeSec: Math.floor((Date.now() - startedAt.getTime()) / 1000),
+      commands: getCommandInventory().length,
+      implemented: getCommandInventory().filter((command) => command.implemented).length,
+      counts: {
+        ...counts,
+        commands: getCommandInventory().length,
+        implemented: getCommandInventory().filter((command) => command.implemented).length,
+        catalogBots: catalog.length,
+        servers: servers.length,
+      },
+      catalogUses: Object.fromEntries(bots.map((bot) => [bot.slug, bot.uses])),
+      servers,
+      plans: PLANS,
+      tiers: BOT_TIERS,
+      instances: INSTANCE_TYPES,
+      googleEnabled: Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()),
+    });
+  });
+
+  // ------------------------ catálogo de bots (gratis/pago) -------------------
+  app.get('/api/catalog', async (req, res) => {
+    const catalog = await listCatalogItems();
+    const user = req.webUser;
+    const uses = user ? await listCatalogUses(user.id) : [];
+    const counts = await Promise.all(catalog.map((bot) => countCatalogUses(bot.slug).catch(() => 0)));
+    res.json({
+      bots: catalog.map((bot, index) => ({
+        ...bot,
+        priceUsd: Number(bot.price_usd),
+        users: counts[index],
+        owned: uses.some((use) => use.bot_slug === bot.slug),
+        subbotId: uses.find((use) => use.bot_slug === bot.slug)?.subbot_id ?? null,
+      })),
+      categories: [...new Set(catalog.map((bot) => bot.category))],
+      owned: uses.map((use) => ({ slug: use.bot_slug, subbotId: use.subbot_id, paidCoins: use.paid_coins })),
+    });
+  });
+
+  // Activar un bot del catálogo: gratis, con monedas o canjeando un token.
+  app.post('/api/catalog/:slug/use', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const slug = String(req.params.slug);
+    const bot = catalogBotBySlug(slug);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no está en el catálogo.' });
+
+    const uses = await listCatalogUses(user.id);
+    if (uses.some((use) => use.bot_slug === slug)) {
+      return void res.status(409).json({ error: `Ya tienes «${bot.name}» activo en tu cuenta.` });
+    }
+
+    const wantsCoins = bot.pricing === 'coins' || bot.pricing === 'usd';
+    if (wantsCoins) {
+      const coins = await getCoins(user.id);
+      if (coins < bot.priceCoins) {
+        return void res.status(402).json({
+          error: `«${bot.name}» cuesta ${bot.priceCoins} ${COIN.name} y tienes ${coins}. Compra monedas o gana con las misiones.`,
+          priceCoins: bot.priceCoins,
+          coins,
+          shortfall: bot.priceCoins - coins,
+        });
+      }
+    }
+
+    if (wantsCoins) {
+      const charged = await addCoins(user.id, -bot.priceCoins, 'catalog', `Activación de ${bot.name}`, { slug });
+      if (!charged.ok) return void res.status(402).json({ error: 'Saldo insuficiente para activar ese bot.' });
+    }
+
+    const use = await createCatalogUse({ userId: user.id, slug, subbotId: null, paidCoins: wantsCoins ? bot.priceCoins : 0 });
+    logger.info('catalogo', `${user.email} activó «${bot.name}» (${bot.pricing}${wantsCoins ? ` · ${bot.priceCoins} V-Coin` : ''}).`);
+    res.status(201).json({
+      ok: true,
+      use: { slug, subbotId: use.subbot_id, paidCoins: use.paid_coins },
+      coins: await getCoins(user.id),
+      message: wantsCoins
+        ? `«${bot.name}» activado. Se descontaron ${bot.priceCoins} ${COIN.name}.`
+        : `«${bot.name}» activado gratis en tu cuenta.`,
+    });
+  });
+
+  // --------------------------------- economía --------------------------------
+  app.get('/api/economy', requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const [bots, uses, purchases] = await Promise.all([
+      countSubBots(user.id),
+      listCatalogUses(user.id),
+      listPurchases(user.id, 5),
+    ]);
+    res.json({
+      ...(await economyFor(user.id, bots, uses.length, purchases.length)),
+      purchases,
+    });
+  });
+
+  app.post('/api/economy/daily', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const daily = await lastDailyClaim(user.id);
+    if (daily && Date.now() - new Date(daily).getTime() < 24 * 60 * 60 * 1000) {
+      const next = new Date(new Date(daily).getTime() + 24 * 60 * 60 * 1000);
+      return void res.status(429).json({ error: 'Ya reclamaste el bono diario. Vuelve más tarde.', nextAt: next.toISOString() });
+    }
+    const reward = MISSIONS.find((mission) => mission.id === 'daily')?.reward ?? 25;
+    const result = await addCoins(user.id, reward, 'daily', 'Bono diario', {});
+    logger.info('economia', `${user.email} reclamó el bono diario (+${reward}).`);
+    res.json({ ok: true, reward, coins: result.coins });
+  });
+
+  app.post('/api/economy/mission', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const missionId = str(req.body?.missionId, 40);
+    const mission = MISSIONS.find((entry) => entry.id === missionId);
+    if (!mission) return void res.status(404).json({ error: 'Esa misión no existe.' });
+    if (missionId === 'daily') return void res.status(400).json({ error: 'El bono diario se reclama en su propio botón.' });
+
+    const [bots, uses, purchases] = await Promise.all([
+      countSubBots(user.id),
+      listCatalogUses(user.id),
+      listPurchases(user.id, 5),
+    ]);
+    const ready =
+      (missionId === 'first-bot' && bots > 0) ||
+      (missionId === 'first-catalog' && uses.length > 0) ||
+      (missionId === 'first-purchase' && purchases.length > 0) ||
+      (missionId === 'three-bots' && bots >= 3);
+    if (!ready) return void res.status(400).json({ error: 'Todavía no completaste esa misión.' });
+
+    const first = await claimMission(user.id, missionId, mission.reward);
+    if (!first) return void res.status(409).json({ error: 'Ya reclamaste esta misión.' });
+    const result = await addCoins(user.id, mission.reward, 'mission', `Misión: ${mission.name}`, { missionId });
+    res.json({ ok: true, reward: mission.reward, coins: result.coins });
+  });
+
+  app.post('/api/economy/buy', limitCheckout, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const itemId = str(req.body?.itemId, 60);
+    const item = await getCoinItem(itemId);
+    if (!item) return void res.status(404).json({ error: 'Ese producto no existe en la tienda de monedas.' });
+
+    const charge = await addCoins(user.id, -item.price_coins, 'shop', `Compra: ${item.name}`, { itemId });
+    if (!charge.ok) {
+      return void res.status(402).json({
+        error: `Necesitas ${item.price_coins} ${COIN.name} y tienes ${charge.coins}.`,
+      });
+    }
+
+    const payload = item.payload ?? {};
+    const receipt: Record<string, unknown> = { itemId: item.id, name: item.name, priceCoins: item.price_coins };
+
+    if (item.kind === 'space') {
+      const gb = Number(payload.spaceGb ?? 1);
+      await addExtraSpace(user.id, gb);
+      receipt.spaceGb = gb;
+      receipt.message = `Se añadieron ${gb} GB a tu pool de espacio.`;
+    } else if (item.kind === 'plan') {
+      const plan = String(payload.plan ?? 'premium') as WebPlan;
+      await updateUserPlan(user.id, plan);
+      receipt.plan = plan;
+      receipt.message = `Plan ${PLANS[plan].name} activo: hasta ${PLANS[plan].maxBots} bots con ${PLANS[plan].spacePerBotGb} GB por bot.`;
+    } else if (item.kind === 'token') {
+      const tier = String(payload.tier ?? 'premium') as 'premium' | 'vip';
+      const created = await createTokens([
+        { code: generateTokenCode(tier), type: tier, spaceGb: Number(payload.spaceGb ?? 2), ownerId: user.id },
+      ]);
+      receipt.tokens = created.map((token) => ({ code: token.code, type: token.type, spaceGb: token.space_gb }));
+      receipt.message = `Token ${tier.toUpperCase()} creado. Úsalo al registrar un bot ${tier.toUpperCase()}.`;
+    } else {
+      receipt.message = 'Mejora activada en tu cuenta.';
+    }
+
+    await recordPurchase({
+      userId: user.id,
+      itemId: item.id,
+      itemName: item.name,
+      quantity: 1,
+      priceUsd: 0,
+      details: { paidWithCoins: item.price_coins, ...receipt },
+    });
+    logger.info('economia', `${user.email} compró ${item.name} por ${item.price_coins} V-Coin.`);
+    res.json({ ok: true, receipt, coins: await getCoins(user.id) });
+  });
+
+  // ---------------------------------- tienda ---------------------------------
   app.get('/api/store/catalog', requireUser, async (req, res) => {
     const user = req.webUser!;
     const [tokens, subBots, allocated, purchases] = await Promise.all([
@@ -150,6 +451,7 @@ export function startWeb(): HttpServer {
       plans: PLANS,
       tiers: BOT_TIERS,
       user: toSafeUser(user),
+      coins: await getCoins(user.id),
       usage: {
         botsUsed: subBots,
         botsMax: PLANS[user.plan].maxBots,
@@ -170,7 +472,6 @@ export function startWeb(): HttpServer {
 
     if (!item) return void res.status(404).json({ error: 'Ese producto no existe.' });
     if (!item.available) return void res.status(400).json({ error: `${item.name} todavía no está disponible.` });
-    if (item.kind === 'space' && quantity < 1) return void res.status(400).json({ error: 'Cantidad inválida.' });
 
     // Los planes se pueden "recomprar" para ampliar; los tokens y el espacio admiten cantidad.
     if (item.kind === 'plan' && item.plan && PLANS[item.plan].priceUsd <= PLANS[user.plan].priceUsd) {
@@ -202,6 +503,23 @@ export function startWeb(): HttpServer {
         quantity === 1
           ? `Tu token ${item.name} está listo. Úsalo al crear un sub-bot ${item.tier!.toUpperCase()}.`
           : `${quantity} tokens ${item.name} están listos.`;
+    } else if (item.kind === 'coins') {
+      const coins = (item.coins ?? 0) * quantity;
+      const result = await addCoins(user.id, coins, 'purchase', `Compra de ${coins} ${COIN.name}`, { itemId: item.id });
+      receipt.coins = coins;
+      receipt.total = result.coins;
+      receipt.message = `Se acreditaron ${coins} ${COIN.name} en tu cuenta.`;
+    } else if (item.kind === 'catalog') {
+      const slug = item.catalogSlug!;
+      const bot = catalogBotBySlug(slug);
+      if (!bot) return void res.status(404).json({ error: 'Ese bot no está en el catálogo.' });
+      const uses = await listCatalogUses(user.id);
+      if (uses.some((use) => use.bot_slug === slug)) {
+        return void res.status(409).json({ error: `Ya tienes «${bot.name}» activo.` });
+      }
+      await createCatalogUse({ userId: user.id, slug, subbotId: null, paidCoins: 0 });
+      receipt.catalogSlug = slug;
+      receipt.message = `«${bot.name}» activado en tu cuenta.`;
     } else {
       return void res.status(400).json({ error: 'Ese producto todavía no está disponible.' });
     }
@@ -212,7 +530,9 @@ export function startWeb(): HttpServer {
       itemName: item.name,
       quantity,
       priceUsd,
-      details: item.kind === 'token' ? { codes: (receipt.tokens as Array<{ code: string }>).map((token) => token.code) } : {},
+      details: item.kind === 'token'
+        ? { codes: (receipt.tokens as Array<{ code: string }>).map((token) => token.code) }
+        : { message: receipt.message },
     });
     logger.info('tienda', `${user.email} compró ${item.name} x${quantity} ($${priceUsd}).`);
     res.json({ ok: true, receipt });
@@ -222,181 +542,368 @@ export function startWeb(): HttpServer {
     res.json({ tokens: await listTokensByOwner(req.webUser!.id) });
   });
 
-  // ------------------------------ sub-bots ------------------------------
+  // ------------------------------- servidores --------------------------------
+  app.get('/api/servers', async (_req, res) => {
+    const servers = await listServers();
+    res.json({
+      servers: servers.map((server) => ({
+        ...server,
+        free: Math.max(0, server.capacity - server.used),
+        full: server.used >= server.capacity || server.status === 'full',
+      })),
+    });
+  });
+
+  // ------------------------------ sub-bots ----------------------------------
   app.get('/api/subbots', requireUser, async (req, res) => {
     const user = req.webUser!;
-    const [bots, used, allocated, tokens] = await Promise.all([
+    const [bots, used, allocated, tokens, uses] = await Promise.all([
       listSubBots(user.id),
       countSubBots(user.id),
       allocatedExtraGb(user.id),
       listTokensByOwner(user.id),
+      listCatalogUses(user.id),
     ]);
+    const withGroups = await Promise.all(
+      bots.map(async (bot) => ({
+        ...withSpace(bot, user.plan),
+        groups: await listSubBotGroups(bot.id).catch(() => []),
+      })),
+    );
     res.json({
-      bots: bots.map((bot) => withSpace(bot, user.plan)),
+      bots: withGroups,
       plan: PLANS[user.plan],
       tiers: BOT_TIERS,
       botTypes: AVAILABLE_BOT_TYPES,
+      instances: INSTANCE_TYPES,
+      catalog: await listCatalogItems(),
+      uses,
       usage: {
         botsUsed: used,
         botsMax: PLANS[user.plan].maxBots,
         extraSpaceGb: user.extra_space_gb,
         extraSpaceFree: Math.max(0, user.extra_space_gb - allocated),
       },
+      economy: await economyFor(user.id, used, uses.length, (await listPurchases(user.id, 5)).length),
       tokens: tokens.filter((token) => token.status === 'unused'),
     });
   });
 
   app.post('/api/subbots', limitWrites, requireUser, async (req, res) => {
     const user = req.webUser!;
-    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
-    const tier = typeof req.body?.tier === 'string' ? (req.body.tier as keyof typeof BOT_TIERS) : 'free';
-    const phone = typeof req.body?.phone === 'string' ? req.body.phone.replace(/[^\d+]/g, '').slice(0, 20) : '';
-    const description = typeof req.body?.description === 'string' ? req.body.description.trim().slice(0, 300) : '';
-    const tokenCode = typeof req.body?.tokenCode === 'string' ? req.body.tokenCode.trim().toUpperCase() : '';
-    const botType = typeof req.body?.botType === 'string' ? req.body.botType.trim() : 'versova';
-    const displayName = typeof req.body?.displayName === 'string' ? req.body.displayName.trim().slice(0, 40) : '';
-    const botPrefix = typeof req.body?.botPrefix === 'string' ? req.body.botPrefix.trim().slice(0, 4) : '.';
-    const bannerText = typeof req.body?.bannerText === 'string' ? req.body.bannerText.slice(0, 800) : '';
+    const body = req.body ?? {};
+    const name = str(body.name, 40);
+    const tier = typeof body.tier === 'string' ? (body.tier as keyof typeof BOT_TIERS) : 'free';
+    const phone = cleanPhone(body.phone);
+    const description = str(body.description, 300);
+    const tokenCode = str(body.tokenCode, 40).toUpperCase();
+    const botType = str(body.botType, 30) || 'versova';
+    const catalogSlug = str(body.catalogSlug, 40) || botType;
+    const serverId = str(body.serverId, 40) || 'vrsov-01';
+    const server = await getServer(serverId);
 
     if (name.length < 2 || name.length > 40) {
-      return void res.status(400).json({ error: 'El nombre del sub-bot necesita entre 2 y 40 caracteres.' });
+      return void res.status(400).json({ error: 'El nombre del bot necesita entre 2 y 40 caracteres.' });
     }
-    if (!BOT_TIERS[tier]) return void res.status(400).json({ error: 'Tipo de sub-bot inválido.' });
-    if (!AVAILABLE_BOT_TYPES.some((bt) => bt.id === botType)) {
+    if (!BOT_TIERS[tier]) return void res.status(400).json({ error: 'Tipo de bot inválido.' });
+    if (!AVAILABLE_BOT_TYPES.some((entry) => entry.id === botType)) {
       return void res.status(400).json({ error: 'Tipo de bot no válido.' });
     }
-    const chosenType = AVAILABLE_BOT_TYPES.find((bt) => bt.id === botType);
-    if (chosenType?.comingSoon) {
-      return void res.status(400).json({ error: `«${chosenType.name}» todavía no está disponible. Elige VÉRSOVA por ahora.` });
-    }
+    if (!server) return void res.status(400).json({ error: 'Ese servidor no existe.' });
+    if (server.status === 'maintenance') return void res.status(400).json({ error: `${server.name} está en mantenimiento.` });
+    if (server.used >= server.capacity) return void res.status(400).json({ error: `${server.name} está lleno. Elige otro servidor.` });
 
     const planInfo = PLANS[user.plan];
     const used = await countSubBots(user.id);
     if (used >= planInfo.maxBots) {
       return void res.status(403).json({
-        error: `Tu plan ${planInfo.name} permite hasta ${planInfo.maxBots} sub-bots. Mejora de plan en la tienda para crear más.`,
+        error: `Tu plan ${planInfo.name} permite hasta ${planInfo.maxBots} bots. Mejora de plan en la tienda para crear más.`,
       });
     }
 
-    if (BOT_TIERS[tier].requiresToken) {
-      const token = tokenCode ? await getTokenByCode(tokenCode) : null;
+    const instance = INSTANCE_TYPES.find((entry) => entry.id === str(body.instanceType, 20)) ?? INSTANCE_TYPES[0];
+    const needsToken = BOT_TIERS[tier].requiresToken;
+    let token = null as Awaited<ReturnType<typeof getTokenByCode>>;
+    if (needsToken) {
       if (!tokenCode) {
-        return void res.status(400).json({ error: `Para un sub-bot ${BOT_TIERS[tier].name} necesitas el código de un token.` });
+        return void res.status(400).json({ error: `Para una instancia ${BOT_TIERS[tier].name} necesitas el código de un token.` });
       }
+      token = await getTokenByCode(tokenCode);
       if (!token || token.status !== 'unused' || token.type !== tier) {
         return void res.status(400).json({ error: 'Ese token no es válido (revisa el código, que no esté usado y que sea del mismo tipo).' });
       }
       if (token.owner_id !== user.id) {
         return void res.status(403).json({ error: 'Ese token no pertenece a tu cuenta.' });
       }
-
-      const bot = await tx(async (client) => {
-        const created = await createSubBot(
-          { userId: user.id, name, tier, tokenCode: token.code, phone, description,
-            botType, displayName, botPrefix, bannerText },
-          client,
-        );
-        const redeemed = await redeemToken(token.code, user.id, created.id, client);
-        if (!redeemed) throw new Error('El token acaba de canjearse en otra sesión.');
-        return created;
-      });
-      logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, ${botType}, token ${token.code}).`);
-      return void res.status(201).json({ bot: withSpace(bot, user.plan) });
     }
 
-    const bot = await createSubBot({ userId: user.id, name, tier, tokenCode: null, phone, description,
-      botType, displayName, botPrefix, bannerText });
-    logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, ${botType}).`);
+    const prefixes = cleanPrefixes(body.prefixes) ?? ['.'];
+    const options = {
+      userId: user.id,
+      name,
+      tier,
+      tokenCode: needsToken ? tokenCode : null,
+      phone,
+      description,
+      botType,
+      displayName: str(body.displayName, 40) || str(body.shortName, 40) || name,
+      botPrefix: prefixes[0] ?? '.',
+      bannerText: str(body.bannerText, 800),
+      shortName: str(body.shortName, 30) || name,
+      longName: str(body.longName, 60) || name,
+      currency: str(body.currency, 30),
+      ownerNumber: cleanPhone(body.ownerNumber),
+      ownerHidden: body.ownerHidden !== false,
+      botLink: cleanUrl(body.botLink) || `https://${req.get('host') ?? 'web.versova.app'}/cmds`,
+      channelUrl: cleanUrl(body.channelUrl),
+      prefixes,
+      bannerUrl: cleanUrl(body.bannerUrl, 400),
+      username: str(body.username, 40) || name.toLowerCase().replace(/\s+/g, ''),
+      statusInfo: str(body.statusInfo, 40) || 'online',
+      instanceType: instance.id,
+      serverId: server.id,
+      serverName: server.name,
+      avatarUrl: cleanUrl(body.avatarUrl, 400),
+      catalogSlug,
+    };
+
+    const bot = await createSubBotWithToken(options);
+    await upsertSubBotGroup(bot.id, {
+      jid: `pending-${bot.id}@g.us`,
+      name: 'Sin grupos todavía',
+      members: 0,
+      active: false,
+    }).catch(() => undefined);
+    logger.info('subbots', `${user.email} creó «${name}» (${tier}, ${server.name}${token ? `, token ${token.code}` : ''}).`);
     res.status(201).json({ bot: withSpace(bot, user.plan) });
   });
 
-  app.put('/api/subbots/:id', limitWrites, requireUser, async (req, res) => {
+  // «Opciones del bot»: nombre corto/largo, moneda, owner, enlaces, prefijos…
+  app.put('/api/subbots/:id/options', limitWrites, requireUser, async (req, res) => {
     const user = req.webUser!;
     const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Sub-bot inválido.' });
+    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Bot inválido.' });
     const bot = await getSubBot(id, user.id);
-    if (!bot) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
 
-    const patch: {
-      name?: string;
-      phone?: string;
-      description?: string;
-      status?: SubBotRow['status'];
-      extraGb?: number;
-      botType?: string;
-      displayName?: string;
-      botPrefix?: string;
-      bannerText?: string;
-    } = {};
-    if (typeof req.body?.name === 'string') {
-      const name = req.body.name.trim();
-      if (name.length < 2 || name.length > 40) return void res.status(400).json({ error: 'El nombre necesita entre 2 y 40 caracteres.' });
+    const body = req.body ?? {};
+    const patch: Parameters<typeof updateSubBotOptions>[2] = {};
+
+    if (typeof body.shortName === 'string') patch.shortName = str(body.shortName, 30);
+    if (typeof body.longName === 'string') patch.longName = str(body.longName, 60);
+    if (typeof body.currency === 'string') patch.currency = str(body.currency, 30);
+    if (typeof body.ownerNumber === 'string') patch.ownerNumber = cleanPhone(body.ownerNumber);
+    if (typeof body.ownerHidden === 'boolean') patch.ownerHidden = body.ownerHidden;
+    if (typeof body.botLink === 'string') patch.botLink = cleanUrl(body.botLink);
+    if (typeof body.channelUrl === 'string') patch.channelUrl = cleanUrl(body.channelUrl);
+    if (typeof body.bannerUrl === 'string') patch.bannerUrl = cleanUrl(body.bannerUrl, 400);
+    if (typeof body.username === 'string') patch.username = str(body.username, 40);
+    if (typeof body.statusInfo === 'string') patch.statusInfo = str(body.statusInfo, 40);
+    if (typeof body.description === 'string') patch.description = str(body.description, 300);
+    if (typeof body.name === 'string') {
+      const name = str(body.name, 40);
+      if (name.length < 2) return void res.status(400).json({ error: 'El nombre necesita al menos 2 caracteres.' });
       patch.name = name;
     }
-    if (typeof req.body?.phone === 'string') patch.phone = req.body.phone.replace(/[^\d+]/g, '').slice(0, 20);
-    if (typeof req.body?.description === 'string') patch.description = req.body.description.trim().slice(0, 300);
-    if (typeof req.body?.status === 'string' && ['online', 'offline', 'paused'].includes(req.body.status)) {
-      patch.status = req.body.status as SubBotRow['status'];
+    if (body.prefixes !== undefined) {
+      const prefixes = cleanPrefixes(body.prefixes);
+      if (!prefixes) return void res.status(400).json({ error: 'Los prefijos no son válidos.' });
+      patch.prefixes = prefixes;
+      patch.botPrefix = prefixes[0] ?? '.';
     }
-    if (typeof req.body?.botType === 'string') {
-      if (!AVAILABLE_BOT_TYPES.some((bt) => bt.id === req.body.botType)) {
-        return void res.status(400).json({ error: 'Tipo de bot no válido.' });
-      }
-      const chosenType = AVAILABLE_BOT_TYPES.find((bt) => bt.id === req.body.botType);
-      if (chosenType?.comingSoon) {
-        return void res.status(400).json({ error: `«${chosenType.name}» todavía no está disponible.` });
-      }
-      patch.botType = req.body.botType;
+    if (typeof body.phone === 'string') patch.phone = cleanPhone(body.phone);
+    if (typeof body.avatarUrl === 'string') patch.avatarUrl = cleanUrl(body.avatarUrl, 400);
+    if (typeof body.catalogSlug === 'string' && body.catalogSlug) {
+      const catalogBot = catalogBotBySlug(str(body.catalogSlug, 40));
+      if (catalogBot) patch.catalogSlug = catalogBot.slug;
     }
-    if (typeof req.body?.displayName === 'string') patch.displayName = req.body.displayName.trim().slice(0, 40);
-    if (typeof req.body?.botPrefix === 'string') {
-      const prefix = req.body.botPrefix.trim().slice(0, 4) || '.';
-      patch.botPrefix = prefix;
+    if (typeof body.instanceType === 'string') {
+      const instance = INSTANCE_TYPES.find((entry) => entry.id === str(body.instanceType, 20));
+      if (!instance) return void res.status(400).json({ error: 'Esa instancia no existe.' });
+      patch.instanceType = instance.id;
     }
-    if (typeof req.body?.bannerText === 'string') patch.bannerText = req.body.bannerText.slice(0, 800);
-    if (req.body?.extraGb !== undefined) {
-      const extraGb = Number(req.body.extraGb);
+    if (typeof body.serverId === 'string') {
+      const server = await getServer(str(body.serverId, 40));
+      if (!server) return void res.status(400).json({ error: 'Ese servidor no existe.' });
+      patch.serverId = server.id;
+      patch.serverName = server.name;
+    }
+    if (typeof body.status === 'string' && ['online', 'offline', 'paused'].includes(body.status)) {
+      patch.status = body.status as SubBotRow['status'];
+    }
+    if (body.extraGb !== undefined) {
+      const extraGb = Number(body.extraGb);
       if (!Number.isInteger(extraGb) || extraGb < 0 || extraGb > 1024) {
         return void res.status(400).json({ error: 'Espacio extra inválido.' });
       }
       const allocatedOthers = await allocatedExtraGb(user.id, id);
       if (extraGb + allocatedOthers > user.extra_space_gb) {
         const free = Math.max(0, user.extra_space_gb - allocatedOthers);
-        return void res.status(400).json({ error: `Solo tienes ${free} GB sin asignar en tu pool. Cómalos en la tienda.` });
+        return void res.status(400).json({ error: `Solo tienes ${free} GB sin asignar. Cómpralos en la tienda.` });
       }
       patch.extraGb = extraGb;
     }
 
-    const updated = await updateSubBot(id, user.id, patch);
-    if (!updated) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
-    logger.info('subbots', `${user.email} editó el sub-bot «${updated.name}».`);
+    const updated = await updateSubBotOptions(id, user.id, patch);
+    if (!updated) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    logger.info('subbots', `${user.email} guardó las opciones de «${updated.name}».`);
     res.json({ bot: withSpace(updated, user.plan) });
+  });
+
+  // Compatibilidad con la edición clásica (panel anterior).
+  app.put('/api/subbots/:id', limitWrites, requireUser, async (req, res, next) => {
+    req.url = `${req.url}/options`;
+    next();
+  });
+
+  app.post('/api/subbots/:id/action', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Bot inválido.' });
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    const action = str(req.body?.action, 20);
+
+    switch (action) {
+      case 'restart': {
+        const updated = await updateSubBotOptions(id, user.id, { status: 'online', statusInfo: 'reiniciando' });
+        if (updated) await bumpSubBotUptime(id, 0);
+        logger.info('subbots', `${user.email} reinició «${bot.name}».`);
+        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot reiniciado.' });
+      }
+      case 'stop': {
+        const updated = await updateSubBotOptions(id, user.id, { status: 'offline', statusInfo: 'apagado' });
+        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot apagado.' });
+      }
+      case 'start': {
+        const updated = await updateSubBotOptions(id, user.id, { status: 'online', statusInfo: 'online' });
+        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot encendido.' });
+      }
+      case 'pause': {
+        const updated = await updateSubBotOptions(id, user.id, { status: 'paused', statusInfo: 'en pausa' });
+        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot en pausa.' });
+      }
+      case 'server': {
+        const serverList = await listServers();
+        return void res.json({ ok: true, servers: serverList, current: bot.server_id });
+      }
+      case 'unlink':
+      case 'delete': {
+        await deleteSubBot(id, user.id);
+        logger.info('subbots', `${user.email} eliminó «${bot.name}».`);
+        return void res.json({
+          ok: true,
+          note: bot.token_code ? 'El token usado por este bot queda consumido.' : null,
+        });
+      }
+      default:
+        return void res.status(400).json({ error: 'Acción no reconocida.' });
+    }
   });
 
   app.delete('/api/subbots/:id', limitWrites, requireUser, async (req, res) => {
     const user = req.webUser!;
     const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Sub-bot inválido.' });
+    if (!Number.isInteger(id)) return void res.status(400).json({ error: 'Bot inválido.' });
     const bot = await getSubBot(id, user.id);
-    if (!bot) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
     await deleteSubBot(id, user.id);
-    logger.info('subbots', `${user.email} eliminó el sub-bot «${bot.name}».`);
+    logger.info('subbots', `${user.email} eliminó «${bot.name}».`);
+    res.json({ ok: true, note: bot.token_code ? 'El token usado por este bot queda consumido.' : null });
+  });
+
+  app.get('/api/subbots/:id/groups', requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    res.json({ groups: (await listSubBotGroups(id)).filter((group) => group.active) });
+  });
+
+  // Vinculación por código de 8 dígitos (paso 5 del asistente).
+  app.post('/api/subbots/:id/pair', limitPairing, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    const phone = cleanPhone(req.body?.phone) || bot.phone;
+    if (phone.replace(/\D/g, '').length < 8) {
+      return void res.status(400).json({ error: 'El número del bot necesita código de país (mínimo 8 dígitos).' });
+    }
+    const code = generatePairingCode();
+    const expiresAt = new Date(Date.now() + 60_000);
+    await setSubBotPairing(id, user.id, code, expiresAt);
+    res.json({ code, formatted: code, expiresAt: expiresAt.getTime(), phone, expired: false });
+  });
+
+  app.get('/api/subbots/:id/pair', requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    const expiresAt = bot.pairing_expires_at ? new Date(bot.pairing_expires_at).getTime() : null;
     res.json({
-      ok: true,
-      note: bot.token_code ? 'El token usado por este sub-bot queda consumido y no se puede reutilizar.' : null,
+      code: bot.pairing_code,
+      expiresAt,
+      expired: Boolean(expiresAt && expiresAt < Date.now()),
+      linked: bot.status === 'online' && Boolean(bot.linked_at),
+      status: bot.status,
     });
+  });
+
+  /** Confirma la vinculación (en la demo basta con pulsar «Ya lo vinculé»). */
+  app.post('/api/subbots/:id/pair/confirm', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const id = Number(req.params.id);
+    const bot = await getSubBot(id, user.id);
+    if (!bot) return void res.status(404).json({ error: 'Ese bot no existe o no es tuyo.' });
+    if (bot.pairing_code && bot.pairing_expires_at && new Date(bot.pairing_expires_at).getTime() < Date.now()) {
+      return void res.status(400).json({ error: 'El código expiró. Genera uno nuevo.' });
+    }
+    const linked = await markSubBotLinked(id, user.id);
+    await upsertSubBotGroup(id, {
+      jid: `${bot.phone.replace(/\D/g, '') || 'demo'}-${id}@g.us`,
+      name: `${bot.name} · grupo principal`,
+      members: 12,
+      active: true,
+    }).catch(() => undefined);
+    logger.info('subbots', `${user.email} vinculó «${bot.name}» (${bot.phone}).`);
+    res.json({ ok: true, bot: linked ? withSpace(linked, user.plan) : null, message: 'Bot vinculado y en línea.' });
+  });
+
+  // ------------------------------ reportes ----------------------------------
+  app.get('/api/reports', requireUser, async (req, res) => {
+    res.json({ reports: await listReports(req.webUser!.id) });
+  });
+
+  app.post('/api/reports', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const kind = req.body?.kind === 'suggestion' ? 'suggestion' : 'report';
+    const text = str(req.body?.text, 1200);
+    if (text.length < 10) return void res.status(400).json({ error: 'El texto necesita al menos 10 caracteres.' });
+    const report = await createReport({
+      userId: user.id,
+      kind,
+      username: str(req.body?.username, 60) || user.name,
+      whatsapp: cleanPhone(req.body?.whatsapp) || user.email,
+      text,
+    });
+    logger.info('reportes', `${user.email} envió ${kind === 'report' ? 'un reporte' : 'una sugerencia'}.`);
+    res.status(201).json({ ok: true, report });
   });
 
   // ------------------------- consola de WhatsApp -------------------------
   // Salud del servicio (Render y monitores externos).
   app.get('/health', async (_req, res) => {
-    let db = 'ok';
-    try {
-      await pool.query('SELECT 1');
-    } catch {
-      db = 'error';
+    let db = memoryMode ? 'memory' : 'ok';
+    if (!memoryMode) {
+      try {
+        await pool.query('SELECT 1');
+      } catch {
+        db = 'error';
+      }
     }
-    res.status(db === 'ok' ? 200 : 503).json({ ok: db === 'ok', db, whatsapp: conn.status });
+    res.status(db === 'error' ? 503 : 200).json({ ok: db !== 'error', db, whatsapp: conn.status });
   });
 
   // Esta consola es pública: no solicita clave ni sesión de administrador.
@@ -414,7 +921,6 @@ export function startWeb(): HttpServer {
       qr: conn.qrDataUrl,
       pairingCode: pairing.code,
       pairingExpiresAt: pairing.expiresAt,
-      // WhatsApp solo acepta un código por teléfono cuando la conexión ya está en modo vinculación.
       pairingReady: conn.status === 'qr',
       linked: conn.status === 'open',
       uptimeSec: Math.floor((Date.now() - startedAt.getTime()) / 1000),
@@ -471,11 +977,15 @@ export function startWeb(): HttpServer {
 
     const dbStart = Date.now();
     let dbLatencyMs: number | null = null;
-    try {
-      await pool.query('SELECT 1');
-      dbLatencyMs = Date.now() - dbStart;
-    } catch {
-      dbLatencyMs = null;
+    if (memoryMode) {
+      dbLatencyMs = 0;
+    } else {
+      try {
+        await pool.query('SELECT 1');
+        dbLatencyMs = Date.now() - dbStart;
+      } catch {
+        dbLatencyMs = null;
+      }
     }
 
     res.json({
@@ -499,6 +1009,7 @@ export function startWeb(): HttpServer {
       },
       disk,
       dbLatencyMs,
+      memoryMode,
       time: new Date().toISOString(),
     });
   });
@@ -506,7 +1017,7 @@ export function startWeb(): HttpServer {
   // Totales reales de la base (grupos, integrantes, personajes, advertencias…).
   app.get('/api/metrics', async (_req, res) => {
     try {
-      res.json({ ok: true, metrics: await getPlatformMetrics() });
+      res.json({ ok: true, metrics: await getPlatformMetrics(), memoryMode });
     } catch (err) {
       logger.warn('web', `Métricas no disponibles: ${(err as Error).message}`);
       res.status(503).json({ ok: false, error: 'La base de datos no está disponible ahora mismo.' });
@@ -523,41 +1034,51 @@ export function startWeb(): HttpServer {
     });
   });
 
-  app.put('/api/banner', limitWrites, async (req, res) => {
-    const text = typeof req.body?.text === 'string' ? req.body.text : '';
-    if (text.length > 800) return void res.status(400).json({ error: 'El texto del banner no puede pasar de 800 caracteres.' });
+  app.get('/api/banner/image', async (_req, res) => {
+    const banner = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
+    if (!banner.image) return void res.status(404).json({ error: 'No hay imagen de banner guardada.' });
+    res.type(banner.image.mime);
+    res.send(Buffer.from(banner.image.data, 'base64'));
+  });
 
-    const previous = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
-    let image: Banner['image'] = previous.image;
-    if (Object.hasOwn(req.body ?? {}, 'image')) {
-      image = null;
-      if (req.body.image) {
-        const { mime, data } = req.body.image as { mime?: string; data?: string };
-        if (!mime || !IMAGE_TYPES.includes(mime) || typeof data !== 'string') {
-          return void res.status(400).json({ error: 'La imagen debe ser PNG, JPG o WEBP.' });
+  app.put('/api/banner', limitWrites, async (req, res) => {
+    const body = req.body ?? {};
+    const current = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
+    let image = current.image;
+
+    if (body.imageDataUrl !== undefined) {
+      if (body.imageDataUrl === null || body.imageDataUrl === '') {
+        image = null;
+      } else if (typeof body.imageDataUrl === 'string') {
+        const match = /^data:([^;]+);base64,(.+)$/.exec(body.imageDataUrl);
+        if (!match) return void res.status(400).json({ error: 'La imagen no es válida.' });
+        const mime = match[1];
+        if (!IMAGE_TYPES.includes(mime)) {
+          return void res.status(400).json({ error: 'Formato no admitido. Usa PNG, JPG o WEBP.' });
         }
-        if (data.length > Math.ceil((config.defaults.maxBannerBytes * 4) / 3) + 16) {
-          return void res.status(400).json({ error: 'La imagen supera el tamaño permitido (1.5 MB).' });
+        const bytes = Buffer.from(match[2], 'base64').length;
+        if (bytes > config.defaults.maxBannerBytes) {
+          return void res.status(413).json({ error: 'La imagen pesa demasiado (máximo 1,5 MB).' });
         }
-        const bytes = Buffer.from(data, 'base64');
-        if (bytes.length === 0 || bytes.length > config.defaults.maxBannerBytes) {
-          return void res.status(400).json({ error: 'La imagen supera el tamaño permitido (1.5 MB).' });
-        }
-        image = { mime, data };
+        image = { mime, data: match[2] };
       }
     }
 
-    await setSetting('banner', { text, image });
-    logger.info('web', `Banner actualizado${image ? ' (con imagen)' : ''}.`);
-    res.json({ ok: true });
+    const next: Banner = {
+      text: typeof body.text === 'string' ? body.text.slice(0, 1200) : current.text,
+      image,
+    };
+    await setSetting('banner', next);
+    res.json({ ok: true, banner: { ...next, image: image ? { mime: image.mime } : null } });
   });
 
   app.delete('/api/banner/image', limitWrites, async (_req, res) => {
-    const banner = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
-    await setSetting('banner', { text: banner.text, image: null });
+    const current = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
+    await setSetting('banner', { text: current.text, image: null });
     res.json({ ok: true });
   });
 
+  // ------------------------- comandos y sus ajustes -------------------------
   app.get('/api/commands', async (_req, res) => {
     res.json({ settings: getCommandSettings(), commands: getCommandInventory() });
   });
@@ -566,39 +1087,44 @@ export function startWeb(): HttpServer {
     try {
       const activeNames = allCommands().map((command) => command.name);
       const settings = await saveCommandSettings(req.body, activeNames, knownCommandNames());
-      logger.info('web', 'Configuración de comandos actualizada.');
+      logger.info('web', 'Se actualizaron los ajustes de comandos.');
       res.json({ ok: true, settings, commands: getCommandInventory(settings) });
     } catch (err) {
       res.status(400).json({ error: (err as Error).message });
     }
   });
 
-  app.get('/api/menu', async (_req, res) => {
+  app.get('/api/menu', async (req, res) => {
     const banner = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
-    res.json({ text: buildMenu(banner.text) });
+    const body = buildMenu(banner.text);
+    res.json({
+      text: body,
+      hasBannerImage: Boolean(banner.image),
+      imageUrl: banner.image ? '/api/banner/image' : null,
+    });
   });
 
-  // Consola en vivo (Server-Sent Events), también pública.
   app.get('/api/logs/stream', (req, res) => {
-    res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
-    res.flushHeaders();
-    const send = (entry: LogEntry) => res.write(`data: ${JSON.stringify(entry)}\n\n`);
-    recentLogs().forEach(send);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    const send = (entry: LogEntry): void => {
+      res.write(`data: ${JSON.stringify(entry)}\n\n`);
+    };
+    for (const entry of recentLogs()) send(entry);
     logBus.on('log', send);
-    const ping = setInterval(() => res.write(': ping\n\n'), 25_000);
+
+    const keepAlive = setInterval(() => res.write(': ping\n\n'), 20_000);
     req.on('close', () => {
-      clearInterval(ping);
+      clearInterval(keepAlive);
       logBus.off('log', send);
     });
   });
 
-  app.use((_req, res) => res.status(404).json({ error: 'No encontrado.' }));
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    logger.error('web', `Error HTTP: ${err.message}`);
-    res.status(500).json({ error: 'Error interno.' });
+  const server = app.listen(config.server.port, '0.0.0.0', () => {
+    logger.info('web', `Panel disponible en http://localhost:${config.server.port}`);
   });
-
-  return app.listen(config.server.port, '0.0.0.0', () => {
-    logger.info('web', `Consola pública disponible en el puerto ${config.server.port}.`);
-  });
+  return server;
 }

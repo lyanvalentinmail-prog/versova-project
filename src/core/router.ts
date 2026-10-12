@@ -1,7 +1,7 @@
 import { normalizeMessageContent, type GroupMetadata, type WAMessage, type WASocket } from '@whiskeysockets/baileys';
 import { config } from '../config/index.js';
 import { getCommandSettings, resolveCommandAlias } from './command-settings.js';
-import { claimMessage } from '../database/repos.js';
+import { claimMessage, isBlocked } from '../database/repos.js';
 import { logger } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
 import { normalizeJid } from '../utils/text.js';
@@ -31,7 +31,7 @@ export interface Ctx {
 
 export interface Command {
   name: string;
-  category: 'Registro' | 'Roles' | 'General' | 'Equipo' | 'Social' | 'Administración';
+  category: 'Registro' | 'Roles' | 'General' | 'Equipo' | 'Social' | 'Economía' | 'Administración';
   usage: string;
   description: string;
   groupOnly?: boolean;
@@ -123,6 +123,9 @@ export async function handleCommand(sock: WASocket, msg: WAMessage): Promise<voi
     botAdmin = botIsAdmin(meta, sock);
   }
   const owner = isOwner(sender);
+
+  // Un integrante bloqueado con .ban no recibe respuestas del bot (salvo el owner).
+  if (isGroup && !owner && (await isBlocked(chat, sender))) return;
 
   if (command.ownerOnly && !owner) {
     await reply('⛔ Este comando es exclusivo del propietario del bot.');

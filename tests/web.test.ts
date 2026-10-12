@@ -167,12 +167,22 @@ describe('panel web: páginas y telemetría', () => {
 
     const landing = await fetch(`${BASE}/`);
     expect(landing.status).toBe(200);
-    expect(await landing.text()).toContain('Automatiza WhatsApp');
+    expect(await landing.text()).toContain('VÉRSOVA');
 
     // Sin sesión, el panel redirige a la portada a iniciar sesión.
-    const blocked = await fetch(`${BASE}/home`, { redirect: 'manual' });
+    // /home es la ruta antigua del panel: ahora redirige a la portada.
+    const legacy = await fetch(`${BASE}/home`, { redirect: 'manual' });
+    expect(legacy.status).toBe(302);
+    expect(legacy.headers.get('location')).toBe('/');
+
+    // Las páginas privadas (bots, tienda, asistente) piden iniciar sesión.
+    const blocked = await fetch(`${BASE}/bots`, { redirect: 'manual' });
     expect(blocked.status).toBe(302);
-    expect(blocked.headers.get('location')).toBe('/?login=1');
+    expect(blocked.headers.get('location')).toBe('/?login=1&next=bots');
+
+    const privateStore = await fetch(`${BASE}/store`, { redirect: 'manual' });
+    expect(privateStore.status).toBe(302);
+    expect(privateStore.headers.get('location')).toBe('/?login=1&next=store');
 
     // Inicia sesión (acceso demo) y vuelve a pedir el panel con la cookie.
     const register = await fetch(`${BASE}/api/auth/register`, {
@@ -183,9 +193,17 @@ describe('panel web: páginas y telemetría', () => {
     expect(register.status).toBe(201);
     const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
 
-    const panel = await fetch(`${BASE}/home`, { headers: { cookie } });
+    const agents = await fetch(`${BASE}/registrar`, { headers: { cookie } });
+    expect(agents.status).toBe(200);
+    expect(await agents.text()).toContain('Elige tu instancia');
+
+    const panel = await fetch(`${BASE}/bots`, { headers: { cookie } });
     expect(panel.status).toBe(200);
-    expect(await panel.text()).toContain('Vincula tu bot en 4 pasos');
+    expect(await panel.text()).toContain('Mis Bots');
+
+    const store = await fetch(`${BASE}/store`, { headers: { cookie } });
+    expect(store.status).toBe(200);
+    expect(await store.text()).toContain('Catálogo de bots');
 
     const catalog = await fetch(`${BASE}/cmds`);
     expect(catalog.status).toBe(200);
@@ -197,7 +215,7 @@ describe('panel web: páginas y telemetría', () => {
 
     const response = await fetch(`${BASE}/status`, { redirect: 'manual' });
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('/home#monitor');
+    expect(response.headers.get('location')).toBe('/metrics');
   });
 
   it('publica la telemetría real del servidor', async () => {

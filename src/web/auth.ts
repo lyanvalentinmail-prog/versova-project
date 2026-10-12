@@ -11,7 +11,7 @@ import {
   linkGoogleToUser,
   type WebPlan,
   type WebUser,
-} from '../database/repos-web.js';
+} from '../database/store.js';
 import { logger } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
 
@@ -44,7 +44,7 @@ export const BOT_TIERS: Record<'free' | 'premium' | 'vip', { name: string; space
 
 export interface StoreItem {
   id: string;
-  kind: 'token' | 'space' | 'plan' | 'bot';
+  kind: 'token' | 'space' | 'plan' | 'bot' | 'coins' | 'catalog';
   name: string;
   description: string;
   priceUsd: number;
@@ -53,6 +53,8 @@ export interface StoreItem {
   spaceGb?: number;
   plan?: WebPlan;
   badge?: string;
+  coins?: number;
+  catalogSlug?: string;
 }
 
 /** Catálogo de la tienda. Los sub-bots «próximamente» no se pueden comprar todavía. */
@@ -104,6 +106,36 @@ export const STORE_ITEMS: StoreItem[] = [
     available: true,
     plan: 'vip',
   },
+  {
+    id: 'coins-500',
+    kind: 'coins',
+    name: '500 V-Coins',
+    description: 'Monedas de la plataforma para activar bots del catálogo y comprar mejoras.',
+    priceUsd: 2,
+    available: true,
+    coins: 500,
+    badge: 'ECONOMÍA',
+  },
+  {
+    id: 'coins-1600',
+    kind: 'coins',
+    name: '1600 V-Coins',
+    description: '1600 monedas (100 de regalo) para el catálogo y la tienda interna.',
+    priceUsd: 5,
+    available: true,
+    coins: 1600,
+    badge: '+100 BONUS',
+  },
+  {
+    id: 'coins-4500',
+    kind: 'coins',
+    name: '4500 V-Coins',
+    description: '4500 monedas (500 de regalo) para desbloquear los bots PRO.',
+    priceUsd: 10,
+    available: true,
+    coins: 4500,
+    badge: '+500 BONUS',
+  },
   { id: 'bot-musica', kind: 'bot', name: 'Sub-bot de Música', description: 'Descargas, playlists y radio en tu grupo.', priceUsd: 3, available: false, badge: 'Próximamente' },
   { id: 'bot-juegos', kind: 'bot', name: 'Sub-bot de Juegos', description: 'Trivia, dados y rankings para tu team.', priceUsd: 3, available: false, badge: 'Próximamente' },
   { id: 'bot-ia', kind: 'bot', name: 'Sub-bot IA', description: 'Chat inteligente, resúmenes e imágenes.', priceUsd: 8, available: false, badge: 'Próximamente' },
@@ -140,6 +172,10 @@ export type SafeUser = {
   plan: WebPlan;
   planInfo: PlanInfo;
   extraSpaceGb: number;
+  coins: number;
+  handle: string | null;
+  avatarUrl: string | null;
+  theme: string;
   createdAt: string;
 };
 
@@ -152,6 +188,10 @@ export function toSafeUser(user: WebUser): SafeUser {
     plan: user.plan,
     planInfo: PLANS[user.plan],
     extraSpaceGb: user.extra_space_gb,
+    coins: user.coins ?? 0,
+    handle: user.handle ?? null,
+    avatarUrl: user.avatar_url ?? null,
+    theme: user.theme ?? 'dark',
     createdAt: new Date(user.created_at).toISOString(),
   };
 }

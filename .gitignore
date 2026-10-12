@@ -5,3 +5,6 @@ data/
 logs/
 *.log
 .DS_Store
+
+# Capturas de referencia de la plataforma objetivo (no van al repositorio)
+google_drive/

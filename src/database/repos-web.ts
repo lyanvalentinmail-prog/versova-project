@@ -16,6 +16,10 @@ export interface WebUser {
   password_hash: string | null;
   plan: WebPlan;
   extra_space_gb: number;
+  coins: number;
+  handle: string | null;
+  avatar_url: string | null;
+  theme: string;
   created_at: Date;
 }
 
@@ -33,6 +37,27 @@ export interface SubBotRow {
   display_name: string;
   bot_prefix: string;
   banner_text: string;
+  short_name: string;
+  long_name: string;
+  currency: string;
+  owner_number: string;
+  owner_hidden: boolean;
+  bot_link: string;
+  channel_url: string;
+  prefixes: string[];
+  banner_url: string;
+  username: string;
+  status_info: string;
+  instance_type: string;
+  server_id: string;
+  server_name: string;
+  pairing_code: string | null;
+  pairing_expires_at: Date | null;
+  linked_at: Date | null;
+  synced_at: Date | null;
+  uptime_seconds: number;
+  avatar_url: string;
+  catalog_slug: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -186,13 +211,34 @@ export async function createSubBot(
     displayName?: string;
     botPrefix?: string;
     bannerText?: string;
+    shortName?: string;
+    longName?: string;
+    currency?: string;
+    ownerNumber?: string;
+    ownerHidden?: boolean;
+    botLink?: string;
+    channelUrl?: string;
+    prefixes?: string[];
+    bannerUrl?: string;
+    username?: string;
+    statusInfo?: string;
+    instanceType?: string;
+    serverId?: string;
+    serverName?: string;
+    avatarUrl?: string;
+    catalogSlug?: string;
   },
   q: Q = pool,
 ): Promise<SubBotRow> {
   const r = await q.query<SubBotRow>(
     `INSERT INTO subbots (user_id, name, tier, token_code, phone, description, extra_gb,
-                           bot_type, display_name, bot_prefix, banner_text)
-     VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $10) RETURNING *`,
+                           bot_type, display_name, bot_prefix, banner_text,
+                           short_name, long_name, currency, owner_number, owner_hidden,
+                           bot_link, channel_url, prefixes, banner_url, username, status_info,
+                           instance_type, server_id, server_name, avatar_url, catalog_slug)
+     VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $10,
+             $11, $12, $13, $14, $15, $16, $17, $18::jsonb, $19, $20, $21,
+             $22, $23, $24, $25, $26) RETURNING *`,
     [
       data.userId,
       data.name,
@@ -204,6 +250,22 @@ export async function createSubBot(
       data.displayName ?? '',
       data.botPrefix ?? '.',
       data.bannerText ?? '',
+      data.shortName ?? '',
+      data.longName ?? '',
+      data.currency ?? '',
+      data.ownerNumber ?? '',
+      data.ownerHidden ?? true,
+      data.botLink ?? '',
+      data.channelUrl ?? '',
+      JSON.stringify(data.prefixes ?? ['.']),
+      data.bannerUrl ?? '',
+      data.username ?? '',
+      data.statusInfo ?? 'online',
+      data.instanceType ?? 'subbot',
+      data.serverId ?? 'vrsov-01',
+      data.serverName ?? 'Vrsov Srv Asuna',
+      data.avatarUrl ?? '',
+      data.catalogSlug ?? 'versova',
     ],
   );
   return r.rows[0];
@@ -301,4 +363,138 @@ export async function listPurchases(userId: number, limit = 25, q: Q = pool): Pr
     [userId, limit],
   );
   return r.rows;
+}
+
+/* -------------------- opciones completas del bot (modal web) -------------------- */
+
+export interface SubBotOptionsPatch {
+  name?: string;
+  shortName?: string;
+  longName?: string;
+  currency?: string;
+  ownerNumber?: string;
+  ownerHidden?: boolean;
+  botLink?: string;
+  channelUrl?: string;
+  prefixes?: string[];
+  bannerUrl?: string;
+  username?: string;
+  statusInfo?: string;
+  description?: string;
+  phone?: string;
+  avatarUrl?: string;
+  serverId?: string;
+  serverName?: string;
+  instanceType?: string;
+  tier?: SubBotTier;
+  catalogSlug?: string;
+  status?: SubBotRow['status'];
+  extraGb?: number;
+  botPrefix?: string;
+  displayName?: string;
+  botType?: string;
+  bannerText?: string;
+}
+
+/** Guarda la ficha completa del bot tal como llega desde «Opciones del bot». */
+export async function updateSubBotOptions(
+  id: number,
+  userId: number,
+  patch: SubBotOptionsPatch,
+  q: Q = pool,
+): Promise<SubBotRow | null> {
+  const r = await q.query<SubBotRow>(
+    `UPDATE subbots SET
+       name             = COALESCE($3, name),
+       short_name       = COALESCE($4, short_name),
+       long_name        = COALESCE($5, long_name),
+       currency         = COALESCE($6, currency),
+       owner_number     = COALESCE($7, owner_number),
+       owner_hidden     = COALESCE($8, owner_hidden),
+       bot_link         = COALESCE($9, bot_link),
+       channel_url      = COALESCE($10, channel_url),
+       prefixes         = COALESCE($11::jsonb, prefixes),
+       banner_url       = COALESCE($12, banner_url),
+       username         = COALESCE($13, username),
+       status_info      = COALESCE($14, status_info),
+       description      = COALESCE($15, description),
+       phone            = COALESCE($16, phone),
+       avatar_url       = COALESCE($17, avatar_url),
+       server_id        = COALESCE($18, server_id),
+       server_name      = COALESCE($19, server_name),
+       instance_type    = COALESCE($20, instance_type),
+       tier             = COALESCE($21, tier),
+       catalog_slug     = COALESCE($22, catalog_slug),
+       status           = COALESCE($23, status),
+       extra_gb         = COALESCE($24, extra_gb),
+       bot_prefix       = COALESCE($25, bot_prefix),
+       display_name     = COALESCE($26, display_name),
+       bot_type         = COALESCE($27, bot_type),
+       banner_text      = COALESCE($28, banner_text),
+       synced_at        = now(),
+       updated_at       = now()
+     WHERE id = $1 AND user_id = $2 RETURNING *`,
+    [
+      id,
+      userId,
+      patch.name ?? null,
+      patch.shortName ?? null,
+      patch.longName ?? null,
+      patch.currency ?? null,
+      patch.ownerNumber ?? null,
+      patch.ownerHidden ?? null,
+      patch.botLink ?? null,
+      patch.channelUrl ?? null,
+      patch.prefixes ? JSON.stringify(patch.prefixes) : null,
+      patch.bannerUrl ?? null,
+      patch.username ?? null,
+      patch.statusInfo ?? null,
+      patch.description ?? null,
+      patch.phone ?? null,
+      patch.avatarUrl ?? null,
+      patch.serverId ?? null,
+      patch.serverName ?? null,
+      patch.instanceType ?? null,
+      patch.tier ?? null,
+      patch.catalogSlug ?? null,
+      patch.status ?? null,
+      patch.extraGb ?? null,
+      patch.botPrefix ?? null,
+      patch.displayName ?? null,
+      patch.botType ?? null,
+      patch.bannerText ?? null,
+    ],
+  );
+  return r.rows[0] ?? null;
+}
+
+/** Guarda el código de vinculación de 8 dígitos con su vencimiento. */
+export async function setSubBotPairing(
+  id: number,
+  userId: number,
+  code: string | null,
+  expiresAt: Date | null,
+  q: Q = pool,
+): Promise<SubBotRow | null> {
+  const r = await q.query<SubBotRow>(
+    `UPDATE subbots SET pairing_code = $3, pairing_expires_at = $4, updated_at = now()
+     WHERE id = $1 AND user_id = $2 RETURNING *`,
+    [id, userId, code, expiresAt],
+  );
+  return r.rows[0] ?? null;
+}
+
+/** Marca el bot como vinculado (en línea) y reinicia su tiempo de actividad. */
+export async function markSubBotLinked(id: number, userId: number, q: Q = pool): Promise<SubBotRow | null> {
+  const r = await q.query<SubBotRow>(
+    `UPDATE subbots SET status = 'online', linked_at = now(), pairing_code = NULL,
+       pairing_expires_at = NULL, uptime_seconds = 0, synced_at = now(), updated_at = now()
+     WHERE id = $1 AND user_id = $2 RETURNING *`,
+    [id, userId],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function bumpSubBotUptime(id: number, seconds: number, q: Q = pool): Promise<void> {
+  await q.query('UPDATE subbots SET uptime_seconds = $2, updated_at = now() WHERE id = $1', [id, Math.max(0, Math.floor(seconds))]);
 }
