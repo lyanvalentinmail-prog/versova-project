@@ -88,6 +88,14 @@ function generateTokenCode(tier: 'premium' | 'vip'): string {
 }
 
 /** Espacio total de un sub-bot: el mayor entre su tipo y el plan del usuario, más el extra asignado. */
+/** Tipos de bot que el usuario puede elegir al crear uno. */
+const AVAILABLE_BOT_TYPES = [
+  { id: 'versova', name: 'VÉRSOVA', description: 'Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.', recommended: true },
+  { id: 'musica', name: 'Música', description: 'Reproductor de música en grupos (próximamente).', comingSoon: true },
+  { id: 'ia', name: 'IA', description: 'Chat con inteligencia artificial (próximamente).', comingSoon: true },
+  { id: 'juegos', name: 'Juegos', description: 'Minijuegos, trivia y economía (próximamente).', comingSoon: true },
+];
+
 function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
   const baseSpaceGb = Math.max(BOT_TIERS[bot.tier].spaceGb, PLANS[plan].spacePerBotGb);
   return {
@@ -227,6 +235,7 @@ export function startWeb(): HttpServer {
       bots: bots.map((bot) => withSpace(bot, user.plan)),
       plan: PLANS[user.plan],
       tiers: BOT_TIERS,
+      botTypes: AVAILABLE_BOT_TYPES,
       usage: {
         botsUsed: used,
         botsMax: PLANS[user.plan].maxBots,
@@ -244,11 +253,22 @@ export function startWeb(): HttpServer {
     const phone = typeof req.body?.phone === 'string' ? req.body.phone.replace(/[^\d+]/g, '').slice(0, 20) : '';
     const description = typeof req.body?.description === 'string' ? req.body.description.trim().slice(0, 300) : '';
     const tokenCode = typeof req.body?.tokenCode === 'string' ? req.body.tokenCode.trim().toUpperCase() : '';
+    const botType = typeof req.body?.botType === 'string' ? req.body.botType.trim() : 'versova';
+    const displayName = typeof req.body?.displayName === 'string' ? req.body.displayName.trim().slice(0, 40) : '';
+    const botPrefix = typeof req.body?.botPrefix === 'string' ? req.body.botPrefix.trim().slice(0, 4) : '.';
+    const bannerText = typeof req.body?.bannerText === 'string' ? req.body.bannerText.slice(0, 800) : '';
 
     if (name.length < 2 || name.length > 40) {
       return void res.status(400).json({ error: 'El nombre del sub-bot necesita entre 2 y 40 caracteres.' });
     }
     if (!BOT_TIERS[tier]) return void res.status(400).json({ error: 'Tipo de sub-bot inválido.' });
+    if (!AVAILABLE_BOT_TYPES.some((bt) => bt.id === botType)) {
+      return void res.status(400).json({ error: 'Tipo de bot no válido.' });
+    }
+    const chosenType = AVAILABLE_BOT_TYPES.find((bt) => bt.id === botType);
+    if (chosenType?.comingSoon) {
+      return void res.status(400).json({ error: `«${chosenType.name}» todavía no está disponible. Elige VÉRSOVA por ahora.` });
+    }
 
     const planInfo = PLANS[user.plan];
     const used = await countSubBots(user.id);
@@ -272,19 +292,21 @@ export function startWeb(): HttpServer {
 
       const bot = await tx(async (client) => {
         const created = await createSubBot(
-          { userId: user.id, name, tier, tokenCode: token.code, phone, description },
+          { userId: user.id, name, tier, tokenCode: token.code, phone, description,
+            botType, displayName, botPrefix, bannerText },
           client,
         );
         const redeemed = await redeemToken(token.code, user.id, created.id, client);
         if (!redeemed) throw new Error('El token acaba de canjearse en otra sesión.');
         return created;
       });
-      logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, token ${token.code}).`);
+      logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, ${botType}, token ${token.code}).`);
       return void res.status(201).json({ bot: withSpace(bot, user.plan) });
     }
 
-    const bot = await createSubBot({ userId: user.id, name, tier, tokenCode: null, phone, description });
-    logger.info('subbots', `${user.email} creó el sub-bot «${name}» (free).`);
+    const bot = await createSubBot({ userId: user.id, name, tier, tokenCode: null, phone, description,
+      botType, displayName, botPrefix, bannerText });
+    logger.info('subbots', `${user.email} creó el sub-bot «${name}» (${tier}, ${botType}).`);
     res.status(201).json({ bot: withSpace(bot, user.plan) });
   });
 
@@ -295,7 +317,17 @@ export function startWeb(): HttpServer {
     const bot = await getSubBot(id, user.id);
     if (!bot) return void res.status(404).json({ error: 'Ese sub-bot no existe o no es tuyo.' });
 
-    const patch: { name?: string; phone?: string; description?: string; status?: SubBotRow['status']; extraGb?: number } = {};
+    const patch: {
+      name?: string;
+      phone?: string;
+      description?: string;
+      status?: SubBotRow['status'];
+      extraGb?: number;
+      botType?: string;
+      displayName?: string;
+      botPrefix?: string;
+      bannerText?: string;
+    } = {};
     if (typeof req.body?.name === 'string') {
       const name = req.body.name.trim();
       if (name.length < 2 || name.length > 40) return void res.status(400).json({ error: 'El nombre necesita entre 2 y 40 caracteres.' });
@@ -306,6 +338,22 @@ export function startWeb(): HttpServer {
     if (typeof req.body?.status === 'string' && ['online', 'offline', 'paused'].includes(req.body.status)) {
       patch.status = req.body.status as SubBotRow['status'];
     }
+    if (typeof req.body?.botType === 'string') {
+      if (!AVAILABLE_BOT_TYPES.some((bt) => bt.id === req.body.botType)) {
+        return void res.status(400).json({ error: 'Tipo de bot no válido.' });
+      }
+      const chosenType = AVAILABLE_BOT_TYPES.find((bt) => bt.id === req.body.botType);
+      if (chosenType?.comingSoon) {
+        return void res.status(400).json({ error: `«${chosenType.name}» todavía no está disponible.` });
+      }
+      patch.botType = req.body.botType;
+    }
+    if (typeof req.body?.displayName === 'string') patch.displayName = req.body.displayName.trim().slice(0, 40);
+    if (typeof req.body?.botPrefix === 'string') {
+      const prefix = req.body.botPrefix.trim().slice(0, 4) || '.';
+      patch.botPrefix = prefix;
+    }
+    if (typeof req.body?.bannerText === 'string') patch.bannerText = req.body.bannerText.slice(0, 800);
     if (req.body?.extraGb !== undefined) {
       const extraGb = Number(req.body.extraGb);
       if (!Number.isInteger(extraGb) || extraGb < 0 || extraGb > 1024) {

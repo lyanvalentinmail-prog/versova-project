@@ -34,9 +34,7 @@
         <nav class="nav" aria-label="Secciones del panel">
           <a href="#inicio" data-view="inicio" class="is-active"><span class="ico" aria-hidden="true">⌂</span> Inicio</a>
           <a href="#subbots" data-view="subbots"><span class="ico" aria-hidden="true">◈</span> Mis Sub-Bots <span class="tag" id="navSubbotCount">—</span></a>
-          <a href="#conexion" data-view="conexion"><span class="ico" aria-hidden="true">⌁</span> Conexión</a>
           <a href="#comandos" data-view="comandos"><span class="ico" aria-hidden="true">⌘</span> Comandos <span class="tag" id="navCommandCount">—</span></a>
-          <a href="#identidad" data-view="identidad"><span class="ico" aria-hidden="true">✎</span> Identidad</a>
         </nav>
       </div>
 
@@ -94,7 +92,6 @@
           <div class="row" style="margin-top:22px">
             <a class="btn btn-primary" href="#subbots">Mis Sub-Bots</a>
             <a class="btn btn-ghost" href="/store">Tienda de tokens</a>
-            <a class="btn btn-ghost" href="#conexion">Vincular dispositivo</a>
           </div>
         </div>
 
@@ -128,8 +125,8 @@
                 <div><span>Sesión</span><span id="infoSession">—</span></div>
               </div>
               <div class="row">
-                <button id="logout" class="btn btn-sm btn-danger" type="button">Cerrar sesión de WhatsApp</button>
-                <a class="btn btn-sm btn-ghost" href="#monitor">Consola</a>
+                <button id="activateGlobal" class="btn btn-sm btn-primary" type="button">⚡ Activar / Vincular</button>
+                <button id="logout" class="btn btn-sm btn-danger" type="button">Cerrar sesión</button>
               </div>
             </div>
           </article>
@@ -182,7 +179,7 @@
             <div>
               <p class="eyebrow">Tus bots</p>
               <h2 class="card-title">Mis Sub-Bots</h2>
-              <p class="muted small" style="margin-top:6px">Crea, edita y administra tus sub-bots. El tipo premium y vip se activa canjeando un token de la tienda.</p>
+              <p class="muted small" style="margin-top:6px">Crea, edita y administra tus sub-bots. Cada bot tiene su propia identidad (nombre, prefijo, banner). El tipo premium y vip se activa canjeando un token de la tienda.</p>
             </div>
             <div class="row">
               <span class="count-pill" id="subbotQuota">—</span>
@@ -207,57 +204,6 @@
         </article>
       </section>
 
-      <!-- ------------------------------ CONEXIÓN ----------------------------- -->
-      <section class="view" id="view-conexion">
-        <div class="wizard-steps" id="wizardSteps">
-          <span class="is-active">Paso 1 · Método</span>
-          <span>Paso 2 · Número</span>
-          <span>Paso 3 · Vinculación</span>
-          <span>Paso 4 · En línea</span>
-        </div>
-
-        <div class="hero-panel">
-          <span class="pill accent">Vinculación</span>
-          <h1 style="margin-top:14px">Vincula tu bot en 4 pasos</h1>
-          <p class="hello">Genera un código de 8 dígitos o escanea el QR desde el teléfono que será el bot. No necesitas servidor propio.</p>
-          <div class="connection-grid" style="margin-top:24px">
-            <div class="card inset">
-              <p class="field-label">Paso 3 · Escanea el código</p>
-              <p class="muted small">Si eliges QR, tendrás 120 segundos para escanearlo antes de que se renueve.</p>
-              <div class="qr-wrap">
-                <img id="qr" alt="Código QR para vincular el bot con WhatsApp" hidden />
-                <p id="qrEmpty" class="empty-state">No hay un QR pendiente.</p>
-              </div>
-            </div>
-
-            <div class="card inset">
-              <p class="field-label" for="phone">Paso 2 · Número del bot</p>
-              <p class="muted small">WhatsApp enviará el código a este número. Escríbelo con código de país, sin + ni espacios.</p>
-              <div class="input-action" style="margin-top:12px">
-                <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="59899999999" />
-                <button id="pair" class="btn btn-primary" type="button">Pedir código</button>
-              </div>
-              <p id="pairCode" class="pair-code" hidden></p>
-              <p id="pairCountdown" class="muted small" hidden></p>
-              <p id="pairHint" class="muted small" hidden></p>
-              <p id="pairError" class="form-message error" hidden></p>
-
-              <ol class="steps-mini">
-                <li>Abre WhatsApp en el teléfono del bot.</li>
-                <li>En Android toca <strong>Menú ⋮</strong>; en iPhone, <strong>Ajustes</strong>.</li>
-                <li>Entra en <strong>Dispositivos vinculados</strong> y toca <strong>Vincular dispositivo</strong>.</li>
-                <li>Toca <strong>Vincular con el número de teléfono</strong> e ingresa el código.</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-
-        <aside class="public-notice">
-          <span class="notice-icon" aria-hidden="true">⚠</span>
-          <p><strong>Estás en tu propia sesión.</strong> Solo tu cuenta puede usar este panel. Quien tenga acceso a tu cuenta puede editar el menú, ver la actividad y vincular o cerrar la sesión de WhatsApp.</p>
-        </aside>
-      </section>
-
       <!-- ------------------------------ COMANDOS ----------------------------- -->
       <section class="view" id="view-comandos">
         <article class="card">
@@ -265,15 +211,15 @@
             <div>
               <p class="eyebrow">Personalización</p>
               <h3 class="card-title">Todos los comandos</h3>
-              <p class="muted small" style="margin-top:6px">Administra qué comandos funcionan, cuáles aparecen en el menú y crea alias. Los que todavía no tienen código se marcan como pendientes.</p>
+              <p class="muted small" style="margin-top:6px">Administra qué comandos funcionan, cuáles aparecen en el menú y crea alias. Los que todavía no tienen código se marcan como pendientes. Puedes personalizar el prefijo y el banner desde el editor de cada sub-bot.</p>
             </div>
             <span id="commandCount" class="count-pill">—</span>
           </div>
 
           <div class="decoration-setting">
             <div class="decoration-copy">
-              <label class="field-label" for="commandDecoration">Texto antes del comando</label>
-              <p class="muted small">Solo cambia cómo se muestra en el menú; el prefijo real del bot sigue siendo «.».</p>
+              <label class="field-label" for="commandDecoration">Decoración del comando en el menú</label>
+              <p class="muted small">Solo cambia cómo se muestra en el menú; el prefijo real lo configuras en cada sub-bot.</p>
             </div>
             <div class="input-action decoration-input">
               <input id="commandDecoration" maxlength="40" value="ㅤ୨ৎㅤ." aria-label="Texto de decoración antes del comando" />
@@ -296,48 +242,6 @@
             <p class="empty-state">Cargando comandos…</p>
           </div>
         </article>
-      </section>
-
-      <!-- ------------------------------ IDENTIDAD ---------------------------- -->
-      <section class="view" id="view-identidad">
-        <div class="grid two">
-          <article class="card">
-            <div class="card-head">
-              <div>
-                <p class="eyebrow">Identidad</p>
-                <h3 class="card-title">Personalizar el banner</h3>
-              </div>
-              <span class="count-pill">01</span>
-            </div>
-            <p class="muted small">Este texto aparece al inicio de <code>.menu</code>. Si lo dejas vacío, se restaura el diseño VÉRSOVA.</p>
-            <label class="sr-only" for="bannerText">Texto del banner</label>
-            <textarea id="bannerText" rows="6" maxlength="800" placeholder="Se usará el banner original de VÉRSOVA" style="margin-top:12px"></textarea>
-            <div class="file-row row" style="margin-top:12px">
-              <label class="btn btn-sm" for="bannerImage">
-                <span aria-hidden="true">＋</span> Añadir imagen
-                <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" />
-              </label>
-              <span id="bannerImageState" class="muted small">Sin imagen</span>
-              <span class="spacer"></span>
-              <button id="removeImage" class="text-button" type="button">Quitar imagen</button>
-            </div>
-            <div class="row" style="margin-top:14px">
-              <button id="saveBanner" class="btn btn-primary btn-sm" type="button">Guardar banner</button>
-              <span id="bannerMsg" class="form-message" aria-live="polite" hidden></span>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <div>
-                <p class="eyebrow">Vista previa</p>
-                <h3 class="card-title">Así se verá el menú</h3>
-              </div>
-              <button id="refreshPreview" class="text-button" type="button">Actualizar</button>
-            </div>
-            <pre id="menuPreview" class="menu-preview">Cargando vista previa…</pre>
-          </article>
-        </div>
       </section>
 
       <!-- -------------------------------- MONITOR ---------------------------- -->
@@ -447,12 +351,6 @@
               <p>Busca, filtra por categoría y copia cualquier comando.</p>
               <span class="go">Abrir →</span>
             </a>
-            <a class="link-card card tight hoverable" href="#conexion">
-              <span class="icon" aria-hidden="true">⌁</span>
-              <b>Vinculación</b>
-              <p>QR y código de 8 dígitos para conectar el número.</p>
-              <span class="go">Abrir →</span>
-            </a>
             <a class="link-card card tight hoverable" href="#monitor">
               <span class="icon" aria-hidden="true">◉</span>
               <b>Monitor</b>
@@ -477,9 +375,9 @@
             <h3 class="card-title">¿Algo no funciona?</h3>
             <p class="muted" style="margin-top:10px">Revisa primero la consola del sistema: casi todos los avisos (reconexiones, emparejamientos rechazados, errores de base de datos) quedan registrados ahí con su hora y código.</p>
             <ol class="steps-mini">
-              <li>Comprueba el estado de WhatsApp en la sección <a href="#conexion">Conexión</a>.</li>
+              <li>Comprueba el estado de WhatsApp en tu <a href="#subbots">lista de sub-bots</a>.</li>
               <li>Mira la telemetría en <a href="#monitor">Monitor</a> para descartar caídas del servidor.</li>
-              <li>Si el bot no responde, ciérrale la sesión y vuelve a vincularlo.</li>
+              <li>Si un bot no responde, usa «Activar» en el bot y elige QR o código de 8 dígitos.</li>
               <li>Para problemas con tokens o compras, revisa <a href="/store#mis-tokens">Mis tokens</a> en la tienda.</li>
             </ol>
             <div class="row" style="margin-top:18px">
@@ -493,8 +391,9 @@
             <h3 class="card-title">Preguntas rápidas</h3>
             <div class="faq" style="margin-top:14px">
               <details open><summary>¿Necesito iniciar sesión?</summary><p>Sí. El panel y la tienda requieren cuenta (Google o email). Así tus tokens y sub-bots quedan ligados solo a ti.</p></details>
+              <details><summary>¿Por qué al actualizar la página no se envía un código solo?</summary><p>El emparejamiento es manual: pulsa «Activar» en el bot y elige QR o código de 8 dígitos cuando lo necesites. Así no se envían códigos sin querer al recargar la página en Render.</p></details>
               <details><summary>¿Cuánto dura el código de vinculación?</summary><p>Unos 60 segundos. El panel lo retira al expirar para que no ingreses un código que WhatsApp rechazaría.</p></details>
-              <details><summary>¿Por qué el botón de código está deshabilitado?</summary><p>WhatsApp solo acepta un código por teléfono cuando la conexión está en modo vinculación (el mismo momento en que aparece el QR).</p></details>
+              <details><summary>¿Dónde configuro el nombre, prefijo y banner de mi bot?</summary><p>Todo está dentro del editor de cada sub-bot: pulsa «Editar» en la tarjeta del bot y verás la sección Identidad con nombre visible, prefijo y texto del banner.</p></details>
               <details><summary>¿Puedo recuperar un token usado?</summary><p>No. Cada token se canjea una sola vez al crear un sub-bot. Si eliminas el sub-bot, el token queda consumido.</p></details>
             </div>
           </article>
@@ -510,7 +409,7 @@
 
   <!-- --------------------- Modal: crear / editar sub-bot -------------------- -->
   <div class="modal-overlay" id="subbotOverlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="subbotModalTitle">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="subbotModalTitle">
       <div class="modal-head">
         <div>
           <p class="eyebrow">Mis Sub-Bots</p>
@@ -519,59 +418,195 @@
         <button class="modal-close" id="subbotClose" type="button" aria-label="Cerrar">✕</button>
       </div>
 
+      <div class="editor-tabs" role="tablist" aria-label="Pestañas del editor">
+        <button type="button" class="editor-tab is-active" data-editor-tab="general" role="tab" aria-selected="true">⚙ General</button>
+        <button type="button" class="editor-tab" data-editor-tab="identity" role="tab" aria-selected="false">✎ Identidad</button>
+        <button type="button" class="editor-tab" data-editor-tab="space" role="tab" aria-selected="false">⛁ Espacio</button>
+      </div>
+
       <form id="subbotForm" novalidate>
-        <div class="stack" style="gap:14px">
-          <div>
-            <label class="field-label" for="subbotName">Nombre del sub-bot</label>
-            <input id="subbotName" type="text" maxlength="40" placeholder="Ej: Versova Rol UY" required />
-          </div>
+        <!-- Pestaña: General -->
+        <div class="editor-pane is-active" data-editor-pane="general">
+          <div class="stack" style="gap:14px">
+            <div>
+              <label class="field-label" for="subbotName">Nombre del sub-bot</label>
+              <input id="subbotName" type="text" maxlength="40" placeholder="Ej: Versova Rol UY" required />
+              <p class="muted small" style="margin-top:6px">Nombre interno que solo tú ves en el panel.</p>
+            </div>
 
-          <div>
-            <label class="field-label">Tipo de sub-bot</label>
-            <div class="tier-picker" id="tierPicker">
-              <button type="button" class="tier-option tier-free is-active" data-tier="free">
-                <b>Free</b><span>1 GB · sin token</span>
-              </button>
-              <button type="button" class="tier-option tier-premium" data-tier="premium">
-                <b>Premium</b><span>2 GB · token</span>
-              </button>
-              <button type="button" class="tier-option tier-vip" data-tier="vip">
-                <b>VIP</b><span>4 GB · token</span>
-              </button>
+            <div>
+              <label class="field-label">¿Qué bot quieres usar?</label>
+              <div class="bottype-grid" id="bottypePicker">
+                <!-- se llena desde JS -->
+              </div>
+              <p class="muted small" style="margin-top:8px">Por defecto: <strong>VÉRSOVA</strong>. Los otros tipos estarán disponibles muy pronto.</p>
+            </div>
+
+            <div>
+              <label class="field-label">Plan / Tipo</label>
+              <div class="tier-picker" id="tierPicker">
+                <button type="button" class="tier-option tier-free is-active" data-tier="free">
+                  <b>Free</b><span>1 GB · sin token</span>
+                </button>
+                <button type="button" class="tier-option tier-premium" data-tier="premium">
+                  <b>Premium</b><span>2 GB · token</span>
+                </button>
+                <button type="button" class="tier-option tier-vip" data-tier="vip">
+                  <b>VIP</b><span>4 GB · token</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="tokenField" hidden>
+              <label class="field-label" for="subbotToken">Código del token</label>
+              <div class="input-action">
+                <input id="subbotToken" type="text" placeholder="VRSOV-PREM-XXXX-XXXX" autocomplete="off" class="mono" />
+                <button id="useLastToken" class="btn btn-sm" type="button" title="Usar el primer token sin usar de mi cuenta">Usar mío</button>
+              </div>
+              <p class="muted small" id="tokenHint" style="margin-top:8px">Compra un token en la <a class="gradient-text" href="/store">tienda</a> y pega su código aquí.</p>
+            </div>
+
+            <div>
+              <label class="field-label" for="subbotPhone">Número de WhatsApp (opcional)</label>
+              <input id="subbotPhone" type="tel" inputmode="tel" placeholder="59899999999" />
+              <p class="muted small" style="margin-top:6px">Se usa para pedir el código de 8 dígitos al activar el bot.</p>
+            </div>
+
+            <div>
+              <label class="field-label" for="subbotDescription">Descripción (opcional)</label>
+              <textarea id="subbotDescription" rows="2" maxlength="300" placeholder="Para qué vas a usar este sub-bot"></textarea>
             </div>
           </div>
+        </div>
 
-          <div id="tokenField" hidden>
-            <label class="field-label" for="subbotToken">Código del token</label>
-            <div class="input-action">
-              <input id="subbotToken" type="text" placeholder="VRSOV-PREM-XXXX-XXXX" autocomplete="off" class="mono" />
-              <button id="useLastToken" class="btn btn-sm" type="button" title="Usar el primer token sin usar de mi cuenta">Usar mío</button>
+        <!-- Pestaña: Identidad -->
+        <div class="editor-pane" data-editor-pane="identity">
+          <div class="stack" style="gap:14px">
+            <div class="card inset" style="padding:14px; background:var(--accent-soft); border-color:rgba(139,92,255,0.25)">
+              <p class="muted small">
+                <strong>Identidad del bot</strong>: estos son los valores que verán tus usuarios cuando el bot escriba y en el menú <code>.menu</code>.
+              </p>
             </div>
-            <p class="muted small" id="tokenHint" style="margin-top:8px">Compra un token en la <a class="gradient-text" href="/store">tienda</a> y pega su código aquí.</p>
-          </div>
 
-          <div>
-            <label class="field-label" for="subbotPhone">Número de WhatsApp (opcional)</label>
-            <input id="subbotPhone" type="tel" inputmode="tel" placeholder="59899999999" />
-          </div>
+            <div>
+              <label class="field-label" for="subbotDisplayName">Nombre visible del bot</label>
+              <input id="subbotDisplayName" type="text" maxlength="40" placeholder="Ej: ◢禍◣ Versova ࿙☕࿚" />
+              <p class="muted small" style="margin-top:6px">Nombre que aparece en el encabezado del menú. Si lo dejas vacío se usa el nombre del sub-bot.</p>
+            </div>
 
-          <div>
-            <label class="field-label" for="subbotDescription">Descripción (opcional)</label>
-            <textarea id="subbotDescription" rows="2" maxlength="300" placeholder="Para qué vas a usar este sub-bot"></textarea>
-          </div>
+            <div>
+              <label class="field-label" for="subbotPrefix">Prefijo de comandos</label>
+              <input id="subbotPrefix" type="text" maxlength="4" value="." placeholder="." style="width:100px; font-family:var(--mono); font-size:1.1rem; text-align:center" />
+              <p class="muted small" style="margin-top:6px">Caracter que activa los comandos. Por defecto «<code>.</code>» (ej: <code>.menu</code>).</p>
+            </div>
 
-          <div id="extraField" hidden>
-            <label class="field-label" for="subbotExtra">Espacio extra asignado: <span id="subbotExtraValue">0 GB</span></label>
-            <input id="subbotExtra" type="range" min="0" max="0" step="1" value="0" style="width:100%" />
-            <p class="muted small" id="subbotExtraHint">Sin espacio extra disponible.</p>
+            <div>
+              <label class="field-label" for="subbotBannerText">Texto del banner del menú</label>
+              <textarea id="subbotBannerText" rows="5" maxlength="800" placeholder="Se usará el banner original de VÉRSOVA"></textarea>
+              <p class="muted small" style="margin-top:6px">Este texto aparece al inicio de <code>.menu</code>. Si lo dejas vacío, se restaura el diseño VÉRSOVA.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestaña: Espacio -->
+        <div class="editor-pane" data-editor-pane="space">
+          <div class="stack" style="gap:14px">
+            <div>
+              <label class="field-label" for="subbotExtra">Espacio extra asignado: <span id="subbotExtraValue">0 GB</span></label>
+              <input id="subbotExtra" type="range" min="0" max="0" step="1" value="0" style="width:100%" />
+              <p class="muted small" id="subbotExtraHint">Sin espacio extra disponible. Compra espacio en la tienda para repartirlo.</p>
+            </div>
+
+            <div id="extraField" class="card inset">
+              <p class="muted small" id="spaceSummary">—</p>
+            </div>
           </div>
         </div>
 
         <p id="subbotError" class="form-message error" hidden></p>
         <div class="row" style="margin-top:18px">
-          <button id="subbotSubmit" class="btn btn-primary" type="submit" style="flex:1">Crear sub-bot</button>
+          <button type="button" class="btn btn-ghost editor-prev" hidden>← Atrás</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost editor-next">Siguiente →</button>
+          <button id="subbotSubmit" class="btn btn-primary" type="submit" hidden>Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- --------------------- Modal: Activar bot (QR vs código) ---------------- -->
+  <div class="modal-overlay" id="activateOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="activateTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Vinculación</p>
+          <h3 class="card-title" id="activateTitle">Activar bot</h3>
+        </div>
+        <button class="modal-close" id="activateClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <!-- Paso 1: elegir método -->
+      <div id="activateStepMethod">
+        <p class="muted small" style="margin-bottom:14px">Elige cómo quieres vincular <b id="activateBotName">este bot</b> con WhatsApp:</p>
+        <div class="method-grid">
+          <button type="button" class="method-card" data-method="qr">
+            <span class="method-icon" aria-hidden="true">▣</span>
+            <b>Escanear QR</b>
+            <p class="muted small">Abre WhatsApp → Dispositivos vinculados → Escanea el código desde tu teléfono.</p>
+            <span class="go">Elegir QR →</span>
+          </button>
+          <button type="button" class="method-card" data-method="code">
+            <span class="method-icon" aria-hidden="true">#</span>
+            <b>Código de 8 dígitos</b>
+            <p class="muted small">Te mandamos un código al número del bot; lo ingresas en WhatsApp sin escanear nada.</p>
+            <span class="go">Elegir código →</span>
+          </button>
+        </div>
+        <p class="muted small" style="margin-top:14px; text-align:center">
+          <button type="button" class="text-button" id="activateCancel">Cancelar</button>
+        </p>
+      </div>
+
+      <!-- Paso 2: QR -->
+      <div id="activateStepQr" hidden>
+        <p class="field-label">Paso 2 · Escanea el QR</p>
+        <p class="muted small">Tienes ~120 segundos para escanearlo antes de que se renueve.</p>
+        <div class="qr-wrap" style="margin-top:12px">
+          <img id="qr" alt="Código QR para vincular el bot con WhatsApp" hidden />
+          <p id="qrEmpty" class="empty-state">Generando QR…</p>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost btn-sm" id="activateBackFromQr">← Cambiar método</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-danger btn-sm" id="activateLogout">Cerrar sesión de WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- Paso 2: Código -->
+      <div id="activateStepCode" hidden>
+        <p class="field-label">Paso 2 · Pide tu código de 8 dígitos</p>
+        <p class="muted small">Escríbelo con código de país, sin + ni espacios. Te lo enviamos al número del bot.</p>
+        <div class="input-action" style="margin-top:12px">
+          <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="59899999999" />
+          <button id="pair" class="btn btn-primary" type="button">Pedir código</button>
+        </div>
+        <p id="pairCode" class="pair-code" hidden></p>
+        <p id="pairCountdown" class="muted small" hidden></p>
+        <p id="pairHint" class="muted small" hidden></p>
+        <p id="pairError" class="form-message error" hidden></p>
+
+        <ol class="steps-mini" style="margin-top:14px">
+          <li>Abre WhatsApp en el teléfono del bot.</li>
+          <li>En Android toca <strong>Menú ⋮</strong>; en iPhone, <strong>Ajustes</strong>.</li>
+          <li>Entra en <strong>Dispositivos vinculados</strong> y toca <strong>Vincular dispositivo</strong>.</li>
+          <li>Toca <strong>Vincular con el número de teléfono</strong> e ingresa el código.</li>
+        </ol>
+        <div class="row" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost btn-sm" id="activateBackFromCode">← Cambiar método</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-danger btn-sm" id="activateLogout2">Cerrar sesión de WhatsApp</button>
+        </div>
+      </div>
     </div>
   </div>
 

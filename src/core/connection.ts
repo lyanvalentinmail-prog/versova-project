@@ -131,21 +131,9 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
   const { connection, lastDisconnect, qr } = update;
 
   if (qr) {
-    // Baileys renueva el QR cada ~20 s. Pedir un código en cada renovación invalidaría el anterior
-    // y el teléfono lo rechazaría, así que el automático se pide una sola vez por conexión.
-    const firstQr = conn.status !== 'qr';
     conn.status = 'qr';
     conn.qrDataUrl = await QRCode.toDataURL(qr, { margin: 1, width: 320 });
-    logger.info('conn', 'Código QR listo. Escanéalo desde la consola web.');
-    if (firstQr && config.pairingPhone && !hasLinkedSession(s.authState.creds) && !currentPairing().code) {
-      autoPairTimer = setTimeout(() => {
-        autoPairTimer = null;
-        if (s !== sock) return; // la conexión ya es otra
-        requestPairing(config.pairingPhone).catch((err) =>
-          logger.warn('conn', `Emparejamiento automático no disponible: ${(err as Error).message}`),
-        );
-      }, 2000);
-    }
+    logger.info('conn', 'Código QR listo. Usa el panel para elegir QR o código de 8 dígitos.');
   }
 
   if (connection === 'open') {

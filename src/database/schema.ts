@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS groups (
@@ -177,4 +177,10 @@ CREATE TABLE IF NOT EXISTS purchases (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS purchases_user ON purchases (user_id);
+
+-- v3: identidad personalizable por sub-bot
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_type       TEXT NOT NULL DEFAULT 'versova';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS display_name  TEXT NOT NULL DEFAULT '';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS bot_prefix    TEXT NOT NULL DEFAULT '.';
+ALTER TABLE subbots ADD COLUMN IF NOT EXISTS banner_text   TEXT NOT NULL DEFAULT '';
 `;

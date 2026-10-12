@@ -29,6 +29,10 @@ export interface SubBotRow {
   description: string;
   status: 'online' | 'offline' | 'paused';
   extra_gb: number;
+  bot_type: string;
+  display_name: string;
+  bot_prefix: string;
+  banner_text: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -171,13 +175,36 @@ export async function countUnusedTokens(userId: number, type: TokenType, q: Q = 
 
 // ---------- sub-bots ----------
 export async function createSubBot(
-  data: { userId: number; name: string; tier: SubBotTier; tokenCode: string | null; phone: string; description: string },
+  data: {
+    userId: number;
+    name: string;
+    tier: SubBotTier;
+    tokenCode: string | null;
+    phone: string;
+    description: string;
+    botType?: string;
+    displayName?: string;
+    botPrefix?: string;
+    bannerText?: string;
+  },
   q: Q = pool,
 ): Promise<SubBotRow> {
   const r = await q.query<SubBotRow>(
-    `INSERT INTO subbots (user_id, name, tier, token_code, phone, description, extra_gb)
-     VALUES ($1, $2, $3, $4, $5, $6, 0) RETURNING *`,
-    [data.userId, data.name, data.tier, data.tokenCode, data.phone, data.description],
+    `INSERT INTO subbots (user_id, name, tier, token_code, phone, description, extra_gb,
+                           bot_type, display_name, bot_prefix, banner_text)
+     VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $10) RETURNING *`,
+    [
+      data.userId,
+      data.name,
+      data.tier,
+      data.tokenCode,
+      data.phone,
+      data.description,
+      data.botType ?? 'versova',
+      data.displayName ?? '',
+      data.botPrefix ?? '.',
+      data.bannerText ?? '',
+    ],
   );
   return r.rows[0];
 }
@@ -195,7 +222,17 @@ export async function getSubBot(id: number, userId: number, q: Q = pool): Promis
 export async function updateSubBot(
   id: number,
   userId: number,
-  patch: { name?: string; phone?: string; description?: string; status?: SubBotRow['status']; extraGb?: number },
+  patch: {
+    name?: string;
+    phone?: string;
+    description?: string;
+    status?: SubBotRow['status'];
+    extraGb?: number;
+    botType?: string;
+    displayName?: string;
+    botPrefix?: string;
+    bannerText?: string;
+  },
   q: Q = pool,
 ): Promise<SubBotRow | null> {
   const r = await q.query<SubBotRow>(
@@ -205,9 +242,25 @@ export async function updateSubBot(
        description = COALESCE($5, description),
        status = COALESCE($6, status),
        extra_gb = COALESCE($7, extra_gb),
+       bot_type = COALESCE($8, bot_type),
+       display_name = COALESCE($9, display_name),
+       bot_prefix = COALESCE($10, bot_prefix),
+       banner_text = COALESCE($11, banner_text),
        updated_at = now()
      WHERE id = $1 AND user_id = $2 RETURNING *`,
-    [id, userId, patch.name ?? null, patch.phone ?? null, patch.description ?? null, patch.status ?? null, patch.extraGb ?? null],
+    [
+      id,
+      userId,
+      patch.name ?? null,
+      patch.phone ?? null,
+      patch.description ?? null,
+      patch.status ?? null,
+      patch.extraGb ?? null,
+      patch.botType ?? null,
+      patch.displayName ?? null,
+      patch.botPrefix ?? null,
+      patch.bannerText ?? null,
+    ],
   );
   return r.rows[0] ?? null;
 }
