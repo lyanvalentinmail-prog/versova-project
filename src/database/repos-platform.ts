@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { pool } from './db.js';
-import type { SubBotTier, WebPlan } from './repos-web.js';
+import type { SubBotRow, SubBotTier, WebPlan } from './repos-web.js';
 
 type Q = Pick<pg.PoolClient, 'query'>;
 
@@ -120,6 +120,18 @@ export async function listSubBotGroups(subbotId: number, q: Q = pool): Promise<S
   const r = await q.query<SubBotGroupRow>(
     'SELECT * FROM subbot_groups WHERE subbot_id = $1 ORDER BY members DESC, name ASC',
     [subbotId],
+  );
+  return r.rows;
+}
+
+/** Sub-bots vinculados a un grupo concreto de WhatsApp (`.subbots` de Yae Miku). */
+export async function findSubBotsByGroupJid(jid: string, q: Q = pool): Promise<SubBotRow[]> {
+  const r = await q.query<SubBotRow>(
+    `SELECT s.* FROM subbots s
+       JOIN subbot_groups g ON g.subbot_id = s.id
+      WHERE g.group_jid = $1
+      ORDER BY s.updated_at DESC`,
+    [jid],
   );
   return r.rows;
 }

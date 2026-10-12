@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 /**
- * Ejercita la ruta PostgreSQL de verdad: se aplica el esquema completo (versión 5) y se
+ * Ejercita la ruta PostgreSQL de verdad: se aplica el esquema completo (versión 6) y se
  * siembran los catálogos sobre un emulador de PostgreSQL en memoria (pg-mem), y luego se
  * ejecutan los repositorios reales. Así se comprueba el SQL sin necesitar un servidor.
  */
@@ -51,7 +51,7 @@ const WA_B = '59899000222@s.whatsapp.net';
 
 await db.migrate();
 
-describe('esquema PostgreSQL (v5) y repositorios', () => {
+describe('esquema PostgreSQL (v6) y repositorios', () => {
   it('aplica el esquema completo y siembra catálogo, tienda y servidores', async () => {
     const tables = await db.pool.query<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
@@ -60,7 +60,7 @@ describe('esquema PostgreSQL (v5) y repositorios', () => {
     for (const table of [
       'web_users', 'web_sessions', 'subbots', 'store_tokens', 'purchases',
       'bot_catalog', 'catalog_uses',
-      'platform_servers', 'reports', 'subbot_groups', 'group_blocks',
+      'platform_servers', 'reports', 'subbot_groups', 'group_blocks', 'bot_data',
       'groups', 'members', 'users', 'characters', 'requests', 'warnings', 'settings', 'audit_log',
     ]) {
       expect(names).toContain(table);
@@ -69,6 +69,17 @@ describe('esquema PostgreSQL (v5) y repositorios', () => {
     for (const table of ['coin_ledger', 'coin_items', 'mission_claims', 'group_bank']) {
       expect(names).not.toContain(table);
     }
+
+    // Almacén clave/valor de los bots del catálogo (carpeta bots/) y ajustes de grupo.
+    await core.setBotValue(GROUP, WA_A, 'coins', '7');
+    expect(await core.getBotValue(GROUP, WA_A, 'coins')).toBe('7');
+    expect(await core.addBotValue(GROUP, WA_A, 'coins', 3)).toBe(10);
+    expect((await core.listBotValues(GROUP, 'coins')).map((row) => row.wa_id)).toEqual([WA_A]);
+    await core.setGroupSetting(GROUP, 'antilink', { enabled: true, action: 'kick' });
+    expect(await core.getGroupSetting<{ action: string }>(GROUP, 'antilink')).toEqual({ enabled: true, action: 'kick' });
+    expect(await core.getGroupSettings(GROUP)).toMatchObject({ antilink: { enabled: true } });
+    await core.deleteBotValue(GROUP, WA_A, 'coins');
+    expect(await core.getBotValue(GROUP, WA_A, 'coins')).toBeNull();
 
     const catalog = await platform.listCatalogItems(db.pool);
     // VÉRSOVA + los bots abiertos de GitHub (Raiden WaBot y Yae Miku Bot).

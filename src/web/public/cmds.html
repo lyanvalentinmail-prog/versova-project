@@ -13,7 +13,12 @@
     <div>
       <span class="label">⌘ Catálogo completo</span>
       <h2>Comandos</h2>
-      <p class="lead">Todos los comandos de la plataforma, su categoría, alias y estado de implementación.</p>
+      <p class="lead">
+        Comandos de cada bot del catálogo, con su categoría, alias y estado de implementación.
+        Cada bot tiene su propio menú y sus propios ajustes.
+      </p>
+      <div class="tabs" id="botTabs" style="margin-top:14px"></div>
+      <p class="tiny muted" id="botHint" style="margin-top:8px"></p>
     </div>
 
     <section class="grid grid-4">
@@ -21,6 +26,7 @@
       <div class="stat-tile"><span class="label">Implementados</span><b id="cmdImplemented">0</b><span class="tiny">Funcionando</span></div>
       <div class="stat-tile"><span class="label">Pendientes</span><b id="cmdPending">0</b><span class="tiny">En desarrollo</span></div>
       <div class="stat-tile"><span class="label">Categorías</span><b id="cmdCategories">0</b><span class="tiny">Secciones</span></div>
+      <div class="stat-tile"><span class="label">Bot</span><b id="cmdBot">—</b><span class="tiny">Seleccionado</span></div>
     </section>
 
     <section class="card">

@@ -227,6 +227,166 @@ describe('panel web: asistente de registro', () => {
   });
 });
 
+describe('panel web: bots del catálogo (carpeta bots/)', () => {
+  it('publica los bots implementados y sus comandos por bot', async () => {
+    await boot();
+    // El arranque real carga los comandos del núcleo; aquí se cargan a mano.
+    await import('../src/commands/index.js');
+
+    const list = await (await fetch(`${BASE}/api/bots`)).json();
+    const slugs = list.bots.map((bot: { slug: string }) => bot.slug);
+    expect(slugs).toEqual(expect.arrayContaining(['versova', 'raiden-wabot', 'yae-miku-bot']));
+    expect(list.active).toBe('versova');
+
+    const raiden = await (await fetch(`${BASE}/api/commands?bot=raiden`)).json();
+    expect(raiden.bot).toBe('raiden-wabot');
+    const names = raiden.commands.map((command: { name: string }) => command.name);
+    expect(names).toContain('download');
+    expect(names).toContain('hug');
+    expect(raiden.commands.every((command: { implemented: boolean }) => command.implemented)).toBe(true);
+
+    const menu = await (await fetch(`${BASE}/api/menu?bot=yae-miku`)).json();
+    expect(menu.text).toContain('YAE MIKU BOT');
+
+    const catalog = await (await fetch(`${BASE}/api/catalog`)).json();
+    const entry = catalog.bots.find((bot: { slug: string }) => bot.slug === 'raiden');
+    expect(entry.implemented).toBe(true);
+    expect(entry.folder).toBe('bots/raiden-wabot');
+    expect(entry.totalCommands).toBeGreaterThan(entry.ownCommands);
+  });
+
+  it('crea el bot del catálogo, lo liga a la cuenta y lo deja activo al vincular', async () => {
+    await boot();
+    harness.reply = 'result';
+
+    const email = `catalogo-${Date.now()}@versova.dev`;
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'secreto-123', name: 'Catálogo' }),
+    });
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+
+    const created = await fetch(`${BASE}/api/catalog/raiden/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Raiden de Ana', phone: '59899000123', serverId: 'vrsov-02' }),
+    });
+    const body = await created.json();
+    expect(created.status).toBe(201);
+    expect(body.botType).toBe('raiden-wabot');
+    expect(body.bot.catalog_slug).toBe('raiden-wabot');
+    expect(body.catalog.slug).toBe('raiden');
+
+    // Crear desde el catálogo deja el bot elegido como bot activo.
+    expect(body.catalog.active).toBe('raiden-wabot');
+    const status = await (await fetch(`${BASE}/api/status`)).json();
+    expect(status.botPack.slug).toBe('raiden-wabot');
+
+    // El catálogo queda marcado como activado en la cuenta.
+    const catalog = await (await fetch(`${BASE}/api/catalog`, { headers: { Cookie: cookie } })).json();
+    const entry = catalog.bots.find((bot: { slug: string }) => bot.slug === 'raiden');
+    expect(entry.owned).toBe(true);
+    expect(entry.subbotId).toBe(body.bot.id);
+
+    // Al vincular, la conexión confirma el bot activo.
+    const confirmed = await fetch(`${BASE}/api/subbots/${body.bot.id}/pair/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({}),
+    });
+    const confirmBody = await confirmed.json();
+    expect(confirmed.status).toBe(200);
+    expect(confirmBody.activeBot).toBe('raiden-wabot');
+
+    // Cambiar de bot a mano también funciona.
+    const switched = await fetch(`${BASE}/api/bots/yae-miku/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({}),
+    });
+    const switchedBody = await switched.json();
+    expect(switchedBody.active).toBe('yae-miku-bot');
+
+    // «⚡ Usar bot» desde Mis Bots liga la elección a ese SubBot.
+    const linked = await fetch(`${BASE}/api/bots/raiden/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ subbotId: body.bot.id }),
+    });
+    const linkedBody = await linked.json();
+    expect(linkedBody.active).toBe('raiden-wabot');
+    expect(linkedBody.subbotId).toBe(body.bot.id);
+    expect(linkedBody.message).toContain('sub-bot');
+
+    // Un SubBot de otra cuenta no se puede usar.
+    const ajeno = await fetch(`${BASE}/api/bots/versova/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ subbotId: 99999 }),
+    });
+    expect(ajeno.status).toBe(404);
+
+    // Y se puede volver al bot base.
+    await fetch(`${BASE}/api/bots/versova/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({}),
+    });
+    expect((await (await fetch(`${BASE}/api/status`)).json()).botPack.slug).toBe('versova');
+  });
+
+  it('rechaza un tipo de bot que no existe o que no está implementado', async () => {
+    await boot();
+
+    const email = `catalogo-err-${Date.now()}@versova.dev`;
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'secreto-123', name: 'Error' }),
+    });
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+
+    const bad = await fetch(`${BASE}/api/subbots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Bot raro', botType: 'inventado' }),
+    });
+    expect(bad.status).toBe(400);
+    expect((await bad.json()).error).toContain('Tipo de bot no válido');
+
+    const missing = await fetch(`${BASE}/api/catalog/no-existe/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Bot raro' }),
+    });
+    expect(missing.status).toBe(404);
+  });
+
+  it('acepta el alias del bot al crear desde el asistente', async () => {
+    await boot();
+
+    const email = `catalogo-alias-${Date.now()}@versova.dev`;
+    const register = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'secreto-123', name: 'Alias' }),
+    });
+    const cookie = register.headers.get('set-cookie')?.split(';')[0] ?? '';
+
+    const created = await fetch(`${BASE}/api/subbots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ name: 'Mi Yae', botType: 'yae-miku', serverId: 'vrsov-04' }),
+    });
+    const body = await created.json();
+    expect(created.status).toBe(201);
+    expect(body.bot.catalog_slug).toBe('yae-miku-bot');
+    expect(body.botType).toBe('yae-miku-bot');
+    expect(body.bot.prefixes).toEqual(['.']);
+  });
+});
+
 describe('panel web: páginas y telemetría', () => {
   it('sirve la portada, el panel y el catálogo de comandos con una sesión activa', async () => {
     await boot();

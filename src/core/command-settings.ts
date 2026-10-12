@@ -1,7 +1,13 @@
 // Se usa la capa de datos (store) para que el panel funcione también en modo memoria.
 import { getSetting, setSetting } from '../database/store.js';
+import { DEFAULT_PACK_SLUG } from './bot-packs.js';
 
 export const COMMAND_SETTINGS_KEY = 'command-settings';
+
+/** Cada bot del catálogo guarda sus propios ajustes (activar/ocultar/alias). */
+export function commandSettingsKey(pack: string = DEFAULT_PACK_SLUG): string {
+  return pack === DEFAULT_PACK_SLUG ? COMMAND_SETTINGS_KEY : `${COMMAND_SETTINGS_KEY}:${pack}`;
+}
 export const DEFAULT_COMMAND_DECORATION = 'ㅤ୨ৎㅤ.';
 
 export interface CommandSettings {
@@ -19,8 +25,8 @@ export const DEFAULT_COMMAND_SETTINGS: CommandSettings = {
   aliases: {},
 };
 
-let current: CommandSettings = copySettings(DEFAULT_COMMAND_SETTINGS);
-let aliasLookup = new Map<string, string>();
+const current = new Map<string, CommandSettings>([[DEFAULT_PACK_SLUG, copySettings(DEFAULT_COMMAND_SETTINGS)]]);
+const aliasLookups = new Map<string, Map<string, string>>();
 
 function copySettings(settings: CommandSettings): CommandSettings {
   return {
@@ -98,46 +104,52 @@ function normalizeAliases(value: unknown, activeNames: Set<string>, activeComman
   return normalized;
 }
 
-export function getCommandSettings(): CommandSettings {
-  return copySettings(current);
+export function getCommandSettings(pack: string = DEFAULT_PACK_SLUG): CommandSettings {
+  return copySettings(current.get(pack) ?? DEFAULT_COMMAND_SETTINGS);
 }
 
-export function resolveCommandAlias(name: string): string {
-  return aliasLookup.get(name.toLowerCase()) ?? name.toLowerCase();
+export function resolveCommandAlias(pack: string, name: string): string {
+  return aliasLookups.get(pack)?.get(name.toLowerCase()) ?? name.toLowerCase();
 }
 
-export async function loadCommandSettings(activeCommandNames: string[], knownCommandNames: string[]): Promise<void> {
-  const stored = await getSetting<unknown>(COMMAND_SETTINGS_KEY);
+export async function loadCommandSettings(
+  activeCommandNames: string[],
+  knownCommandNames: string[],
+  pack: string = DEFAULT_PACK_SLUG,
+): Promise<void> {
+  const stored = await getSetting<unknown>(commandSettingsKey(pack));
   if (!stored) {
-    current = copySettings(DEFAULT_COMMAND_SETTINGS);
-    rebuildAliasLookup();
+    current.set(pack, copySettings(DEFAULT_COMMAND_SETTINGS));
+    rebuildAliasLookup(pack);
     return;
   }
 
   try {
-    current = normalizeCommandSettings(stored, activeCommandNames, knownCommandNames);
+    current.set(pack, normalizeCommandSettings(stored, activeCommandNames, knownCommandNames));
   } catch {
     // Un cambio futuro del catálogo no debe impedir que el bot arranque con ajustes viejos.
-    current = copySettings(DEFAULT_COMMAND_SETTINGS);
+    current.set(pack, copySettings(DEFAULT_COMMAND_SETTINGS));
   }
-  rebuildAliasLookup();
+  rebuildAliasLookup(pack);
 }
 
 export async function saveCommandSettings(
   input: unknown,
   activeCommandNames: string[],
   knownCommandNames: string[],
+  pack: string = DEFAULT_PACK_SLUG,
 ): Promise<CommandSettings> {
   const normalized = normalizeCommandSettings(input, activeCommandNames, knownCommandNames);
-  await setSetting(COMMAND_SETTINGS_KEY, normalized);
-  current = copySettings(normalized);
-  rebuildAliasLookup();
-  return getCommandSettings();
+  await setSetting(commandSettingsKey(pack), normalized);
+  current.set(pack, copySettings(normalized));
+  rebuildAliasLookup(pack);
+  return getCommandSettings(pack);
 }
 
-function rebuildAliasLookup(): void {
-  aliasLookup = new Map<string, string>();
-  for (const [command, aliases] of Object.entries(current.aliases)) {
-    for (const alias of aliases) aliasLookup.set(alias, command);
+function rebuildAliasLookup(pack: string): void {
+  const lookup = new Map<string, string>();
+  for (const [command, aliases] of Object.entries(getCommandSettings(pack).aliases)) {
+    for (const alias of aliases) lookup.set(alias, command);
   }
+  aliasLookups.set(pack, lookup);
 }

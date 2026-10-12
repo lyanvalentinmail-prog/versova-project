@@ -1,11 +1,54 @@
 import type { WAMessage, WASocket } from '@whiskeysockets/baileys';
 import { handleCommand, extractText } from '../core/router.js';
+import { getActiveBotSlug } from '../core/active-bot.js';
+import { runGuards } from '../core/guards.js';
+import { botIsAdmin, getGroupMeta, isAdminIn, isOwner } from '../core/permissions.js';
+import type { GuardCtx } from '../core/bot-packs.js';
 import { clearAfk, getMember, touchMember } from '../database/repos.js';
 import * as F from '../messages/design.js';
 import { mention } from '../messages/design.js';
 import { normalizeJid, userPart } from '../utils/text.js';
 import { contextMentions } from './helpers.js';
 import { logger } from '../utils/logger.js';
+
+/**
+ * Contexto mínimo que reciben las guardias de los bots del catálogo.
+ * Se construye solo cuando hay mensaje de texto: una guardia nunca analiza media.
+ */
+async function guardContext(
+  sock: WASocket,
+  msg: WAMessage,
+  text: string,
+  sender: string,
+  chat: string,
+): Promise<GuardCtx> {
+  const meta = await getGroupMeta(sock, chat).catch(() => null);
+  const admin = meta ? isAdminIn(meta, sender) : false;
+  const botAdmin = meta ? botIsAdmin(meta, sock) : false;
+  return {
+    sock,
+    msg,
+    chat,
+    isGroup: true,
+    groupId: chat,
+    sender,
+    senderName: msg.pushName ?? '',
+    text,
+    mentions: contextMentions(msg),
+    isAdmin: admin,
+    botIsAdmin: botAdmin,
+    isOwner: isOwner(sender),
+    pack: getActiveBotSlug(),
+    reply: async (body, mentions) => {
+      try {
+        return await sock.sendMessage(chat, { text: body, mentions: mentions ?? [] }, { quoted: msg });
+      } catch (err) {
+        logger.error('send', `No se pudo enviar mensaje: ${(err as Error).message}`);
+        return undefined;
+      }
+    },
+  };
+}
 
 /** Punto de entrada de cada mensaje entrante. */
 export async function onMessagesUpsert(sock: WASocket, msg: WAMessage): Promise<void> {
@@ -21,6 +64,8 @@ export async function onMessagesUpsert(sock: WASocket, msg: WAMessage): Promise<
     await handleCommand(sock, msg);
     return;
   }
+  // El bot que está activo decide qué guardias corren (antilink, mute, contadores…).
+  const pack = getActiveBotSlug();
 
   const sender = msg.key.participant ? normalizeJid(msg.key.participant) : null;
   if (!sender) return;
@@ -54,6 +99,11 @@ export async function onMessagesUpsert(sock: WASocket, msg: WAMessage): Promise<
     }
   }
 
-  // 4) Comandos.
+  // 4) Guardias del pack activo: antilink, mute y contadores. Nunca interrumpen.
+  await runGuards(pack, await guardContext(sock, msg, text, sender, chat), (err, guard) =>
+    logger.warn('guardia', `${guard.name} falló: ${(err as Error).message}`),
+  );
+
+  // 5) Comandos.
   await handleCommand(sock, msg);
 }

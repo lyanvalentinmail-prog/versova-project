@@ -1,5 +1,14 @@
 import { normalizeMessageContent, type GroupMetadata, type WAMessage, type WASocket } from '@whiskeysockets/baileys';
 import { config } from '../config/index.js';
+import {
+  commandForPack,
+  commandsForPack,
+  DEFAULT_PACK_SLUG,
+  registerCoreCommand,
+  type Command,
+  type Ctx,
+} from './bot-packs.js';
+import { getActiveBotSlug } from './active-bot.js';
 import { getCommandSettings, resolveCommandAlias } from './command-settings.js';
 import { claimMessage, isBlocked } from '../database/repos.js';
 import { logger } from '../utils/logger.js';
@@ -7,50 +16,19 @@ import { hit } from '../utils/ratelimit.js';
 import { normalizeJid } from '../utils/text.js';
 import { botIsAdmin, getGroupMeta, isAdminIn, isOwner } from './permissions.js';
 
-export interface Ctx {
-  sock: WASocket;
-  msg: WAMessage;
-  chat: string;
-  isGroup: boolean;
-  groupId: string;
-  /** Identificador normalizado de quien envía (clave en la base). */
-  sender: string;
-  senderName: string;
-  command: string;
-  args: string[];
-  argText: string;
-  mentions: string[];
-  quotedId: string | null;
-  meta: GroupMetadata | null;
-  isAdmin: boolean;
-  isOwner: boolean;
-  botIsAdmin: boolean;
-  /** Responde citando el mensaje original. Devuelve el mensaje enviado. */
-  reply: (text: string, mentions?: string[]) => Promise<WAMessage | undefined>;
-}
+export type { Command, Ctx, CommandCategory, GuardCtx, BotGuard, BotPack } from './bot-packs.js';
 
-export interface Command {
-  name: string;
-  category: 'Registro' | 'Roles' | 'General' | 'Equipo' | 'Social' | 'Administración';
-  usage: string;
-  description: string;
-  groupOnly?: boolean;
-  adminOnly?: boolean;
-  ownerOnly?: boolean;
-  needsBotAdmin?: boolean;
-  run: (ctx: Ctx) => Promise<void>;
-}
-
-const registry = new Map<string, Command>();
-
+/**
+ * Registro de comandos del núcleo (pack VÉRSOVA). Los packs de `bots/` añaden los
+ * suyos con `registerPackCommand` y pueden reemplazar un comando heredado usando el
+ * mismo nombre.
+ */
 export function register(...commands: Command[]): void {
-  for (const c of commands) {
-    if (registry.has(c.name)) throw new Error(`Comando duplicado: ${c.name}`);
-    registry.set(c.name, c);
-  }
+  registerCoreCommand(...commands);
 }
 
-export const allCommands = (): Command[] => [...registry.values()];
+/** Comandos efectivos del pack indicado (por defecto, el bot base). */
+export const allCommands = (pack: string = DEFAULT_PACK_SLUG): Command[] => commandsForPack(pack);
 
 export function extractText(msg: WAMessage): string {
   const m = normalizeMessageContent(msg.message);
@@ -82,10 +60,14 @@ export async function handleCommand(sock: WASocket, msg: WAMessage): Promise<voi
   const text = extractText(msg).trim();
   if (!text.startsWith(config.bot.prefix)) return;
 
+  // El bot activo decide qué comandos existen: el núcleo o los del pack instalado.
+  const pack = getActiveBotSlug();
+  const settings = getCommandSettings(pack);
+
   const [head = '', ...rest] = text.slice(config.bot.prefix.length).split(/\s+/);
-  const name = resolveCommandAlias(head.toLowerCase());
-  const command = registry.get(name);
-  if (!command || getCommandSettings().disabled.includes(name)) return;
+  const name = resolveCommandAlias(pack, head.toLowerCase());
+  const command = commandForPack(pack, name);
+  if (!command || settings.disabled.includes(name)) return;
 
   const rawSender = isGroup ? msg.key.participant : chat;
   if (!rawSender || !msg.key.id) return;
@@ -149,6 +131,7 @@ export async function handleCommand(sock: WASocket, msg: WAMessage): Promise<voi
     sender,
     senderName: msg.pushName ?? '',
     command: name,
+    pack,
     args: rest.filter(Boolean),
     argText: text.slice(config.bot.prefix.length + head.length).trim(),
     mentions: (ctxInfo?.mentionedJid ?? []).map(normalizeJid),

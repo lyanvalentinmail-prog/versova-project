@@ -19,10 +19,25 @@
     </div>
 
     <div class="steps" id="wizardSteps"></div>
-    <span class="paso-pill" id="pasoPill">Paso 1 de 5</span>
+    <span class="paso-pill" id="pasoPill">Paso 1 de 6</span>
 
-    <!-- Paso 1 · instancia -->
+    <!-- Paso 1 · tipo de bot del catálogo -->
     <section class="card glow-top" id="step0">
+      <h2>Elige el bot</h2>
+      <p class="lead">
+        Cada bot del catálogo es <strong>gratis</strong> y tiene su propio código en GitHub.
+        Al crearlo, la conexión empieza a responder con sus comandos.
+      </p>
+      <span class="label" style="margin-top:14px">Bot</span>
+      <div class="grid" id="botTypeOptions"></div>
+      <p class="tiny muted" id="botTypeHint" style="margin-top:10px"></p>
+      <div class="wizard-actions">
+        <button class="btn btn-primary btn-block btn-arrow" id="wizardNextBot" type="button">Continuar</button>
+      </div>
+    </section>
+
+    <!-- Paso 2 · instancia -->
+    <section class="card glow-top" id="step1">
       <h2>Elige tu instancia</h2>
       <p class="lead">Selecciona el tipo de instancia que deseas activar.</p>
       <span class="label" style="margin-top:14px">Instancia</span>
@@ -34,12 +49,13 @@
         <p class="tiny muted">Los tokens se compran en la tienda y se canjean una sola vez.</p>
       </div>
       <div class="wizard-actions">
-        <button class="btn btn-primary btn-block btn-arrow" id="wizardNext1" type="button">Continuar</button>
+        <button class="btn" id="wizardBack0" type="button">← Atrás</button>
+        <button class="btn btn-primary btn-arrow" id="wizardNext1" type="button">Continuar</button>
       </div>
     </section>
 
-    <!-- Paso 2 · servidor -->
-    <section class="card glow-top" id="step1" hidden>
+    <!-- Paso 3 · servidor -->
+    <section class="card glow-top" id="step2" hidden>
       <h2>Elige tu servidor</h2>
       <p class="lead">Selecciona el proveedor y el servidor donde correrá tu bot.</p>
       <span class="label" style="margin-top:14px">Conexión</span>
@@ -53,8 +69,8 @@
       </div>
     </section>
 
-    <!-- Paso 3 · vinculación -->
-    <section class="card glow-top" id="step2" hidden>
+    <!-- Paso 4 · vinculación -->
+    <section class="card glow-top" id="step3" hidden>
       <h2>Vinculación</h2>
       <p class="lead">Ingresa el número del bot y elige cómo vincularlo.</p>
       <div class="field" style="margin-top:14px">
@@ -70,8 +86,8 @@
       </div>
     </section>
 
-    <!-- Paso 4 · nombre -->
-    <section class="card glow-top" id="step3" hidden>
+    <!-- Paso 5 · nombre -->
+    <section class="card glow-top" id="step4" hidden>
       <h2>Nombre del bot</h2>
       <p class="lead">Ponle un nombre para identificar tu bot.</p>
       <div class="field" style="margin-top:14px">
@@ -79,8 +95,8 @@
         <input id="botName" type="text" placeholder="Ej: Mi Bot Versova" maxlength="40" />
       </div>
       <p class="tiny muted" style="margin-top:10px">
-        Después podrás editar nombre corto, nombre largo, moneda, owner, enlaces, canal, prefijos y banner
-        desde <strong>Mis Bots → Config</strong>.
+        Se crea con el tipo de bot que elegiste en el paso 1. Después podrás editar nombre corto, nombre largo,
+        moneda, owner, enlaces, canal, prefijos y banner desde <strong>Mis Bots → Config</strong>.
       </p>
       <div class="wizard-actions">
         <button class="btn" id="wizardBack3" type="button">← Atrás</button>
@@ -88,9 +104,9 @@
       </div>
     </section>
 
-    <!-- Paso 5 · código -->
-    <section class="card glow-top" id="step4" hidden>
-      <span class="paso-pill">Paso 5</span>
+    <!-- Paso 6 · código -->
+    <section class="card glow-top" id="step5" hidden>
+      <span class="paso-pill">Paso 6</span>
       <h2 id="wizardStepTitle">Ingresa el código</h2>
       <p class="lead" id="wizardStepText">Desde el teléfono que va a ser el bot, abre WhatsApp y escribe este código.</p>
       <div class="code-box" id="wizardCode" style="margin-top:16px"></div>

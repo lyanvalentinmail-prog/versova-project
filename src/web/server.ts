@@ -9,6 +9,15 @@ import { config } from '../config/index.js';
 import { conn, currentPairing, getSocket, logoutBot, requestPairing } from '../core/connection.js';
 import { getCommandSettings, saveCommandSettings } from '../core/command-settings.js';
 import { allCommands } from '../core/router.js';
+import { getActiveBotSlug } from '../core/active-bot.js';
+import {
+  activateBot,
+  allPacks,
+  loadActiveBotFromStore,
+  packForSlug,
+  packSummaries,
+  renderBotMenuText,
+} from '../bots/index.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
 import { memoryMode, pool } from '../database/db.js';
 import {
@@ -46,6 +55,7 @@ import {
   upsertSubBotGroup,
   type SubBotRow,
   type WebPlan,
+  type WebUser,
 } from '../database/store.js';
 import { logBus, logger, recentLogs, type LogEntry } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
@@ -114,11 +124,38 @@ function formatPairingCode(raw: string): string {
   return clean.length === 8 ? `${clean.slice(0, 4)}-${clean.slice(4)}` : clean;
 }
 
-const AVAILABLE_BOT_TYPES = [
-  { id: 'versova', name: 'VÉRSOVA', description: 'Bot de rol estándar con menú, registro, personajes, advertencias y todos los comandos VÉRSOVA.', recommended: true },
-  { id: 'raiden', name: 'Raiden WaBot', description: 'Bot anime abierto en GitHub: descargas (IG, YouTube, Spotify, TikTok), stickers, IA, reacciones y logos.' },
-  { id: 'yae-miku', name: 'Yae Miku Bot', description: 'Bot de rol y moderación abierto en GitHub: matrimonio/divorcio, antilink y sub-bots persistentes.' },
-];
+/**
+ * Tipos de bot que ofrece el asistente: se arman con los packs instalados en
+ * `bots/`, así que añadir un bot al catálogo no obliga a tocar este archivo.
+ */
+function availableBotTypes() {
+  const active = getActiveBotSlug();
+  return packSummaries().map((pack) => ({
+    id: pack.slug,
+    // Alias del catálogo (`raiden`, `yae-miku`…): el asistente los acepta en `?bot=`.
+    aliases: pack.aliases,
+    name: pack.name,
+    description: pack.description,
+    emoji: pack.emoji,
+    tagline: pack.tagline,
+    category: pack.category,
+    accent: pack.accent,
+    link: pack.link,
+    folder: pack.folder,
+    features: pack.features,
+    highlights: pack.highlights,
+    prefix: pack.prefix,
+    commands: pack.totalCommands,
+    ownCommands: pack.ownCommands,
+    active: pack.slug === active,
+    recommended: pack.slug === 'versova',
+  }));
+}
+
+/** Normaliza lo que llega del panel (`raiden`, `yae-miku`…) al slug del pack. */
+function resolveBotType(value: string): string | null {
+  return packForSlug(value)?.slug ?? null;
+}
 
 function withSpace(bot: SubBotRow, plan: WebPlan): SubBotRow & { baseSpaceGb: number; totalSpaceGb: number } {
   const baseSpaceGb = Math.max(BOT_TIERS[bot.tier].spaceGb, PLANS[plan].spacePerBotGb);
@@ -215,6 +252,8 @@ export function startWeb(): HttpServer {
         servers: servers.length,
       },
       catalogUses: Object.fromEntries(bots.map((bot) => [bot.slug, bot.uses])),
+      bots: packSummaries(),
+      activeBot: getActiveBotSlug(),
       servers,
       plans: PLANS,
       tiers: BOT_TIERS,
@@ -234,15 +273,60 @@ export function startWeb(): HttpServer {
     const uses = user ? await listCatalogUses(user.id) : [];
     const counts = await Promise.all(catalog.map((bot) => countCatalogUses(bot.slug).catch(() => 0)));
     res.json({
-      bots: catalog.map((bot, index) => ({
-        ...bot,
-        priceUsd: Number(bot.price_usd),
-        users: counts[index],
-        owned: uses.some((use) => use.bot_slug === bot.slug),
-        subbotId: uses.find((use) => use.bot_slug === bot.slug)?.subbot_id ?? null,
-      })),
+      bots: catalog.map((bot, index) => {
+        const pack = packForSlug(bot.slug);
+        const summary = pack ? packSummaries().find((entry) => entry.slug === pack.slug) : null;
+        return {
+          ...bot,
+          priceUsd: Number(bot.price_usd),
+          users: counts[index],
+          owned: uses.some((use) => use.bot_slug === bot.slug),
+          subbotId: uses.find((use) => use.bot_slug === bot.slug)?.subbot_id ?? null,
+          // Datos del bot implementado en `bots/` (no solo la ficha del catálogo).
+          implemented: Boolean(pack),
+          folder: pack?.folder ?? null,
+          botType: pack?.slug ?? bot.slug,
+          totalCommands: summary?.totalCommands ?? 0,
+          ownCommands: summary?.ownCommands ?? 0,
+          active: Boolean(summary?.active),
+        };
+      }),
       categories: [...new Set(catalog.map((bot) => bot.category))],
       owned: uses.map((use) => ({ slug: use.bot_slug, subbotId: use.subbot_id, paidCoins: use.paid_coins })),
+      activeBot: getActiveBotSlug(),
+    });
+  });
+
+  // -------------------- bots del catálogo implementados (bots/) ---------------
+  app.get('/api/bots', async (_req, res) => {
+    res.json({ bots: packSummaries(), active: getActiveBotSlug() });
+  });
+
+  /** Activa un bot del catálogo como bot de la conexión (el que responde en WhatsApp). */
+  app.post('/api/bots/:slug/activate', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const slug = resolveBotType(String(req.params.slug));
+    if (!slug) return void res.status(404).json({ error: 'Ese bot no está implementado en la plataforma.' });
+
+    // «⚡ Usar bot» desde Mis Bots: deja constancia del SubBot que pidió el cambio.
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const subbotId = Number(body.subbotId);
+    let linked: number | null = null;
+    if (Number.isFinite(subbotId) && subbotId > 0) {
+      const subbot = await getSubBot(subbotId, user.id);
+      if (!subbot) return void res.status(404).json({ error: 'Ese sub-bot no es de tu cuenta.' });
+      linked = subbot.id;
+    }
+
+    const applied = await activateBot(slug, linked);
+    logger.info('bots', `${user.email} activó «${applied}» como bot de la conexión${linked ? ` (subbot ${linked})` : ''}.`);
+    res.json({
+      ok: true,
+      active: applied,
+      subbotId: linked,
+      message: linked
+        ? `«${packForSlug(applied)?.name ?? applied}» responderá desde ese sub-bot.`
+        : `Ahora responde «${packForSlug(applied)?.name ?? applied}».`,
     });
   });
 
@@ -397,7 +481,8 @@ export function startWeb(): HttpServer {
       bots: withGroups,
       plan: PLANS[user.plan],
       tiers: BOT_TIERS,
-      botTypes: AVAILABLE_BOT_TYPES,
+      botTypes: availableBotTypes(),
+      activeBot: getActiveBotSlug(),
       instances: INSTANCE_TYPES,
       catalog: await listCatalogItems(),
       uses,
@@ -411,36 +496,54 @@ export function startWeb(): HttpServer {
     });
   });
 
-  app.post('/api/subbots', limitWrites, requireUser, async (req, res) => {
-    const user = req.webUser!;
-    const body = req.body ?? {};
-    const name = str(body.name, 40);
+  /**
+   * Crea un sub-bot para la cuenta. Lo usan el asistente (`/api/subbots`) y el botón
+   * «Crear este bot» del catálogo (`/api/catalog/:slug/create`); con `forcedSlug` el
+   * tipo de bot queda fijado y el resto de datos se completa con valores por defecto.
+   */
+  async function createSubBotFor(
+    user: WebUser,
+    body: Record<string, unknown>,
+    req: Request,
+    forcedSlug?: string,
+  ): Promise<{ status: number; payload: Record<string, unknown> }> {
+    const requestedType = forcedSlug ?? (str(body.botType, 40) || str(body.catalogSlug, 40) || 'versova');
+    const botType = resolveBotType(str(requestedType, 40));
+    const pack = botType ? packForSlug(botType) : null;
+    const catalogSlug = resolveBotType(str(body.catalogSlug, 40)) ?? botType;
+    const name = str(body.name, 40) || pack?.name || 'Mi bot';
     const tier = typeof body.tier === 'string' ? (body.tier as keyof typeof BOT_TIERS) : 'free';
     const phone = cleanPhone(body.phone);
-    const description = str(body.description, 300);
+    const description = str(body.description, 300) || pack?.tagline || '';
     const tokenCode = str(body.tokenCode, 40).toUpperCase();
-    const botType = str(body.botType, 30) || 'versova';
-    const catalogSlug = str(body.catalogSlug, 40) || botType;
     const serverId = str(body.serverId, 40) || 'vrsov-01';
     const server = await getServer(serverId);
 
     if (name.length < 2 || name.length > 40) {
-      return void res.status(400).json({ error: 'El nombre del bot necesita entre 2 y 40 caracteres.' });
+      return { status: 400, payload: { error: 'El nombre del bot necesita entre 2 y 40 caracteres.' } };
     }
-    if (!BOT_TIERS[tier]) return void res.status(400).json({ error: 'Tipo de bot inválido.' });
-    if (!AVAILABLE_BOT_TYPES.some((entry) => entry.id === botType)) {
-      return void res.status(400).json({ error: 'Tipo de bot no válido.' });
+    if (!BOT_TIERS[tier]) return { status: 400, payload: { error: 'Tipo de bot inválido.' } };
+    if (!botType || !pack) {
+      const options = allPacks().map((entry) => `${entry.name} (${entry.slug})`).join(', ');
+      return { status: 400, payload: { error: `Tipo de bot no válido. Disponibles: ${options}.` } };
     }
-    if (!server) return void res.status(400).json({ error: 'Ese servidor no existe.' });
-    if (server.status === 'maintenance') return void res.status(400).json({ error: `${server.name} está en mantenimiento.` });
-    if (server.used >= server.capacity) return void res.status(400).json({ error: `${server.name} está lleno. Elige otro servidor.` });
+    if (!server) return { status: 400, payload: { error: 'Ese servidor no existe.' } };
+    if (server.status === 'maintenance') {
+      return { status: 400, payload: { error: `${server.name} está en mantenimiento.` } };
+    }
+    if (server.used >= server.capacity) {
+      return { status: 400, payload: { error: `${server.name} está lleno. Elige otro servidor.` } };
+    }
 
     const planInfo = PLANS[user.plan];
     const used = await countSubBots(user.id);
     if (used >= planInfo.maxBots) {
-      return void res.status(403).json({
-        error: `Tu plan ${planInfo.name} permite hasta ${planInfo.maxBots} bots. Mejora de plan en la tienda para crear más.`,
-      });
+      return {
+        status: 403,
+        payload: {
+          error: `Tu plan ${planInfo.name} permite hasta ${planInfo.maxBots} bots. Mejora de plan en la tienda para crear más.`,
+        },
+      };
     }
 
     const instance = INSTANCE_TYPES.find((entry) => entry.id === str(body.instanceType, 20)) ?? INSTANCE_TYPES[0];
@@ -448,18 +551,24 @@ export function startWeb(): HttpServer {
     let token = null as Awaited<ReturnType<typeof getTokenByCode>>;
     if (needsToken) {
       if (!tokenCode) {
-        return void res.status(400).json({ error: `Para una instancia ${BOT_TIERS[tier].name} necesitas el código de un token.` });
+        return {
+          status: 400,
+          payload: { error: `Para una instancia ${BOT_TIERS[tier].name} necesitas el código de un token.` },
+        };
       }
       token = await getTokenByCode(tokenCode);
       if (!token || token.status !== 'unused' || token.type !== tier) {
-        return void res.status(400).json({ error: 'Ese token no es válido (revisa el código, que no esté usado y que sea del mismo tipo).' });
+        return {
+          status: 400,
+          payload: { error: 'Ese token no es válido (revisa el código, que no esté usado y que sea del mismo tipo).' },
+        };
       }
       if (token.owner_id !== user.id) {
-        return void res.status(403).json({ error: 'Ese token no pertenece a tu cuenta.' });
+        return { status: 403, payload: { error: 'Ese token no pertenece a tu cuenta.' } };
       }
     }
 
-    const prefixes = cleanPrefixes(body.prefixes) ?? ['.'];
+    const prefixes = cleanPrefixes(body.prefixes) ?? [pack.prefix];
     const options = {
       userId: user.id,
       name,
@@ -469,14 +578,14 @@ export function startWeb(): HttpServer {
       description,
       botType,
       displayName: str(body.displayName, 40) || str(body.shortName, 40) || name,
-      botPrefix: prefixes[0] ?? '.',
+      botPrefix: prefixes[0] ?? pack.prefix,
       bannerText: str(body.bannerText, 800),
       shortName: str(body.shortName, 30) || name,
-      longName: str(body.longName, 60) || name,
+      longName: str(body.longName, 60) || pack.name,
       currency: str(body.currency, 30),
       ownerNumber: cleanPhone(body.ownerNumber),
       ownerHidden: body.ownerHidden !== false,
-      botLink: cleanUrl(body.botLink) || `https://${req.get('host') ?? 'web.versova.app'}/cmds`,
+      botLink: cleanUrl(body.botLink) || pack.link || `https://${req.get('host') ?? 'web.versova.app'}/cmds`,
       channelUrl: cleanUrl(body.channelUrl),
       prefixes,
       bannerUrl: cleanUrl(body.bannerUrl, 400),
@@ -486,7 +595,7 @@ export function startWeb(): HttpServer {
       serverId: server.id,
       serverName: server.name,
       avatarUrl: cleanUrl(body.avatarUrl, 400),
-      catalogSlug,
+      catalogSlug: catalogSlug ?? botType,
     };
 
     const bot = await createSubBotWithToken(options);
@@ -496,8 +605,46 @@ export function startWeb(): HttpServer {
       members: 0,
       active: false,
     }).catch(() => undefined);
-    logger.info('subbots', `${user.email} creó «${name}» (${tier}, ${server.name}${token ? `, token ${token.code}` : ''}).`);
-    res.status(201).json({ bot: withSpace(bot, user.plan) });
+    logger.info(
+      'subbots',
+      `${user.email} creó «${name}» (${pack.name}, ${tier}, ${server.name}${token ? `, token ${token.code}` : ''}).`,
+    );
+    return { status: 201, payload: { bot: withSpace(bot, user.plan), botType, botName: pack.name } };
+  }
+
+  app.post('/api/subbots', limitWrites, requireUser, async (req, res) => {
+    const outcome = await createSubBotFor(req.webUser!, (req.body ?? {}) as Record<string, unknown>, req);
+    res.status(outcome.status).json(outcome.payload);
+  });
+
+  /**
+   * «Crear este bot» del catálogo: crea la instancia del bot elegido, la liga a la
+   * cuenta y la deja como bot activo de la conexión. Después solo falta vincular
+   * WhatsApp desde el asistente o desde «Mis bots».
+   */
+  app.post('/api/catalog/:slug/create', limitWrites, requireUser, async (req, res) => {
+    const user = req.webUser!;
+    const raw = String(req.params.slug);
+    const slug = resolveBotType(raw);
+    const catalogBot = catalogBotBySlug(raw);
+    if (!slug || !catalogBot) {
+      return void res.status(404).json({ error: 'Ese bot todavía no está implementado en la plataforma.' });
+    }
+
+    const outcome = await createSubBotFor(user, (req.body ?? {}) as Record<string, unknown>, req, slug);
+    if (outcome.status >= 400) return void res.status(outcome.status).json(outcome.payload);
+
+    const bot = outcome.payload.bot as SubBotRow;
+    await createCatalogUse({ userId: user.id, slug: catalogBot.slug, subbotId: bot.id, paidCoins: 0 }).catch(
+      () => undefined,
+    );
+    const active = await activateBot(slug, bot.id);
+    logger.info('catalogo', `${user.email} creó «${bot.name}» desde el catálogo (${slug}).`);
+    res.status(201).json({
+      ...outcome.payload,
+      catalog: { slug: catalogBot.slug, linked: false, active },
+      message: `«${bot.name}» está listo. Vincula su WhatsApp en «Mis bots» para que empiece a responder.`,
+    });
   });
 
   // «Opciones del bot»: nombre corto/largo, moneda, owner, enlaces, prefijos…
@@ -595,15 +742,33 @@ export function startWeb(): HttpServer {
       }
       case 'stop': {
         const updated = await updateSubBotOptions(id, user.id, { status: 'offline', statusInfo: 'apagado' });
-        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot apagado.' });
+        await activateBot('versova', null);
+        return void res.json({
+          ok: true,
+          bot: updated ? withSpace(updated, user.plan) : null,
+          activeBot: getActiveBotSlug(),
+          message: 'Bot apagado. La conexión vuelve al bot base VÉRSOVA.',
+        });
       }
       case 'start': {
         const updated = await updateSubBotOptions(id, user.id, { status: 'online', statusInfo: 'online' });
-        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot encendido.' });
+        const active = await activateBot(bot.catalog_slug || bot.bot_type || 'versova', id);
+        return void res.json({
+          ok: true,
+          bot: updated ? withSpace(updated, user.plan) : null,
+          activeBot: active,
+          message: `Bot encendido. Ahora responde «${packForSlug(active)?.name ?? active}».`,
+        });
       }
       case 'pause': {
         const updated = await updateSubBotOptions(id, user.id, { status: 'paused', statusInfo: 'en pausa' });
-        return void res.json({ ok: true, bot: updated ? withSpace(updated, user.plan) : null, message: 'Bot en pausa.' });
+        await activateBot('versova', null);
+        return void res.json({
+          ok: true,
+          bot: updated ? withSpace(updated, user.plan) : null,
+          activeBot: getActiveBotSlug(),
+          message: 'Bot en pausa. La conexión vuelve al bot base VÉRSOVA.',
+        });
       }
       case 'server': {
         const serverList = await listServers();
@@ -698,8 +863,15 @@ export function startWeb(): HttpServer {
       members: 12,
       active: true,
     }).catch(() => undefined);
-    logger.info('subbots', `${user.email} vinculó «${bot.name}» (${bot.phone}).`);
-    res.json({ ok: true, bot: linked ? withSpace(linked, user.plan) : null, message: 'Bot vinculado y en línea.' });
+    // La conexión de WhatsApp pasa a hablar el bot que acaba de vincularse.
+    const active = await activateBot(bot.catalog_slug || bot.bot_type || 'versova', id);
+    logger.info('subbots', `${user.email} vinculó «${bot.name}» (${bot.phone}) · bot activo: ${active}.`);
+    res.json({
+      ok: true,
+      bot: linked ? withSpace(linked, user.plan) : null,
+      activeBot: active,
+      message: `Bot vinculado y en línea. Ahora responde «${packForSlug(active)?.name ?? active}».`,
+    });
   });
 
   // ------------------------------ reportes ----------------------------------
@@ -744,8 +916,12 @@ export function startWeb(): HttpServer {
   // Esta consola es pública: no solicita clave ni sesión de administrador.
   app.get('/api/status', async (_req, res) => {
     const pairing = currentPairing();
+    const activePack = packForSlug(getActiveBotSlug()) ?? allPacks()[0];
     res.json({
-      bot: config.bot.name,
+      bot: activePack?.name ?? config.bot.name,
+      botPack: activePack
+        ? { slug: activePack.slug, name: activePack.name, emoji: activePack.emoji, folder: activePack.folder, link: activePack.link }
+        : null,
       team: config.bot.team,
       version: config.bot.version,
       prefix: config.bot.prefix,
@@ -914,25 +1090,40 @@ export function startWeb(): HttpServer {
   });
 
   // ------------------------- comandos y sus ajustes -------------------------
-  app.get('/api/commands', async (_req, res) => {
-    res.json({ settings: getCommandSettings(), commands: getCommandInventory() });
+  function readBotParam(value: unknown): string {
+    const requested = typeof value === 'string' ? value : '';
+    return resolveBotType(requested) ?? getActiveBotSlug();
+  }
+
+  app.get('/api/commands', async (req, res) => {
+    const pack = readBotParam(req.query.bot);
+    res.json({
+      bot: pack,
+      bots: packSummaries(),
+      settings: getCommandSettings(pack),
+      commands: getCommandInventory(pack),
+    });
   });
 
   app.put('/api/commands', limitWrites, async (req, res) => {
+    const pack = readBotParam(req.body?.bot ?? req.query.bot);
     try {
-      const activeNames = allCommands().map((command) => command.name);
-      const settings = await saveCommandSettings(req.body, activeNames, knownCommandNames());
-      logger.info('web', 'Se actualizaron los ajustes de comandos.');
-      res.json({ ok: true, settings, commands: getCommandInventory(settings) });
+      const activeNames = allCommands(pack).map((command) => command.name);
+      const settings = await saveCommandSettings(req.body, activeNames, knownCommandNames(), pack);
+      logger.info('web', `Se actualizaron los ajustes de comandos de «${pack}».`);
+      res.json({ ok: true, bot: pack, settings, commands: getCommandInventory(pack, settings) });
     } catch (err) {
       res.status(400).json({ error: (err as Error).message });
     }
   });
 
   app.get('/api/menu', async (req, res) => {
+    const pack = readBotParam(req.query.bot);
     const banner = (await getSetting<Banner>('banner')) ?? { text: '', image: null };
-    const body = buildMenu(banner.text);
+    // VÉRSOVA usa su plantilla decorada; los demás bots generan su propio menú.
+    const body = pack === 'versova' ? buildMenu(banner.text) : renderBotMenuText(pack);
     res.json({
+      bot: pack,
       text: body,
       hasBannerImage: Boolean(banner.image),
       imageUrl: banner.image ? '/api/banner/image' : null,

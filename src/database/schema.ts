@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS groups (
@@ -293,6 +293,21 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
+
+-- ===================== v6: datos de los bots del catálogo =====================
+
+-- Almacén clave/valor por grupo y por integrante que usan los bots de la carpeta
+-- bots/ (antilink, avisos, parejas, perfil social, contadores de trabajo…).
+-- Un valor por (grupo, integrante, clave); wa_id vacío = ajuste del grupo.
+CREATE TABLE IF NOT EXISTS bot_data (
+  group_id   TEXT NOT NULL DEFAULT '',
+  wa_id      TEXT NOT NULL DEFAULT '',
+  key        TEXT NOT NULL,
+  value      TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (group_id, wa_id, key)
+);
+CREATE INDEX IF NOT EXISTS bot_data_key ON bot_data (group_id, key);
 
 -- ===================== v5: sin economía; repos GitHub en el catálogo =====================
 
