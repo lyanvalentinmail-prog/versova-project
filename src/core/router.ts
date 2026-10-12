@@ -1,5 +1,6 @@
 import { normalizeMessageContent, type GroupMetadata, type WAMessage, type WASocket } from '@whiskeysockets/baileys';
 import { config } from '../config/index.js';
+import { getCommandSettings, resolveCommandAlias } from './command-settings.js';
 import { claimMessage } from '../database/repos.js';
 import { logger } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
@@ -82,9 +83,9 @@ export async function handleCommand(sock: WASocket, msg: WAMessage): Promise<voi
   if (!text.startsWith(config.bot.prefix)) return;
 
   const [head = '', ...rest] = text.slice(config.bot.prefix.length).split(/\s+/);
-  const name = head.toLowerCase();
+  const name = resolveCommandAlias(head.toLowerCase());
   const command = registry.get(name);
-  if (!command) return;
+  if (!command || getCommandSettings().disabled.includes(name)) return;
 
   const rawSender = isGroup ? msg.key.participant : chat;
   if (!rawSender || !msg.key.id) return;

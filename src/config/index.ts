@@ -6,11 +6,6 @@ function required(name: string): string {
   return value;
 }
 
-const consoleKey = required('CONSOLE_KEY');
-if (consoleKey.length < 12) {
-  throw new Error('CONSOLE_KEY debe tener al menos 12 caracteres.');
-}
-
 export const config = {
   bot: {
     name: 'VÉRSOVA',
@@ -24,9 +19,6 @@ export const config = {
     url: required('DATABASE_URL'),
     ssl: process.env.DB_SSL !== 'false',
     poolMax: Number(process.env.DB_POOL_MAX ?? 8),
-  },
-  console: {
-    key: consoleKey,
   },
   server: {
     port: Number(process.env.PORT ?? 3000),

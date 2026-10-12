@@ -10,7 +10,7 @@ import pino from 'pino';
 import { config } from '../config/index.js';
 import { clearPgAuthState, usePgAuthState } from './auth-state.js';
 import { logger } from '../utils/logger.js';
-import { digitsOnly } from '../utils/text.js';
+import { digitsOnly, maskPhone } from '../utils/text.js';
 import { onMessagesUpsert } from '../events/messages.js';
 import { onParticipantsUpdate } from '../events/participants.js';
 
@@ -104,7 +104,7 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
     conn.lastError = null;
     conn.since = new Date();
     conn.me = s.user?.id ? jidNormalizedUser(s.user.id) : null;
-    logger.info('conn', `Conectado como ${conn.me ?? 'desconocido'}.`);
+    logger.info('conn', `Conectado como ${conn.me ? maskPhone(conn.me) : 'desconocido'}.`);
   }
 
   if (connection === 'close') {
