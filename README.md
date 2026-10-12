@@ -55,6 +55,16 @@ Variables:
 | `BOT_PHONE` | Opcional: número del bot para pedir un código de emparejamiento al arrancar. |
 | `PORT` | Puerto HTTP (Render asigna su propio valor). |
 
+## Emparejamiento por código
+
+El panel pide el código solo cuando WhatsApp puede aceptarlo, y lo confirma con el servidor antes de mostrarlo:
+
+- El botón se habilita cuando la conexión entra en modo vinculación (aparece junto con el QR). Antes de eso WhatsApp rechaza cualquier solicitud.
+- El código vive ~60 segundos. El panel muestra la cuenta regresiva y lo quita cuando expira, para no dejar en pantalla un código que el teléfono contestaría como inválido.
+- Si WhatsApp rechaza la solicitud (número inexistente, límite de intentos, caída de la conexión), el panel muestra el motivo en vez de un código que no sirve.
+- Se pide un solo código por conexión. Con `BOT_PHONE` el pedido automático ocurre una vez, no en cada renovación del QR.
+- Las credenciales provisionales del emparejamiento no se guardan en PostgreSQL: si el intento se abandona, el siguiente arranque vuelve a empezar limpio en vez de intentar iniciar sesión con un vínculo a medio hacer.
+
 ## Base de datos gratuita: Neon
 
 El proyecto conserva PostgreSQL —necesario para transacciones, datos y sesión persistente de WhatsApp— y queda preparado para alojarlo en [Neon](https://neon.com/pricing). Es serverless y compatible con el cliente `pg`; no requiere una SDK nueva ni migrar el esquema. El plan Free oficial ofrece actualmente 1 GB de almacenamiento y 100 CU-horas mensuales por proyecto, con cómputo que escala a cero cuando queda inactivo. Revisa [los límites y precios vigentes](https://neon.com/pricing): las cuotas pueden cambiar y un bot que mantenga la base ocupada todo el tiempo puede superar la cuota gratuita.

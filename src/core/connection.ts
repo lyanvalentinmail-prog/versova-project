@@ -9,8 +9,14 @@ import QRCode from 'qrcode';
 import pino from 'pino';
 import { config } from '../config/index.js';
 import { clearPgAuthState, usePgAuthState } from './auth-state.js';
+import {
+  activePairingCode,
+  hasLinkedSession,
+  isPendingPairingCreds,
+  requestPairing as pairWithCode,
+} from './pairing.js';
 import { logger } from '../utils/logger.js';
-import { digitsOnly, maskPhone } from '../utils/text.js';
+import { maskPhone } from '../utils/text.js';
 import { onMessagesUpsert } from '../events/messages.js';
 import { onParticipantsUpdate } from '../events/participants.js';
 
@@ -20,6 +26,7 @@ export const conn = {
   status: 'idle' as ConnStatus,
   qrDataUrl: null as string | null,
   pairingCode: null as string | null,
+  pairingExpiresAt: null as number | null,
   me: null as string | null,
   since: new Date(),
   lastError: null as string | null,
@@ -28,23 +35,58 @@ export const conn = {
 let sock: WASocket | null = null;
 let attempts = 0;
 let reconnectTimer: NodeJS.Timeout | null = null;
+let autoPairTimer: NodeJS.Timeout | null = null;
 const silentLogger = pino({ level: 'silent' });
 
 export const getSocket = (): WASocket | null => sock;
+
+/** Código de emparejamiento todavía útil para el panel (null si no hay o si ya expiró). */
+export function currentPairing(now = Date.now()): { code: string | null; expiresAt: number | null } {
+  const code = activePairingCode({ code: conn.pairingCode, expiresAt: conn.pairingExpiresAt }, now);
+  if (!code) {
+    if (conn.pairingCode) clearPairing();
+    return { code: null, expiresAt: null };
+  }
+  return { code, expiresAt: conn.pairingExpiresAt };
+}
+
+function clearPairing(): void {
+  conn.pairingCode = null;
+  conn.pairingExpiresAt = null;
+}
 
 export async function startConnection(): Promise<void> {
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
   }
-  const { state, saveCreds } = await usePgAuthState();
+  // Un pedido automático pendiente pertenece al socket anterior: si se dispara sobre el nuevo
+  // puede pisar el código que alguien pidió desde el panel.
+  if (autoPairTimer) {
+    clearTimeout(autoPairTimer);
+    autoPairTimer = null;
+  }
+  let { state, saveCreds } = await usePgAuthState();
+
+  // Un emparejamiento abandonado deja creds.me a medio escribir; con eso Baileys intenta iniciar
+  // sesión en vez de registrarse y ningún código nuevo funciona. Se descarta y se empieza limpio.
+  if (isPendingPairingCreds(state.creds)) {
+    logger.warn('conn', 'Se descartó un emparejamiento sin terminar guardado en la base de datos.');
+    await clearPgAuthState();
+    ({ state, saveCreds } = await usePgAuthState());
+  }
+
   conn.status = 'connecting';
   conn.since = new Date();
   conn.qrDataUrl = null;
+  clearPairing();
 
   const s = makeWASocket({
     auth: state,
-    browser: Browsers.ubuntu('Chrome'),
+    // La etiqueta del sistema operativo llega a WhatsApp como "Chrome (Mac OS)" en el IQ de
+    // emparejamiento. Con valores fuera de la lista conocida el servidor rechaza el código por
+    // teléfono aunque el QR sí funcione, así que se usa una descripción canónica.
+    browser: Browsers.macOS('Chrome'),
     logger: silentLogger,
     markOnlineOnConnect: false,
     syncFullHistory: false,
@@ -52,7 +94,12 @@ export async function startConnection(): Promise<void> {
   });
   sock = s;
 
-  s.ev.on('creds.update', () => {
+  s.ev.on('creds.update', (partial) => {
+    // Baileys emite actualizaciones parciales; se mira el estado resultante completo.
+    const creds = { ...s.authState.creds, ...(partial ?? {}) };
+    // Mientras el emparejamiento no se confirme no se guarda: esas credenciales a medio escribir
+    // romperían el próximo arranque (inicio de sesión en vez de registro).
+    if (isPendingPairingCreds(creds)) return;
     saveCreds().catch((err) => logger.error('auth', `No se pudieron guardar credenciales: ${err.message}`));
   });
 
@@ -84,11 +131,16 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
   const { connection, lastDisconnect, qr } = update;
 
   if (qr) {
+    // Baileys renueva el QR cada ~20 s. Pedir un código en cada renovación invalidaría el anterior
+    // y el teléfono lo rechazaría, así que el automático se pide una sola vez por conexión.
+    const firstQr = conn.status !== 'qr';
     conn.status = 'qr';
     conn.qrDataUrl = await QRCode.toDataURL(qr, { margin: 1, width: 320 });
     logger.info('conn', 'Código QR listo. Escanéalo desde la consola web.');
-    if (config.pairingPhone && !s.authState.creds.registered) {
-      setTimeout(() => {
+    if (firstQr && config.pairingPhone && !hasLinkedSession(s.authState.creds) && !currentPairing().code) {
+      autoPairTimer = setTimeout(() => {
+        autoPairTimer = null;
+        if (s !== sock) return; // la conexión ya es otra
         requestPairing(config.pairingPhone).catch((err) =>
           logger.warn('conn', `Emparejamiento automático no disponible: ${(err as Error).message}`),
         );
@@ -100,7 +152,7 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
     attempts = 0;
     conn.status = 'open';
     conn.qrDataUrl = null;
-    conn.pairingCode = null;
+    clearPairing();
     conn.lastError = null;
     conn.since = new Date();
     conn.me = s.user?.id ? jidNormalizedUser(s.user.id) : null;
@@ -111,6 +163,12 @@ async function handleConnectionUpdate(s: WASocket, update: Partial<BaileysEventM
     const code = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output?.statusCode;
     conn.lastError = lastDisconnect?.error?.message ?? null;
     sock = null;
+    if (autoPairTimer) {
+      clearTimeout(autoPairTimer);
+      autoPairTimer = null;
+    }
+    // El código pertenece a la sesión que acaba de caer: ya no sirve.
+    clearPairing();
 
     if (code === DisconnectReason.loggedOut) {
       conn.status = 'logged_out';
@@ -142,21 +200,25 @@ function scheduleReconnect(delayMs: number): void {
 /** Pide un código de emparejamiento de 8 caracteres para un número. */
 export async function requestPairing(phone: string): Promise<string> {
   const s = sock;
-  if (!s) throw new Error('La conexión todavía no está lista. Espera unos segundos.');
-  if (s.authState.creds.registered) {
-    throw new Error('El bot ya está vinculado. Cierra sesión antes de vincular otro número.');
-  }
-  const digits = digitsOnly(phone);
-  if (digits.length < 8 || digits.length > 15) throw new Error('Número inválido. Usa código de país, sin + ni espacios.');
-  const code = await s.requestPairingCode(digits);
+  const { code, expiresAt } = await pairWithCode(
+    {
+      socket: s,
+      // WhatsApp solo acepta el companion_hello después de enviar pair-device (cuando ya hay QR).
+      ready: conn.status === 'qr',
+      linked: conn.status === 'open' || hasLinkedSession(s?.authState.creds),
+    },
+    phone,
+  );
   conn.pairingCode = code;
-  logger.info('conn', `Código de emparejamiento generado para ${digits.slice(0, 2)}•••${digits.slice(-2)}.`);
+  conn.pairingExpiresAt = expiresAt;
+  logger.info('conn', 'Código de emparejamiento confirmado por WhatsApp; expira en 60 segundos.');
   return code;
 }
 
 /** Cierra la sesión en WhatsApp y vuelve a iniciar para mostrar un nuevo QR. */
 export async function logoutBot(): Promise<void> {
   const s = sock;
+  clearPairing();
   if (!s) {
     await clearPgAuthState();
     await startConnection();

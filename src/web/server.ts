@@ -1,8 +1,9 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
+import type { Server as HttpServer } from 'node:http';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config/index.js';
-import { conn, getSocket, logoutBot, requestPairing } from '../core/connection.js';
+import { conn, currentPairing, getSocket, logoutBot, requestPairing } from '../core/connection.js';
 import { getCommandSettings, saveCommandSettings } from '../core/command-settings.js';
 import { allCommands } from '../core/router.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
@@ -31,7 +32,7 @@ function publicWriteLimit(scope: string, max = 30, windowMs = 60_000) {
 const limitWrites = publicWriteLimit('writes', 30, 60_000);
 const limitPairing = publicWriteLimit('pairing', 4, 60_000);
 
-export function startWeb(): void {
+export function startWeb(): HttpServer {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -51,6 +52,7 @@ export function startWeb(): void {
 
   // Esta consola es pública: no solicita clave ni sesión de administrador.
   app.get('/api/status', async (_req, res) => {
+    const pairing = currentPairing();
     res.json({
       bot: config.bot.name,
       team: config.bot.team,
@@ -61,7 +63,11 @@ export function startWeb(): void {
       since: conn.since,
       lastError: conn.lastError,
       qr: conn.qrDataUrl,
-      pairingCode: conn.pairingCode,
+      pairingCode: pairing.code,
+      pairingExpiresAt: pairing.expiresAt,
+      // WhatsApp solo acepta un código por teléfono cuando la conexión ya está en modo vinculación.
+      pairingReady: conn.status === 'qr',
+      linked: conn.status === 'open',
       uptimeSec: Math.floor((Date.now() - startedAt.getTime()) / 1000),
       connected: Boolean(getSocket()),
     });
@@ -71,8 +77,9 @@ export function startWeb(): void {
     const phone = typeof req.body?.phone === 'string' ? req.body.phone : '';
     try {
       const code = await requestPairing(phone);
-      res.json({ code });
+      res.json({ code, expiresAt: currentPairing().expiresAt });
     } catch (err) {
+      logger.warn('web', `Emparejamiento rechazado: ${(err as Error).message}`);
       res.status(400).json({ error: (err as Error).message });
     }
   });
@@ -172,7 +179,7 @@ export function startWeb(): void {
     res.status(500).json({ error: 'Error interno.' });
   });
 
-  app.listen(config.server.port, '0.0.0.0', () => {
+  return app.listen(config.server.port, '0.0.0.0', () => {
     logger.info('web', `Consola pública disponible en el puerto ${config.server.port}.`);
   });
 }
