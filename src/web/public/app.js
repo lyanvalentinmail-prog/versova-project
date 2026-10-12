@@ -1,80 +1,198 @@
+/**
+ * VÉRSOVA · interfaz web (una sola app para tres rutas):
+ *   /        landing  (data-page="landing")
+ *   /home    panel    (data-page="home")
+ *   /cmds    catálogo (data-page="cmds")
+ * El panel es público: no hay autenticación.
+ */
+
 const $ = (id) => document.getElementById(id);
 
-let statusTimer = null;
-let eventSource = null;
-let commandSettings = null;
-let commandInventory = [];
-let pairingCode = null;
-let pairingExpiresAt = null;
-let pairingTicker = null;
-let pairingBusy = false;
+const toastElement = () => $('toast');
+let toastTimer = null;
 
-const api = async (path, options = {}) => {
+function toast(message) {
+  const box = toastElement();
+  if (!box) return;
+  box.textContent = message;
+  box.classList.add('show');
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => box.classList.remove('show'), 2200);
+}
+
+async function api(path, options = {}) {
   const headers = { Accept: 'application/json', ...(options.headers ?? {}) };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   const response = await fetch(path, { cache: 'no-store', ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error ?? `Error ${response.status}`);
   return data;
+}
+
+/** Igual que api() pero devuelve null en vez de lanzar (para datos opcionales). */
+async function apiOrNull(path, options) {
+  try {
+    return await api(path, options);
+  } catch {
+    return null;
+  }
+}
+
+const setText = (id, value) => {
+  const element = $(id);
+  if (element) element.textContent = value === null || value === undefined || value === '' ? '—' : String(value);
 };
 
+const setWidth = (id, percent) => {
+  const element = $(id);
+  if (element) element.style.width = `${Math.max(0, Math.min(100, Number(percent) || 0))}%`;
+};
+
+const number = (value) => new Intl.NumberFormat('es-UY').format(Number(value) || 0);
+
+function countUp(id, value) {
+  const element = $(id);
+  if (!element) return;
+  const target = Number(value) || 0;
+  const start = Number(element.dataset.count) || 0;
+  element.dataset.count = String(target);
+  if (typeof requestAnimationFrame !== 'function' || target === start) {
+    element.textContent = number(target);
+    return;
+  }
+  const started = Date.now();
+  const from = start;
+  const step = () => {
+    const elapsed = Math.min(1, (Date.now() - started) / 800);
+    const eased = 1 - (1 - elapsed) ** 3;
+    element.textContent = number(Math.round(from + (target - from) * eased));
+    if (elapsed < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function formatDuration(seconds) {
+  const totalMinutes = Math.max(0, Math.floor((Number(seconds) || 0) / 60));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days) return `${days} d ${hours} h`;
+  if (hours) return `${hours} h ${minutes} min`;
+  return `${minutes} min`;
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('es-UY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function greetingFor(hour) {
+  if (hour < 6) return { title: 'BUENAS MADRUGADAS', hello: 'Aún despierto, bienvenido' };
+  if (hour < 12) return { title: 'BUENOS DÍAS', hello: 'Hola, bienvenido' };
+  if (hour < 20) return { title: 'BUENAS TARDES', hello: 'Hola, bienvenido' };
+  return { title: 'BUENAS NOCHES', hello: 'Hola, bienvenido' };
+}
+
+/* ------------------------------- tema ---------------------------------- */
 function applyTheme(theme) {
-  const selected = theme === 'dark' ? 'dark' : 'light';
+  const selected = theme === 'light' ? 'light' : 'dark';
   document.documentElement.dataset.theme = selected;
   const toggle = $('themeToggle');
   toggle.setAttribute('aria-pressed', String(selected === 'dark'));
-  toggle.setAttribute('aria-label', selected === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro');
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', selected === 'dark' ? '#131116' : '#f7f6f8');
-  try { localStorage.setItem('versova.theme', selected); } catch { /* almacenamiento opcional */ }
+  toggle.setAttribute('aria-label', selected === 'light' ? 'Activar modo oscuro' : 'Activar modo claro');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', selected === 'dark' ? '#05060f' : '#f4f4fb');
+  try {
+    localStorage.setItem('versova.theme', selected);
+  } catch {
+    /* almacenamiento opcional */
+  }
 }
 
 function initTheme() {
   let saved = null;
-  try { saved = localStorage.getItem('versova.theme'); } catch { /* almacenamiento opcional */ }
-  applyTheme(saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  try {
+    saved = localStorage.getItem('versova.theme');
+  } catch {
+    /* almacenamiento opcional */
+  }
+  applyTheme(saved || 'dark');
   $('themeToggle').addEventListener('click', () => {
-    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
   });
 }
 
+/* ------------------------------ estado -------------------------------- */
 const BADGE = {
-  open: ['Conectado', 'open'],
-  qr: ['Esperando QR', ''],
+  open: ['En línea', 'open'],
+  qr: ['Esperando vinculación', ''],
   connecting: ['Conectando…', ''],
   closed: ['Reconectando', 'bad'],
   logged_out: ['Sesión cerrada', 'bad'],
   idle: ['Iniciando', ''],
 };
 
-function formatDuration(seconds) {
-  const totalMinutes = Math.max(0, Math.floor(seconds / 60));
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-  if (days) return `${days} d ${hours} h activo`;
-  if (hours) return `${hours} h ${minutes} min activo`;
-  return `${minutes} min activo`;
+let lastStatus = {};
+
+const setBadge = (id, label, cls) => {
+  const badge = $(id);
+  if (!badge) return;
+  badge.className = `status-badge ${cls}`.trim();
+  const inner = badge.querySelector('span:last-child');
+  if (inner) inner.textContent = label;
+};
+
+const setPill = (id, label, cls) => {
+  const pill = $(id);
+  if (!pill) return;
+  pill.className = `pill ${cls}`.trim();
+  const inner = pill.querySelector('span:last-child');
+  if (inner) inner.textContent = label;
+};
+
+function paintStatus(status) {
+  lastStatus = status ?? {};
+  const [label, cls] = BADGE[lastStatus.whatsapp] ?? [lastStatus.whatsapp ?? 'Desconocido', 'bad'];
+  const pillClass = cls === 'open' ? 'ok' : cls === 'bad' ? 'bad' : '';
+
+  setBadge('statusBadge', label, cls);
+  setBadge('sideBadge', label, cls);
+  setBadge('botBadge', label, cls);
+  for (const id of ['statusPill', 'heroStatusPill', 'heroPill', 'navStatus']) {
+    setPill(id, label, pillClass);
+    $(id)?.querySelector('.live-dot')?.classList.toggle('off', cls !== 'open');
+  }
+
+  setText('sideDetail', lastStatus.me ? `Número ${lastStatus.me}` : lastStatus.team ?? 'Buscando estado…');
+  setText('statusDetail', lastStatus.me ? `Número ${lastStatus.me} · ${lastStatus.team}` : (lastStatus.team ?? 'Buscando estado…'));
+  const uptimeText = `${formatDuration(lastStatus.uptimeSec)} · versión ${lastStatus.version ?? '—'}`;
+  setText('uptime', uptimeText);
+  setText('statUptime', formatDuration(lastStatus.uptimeSec));
+  setText('infoNumber', lastStatus.me ?? 'sin vincular');
+  setText('infoTeam', lastStatus.team);
+  setText('infoVersion', lastStatus.version);
+  setText('infoSession', lastStatus.linked ? 'vinculada' : 'pendiente');
+  setText('botNumber', lastStatus.me ? `Número ${lastStatus.me}` : 'Número sin vincular');
+  setText('botName', lastStatus.bot);
+  setText('botTeam', lastStatus.team);
+  setText('botPrefix', lastStatus.prefix);
+  setText('heroBot', lastStatus.bot);
+  setText('heroBotName', lastStatus.bot);
+  setText('heroTeam', lastStatus.me ? `${lastStatus.team} · ${lastStatus.me}` : lastStatus.team);
+  setText('heroPrefix', lastStatus.prefix);
+  setText('heroVersion', lastStatus.version);
+  setText('heroUptime', formatDuration(lastStatus.uptimeSec));
+  setText('heroTeamPill', lastStatus.team);
+  const flag = $('botFlagSession');
+  if (flag) flag.className = `pill ${lastStatus.linked ? 'ok' : ''}`.trim();
 }
 
 async function refreshStatus() {
   try {
     const status = await api('/api/status');
-    const [label, cls] = BADGE[status.whatsapp] ?? [status.whatsapp ?? 'Desconocido', 'bad'];
-    $('statusBadge').className = `status-badge ${cls}`;
-    $('statusBadge').querySelector('span:last-child').textContent = label;
-    $('statusDetail').textContent = status.me ? `Número ${status.me} · ${status.team}` : status.team;
-    $('uptime').textContent = `${formatDuration(status.uptimeSec)} · versión ${status.version}`;
-
-    if (status.qr) {
-      $('qr').src = status.qr;
-      $('qr').hidden = false;
-      $('qrEmpty').hidden = true;
-    } else {
-      $('qr').removeAttribute('src');
-      $('qr').hidden = true;
-      $('qrEmpty').hidden = false;
-      $('qrEmpty').textContent = status.whatsapp === 'open' ? 'El dispositivo ya está vinculado.' : 'No hay un QR pendiente.';
-    }
+    paintStatus(status);
+    renderQr(status);
     if (!pairingBusy) {
       pairingCode = status.pairingCode ?? null;
       pairingExpiresAt = status.pairingExpiresAt ?? null;
@@ -84,13 +202,40 @@ async function refreshStatus() {
   } catch (error) {
     $('statusBadge').className = 'status-badge bad';
     $('statusBadge').querySelector('span:last-child').textContent = 'Sin conexión';
-    $('statusDetail').textContent = error.message;
+    setText('statusDetail', error.message);
+    const pill = $('statusPill');
+    if (pill) {
+      pill.className = 'pill bad';
+      pill.querySelector('span:last-child').textContent = 'Sin conexión';
+    }
   }
 }
 
+function renderQr(status) {
+  const image = $('qr');
+  const empty = $('qrEmpty');
+  if (!image || !empty) return;
+  if (status.qr) {
+    image.src = status.qr;
+    image.hidden = false;
+    empty.hidden = true;
+  } else {
+    image.removeAttribute('src');
+    image.hidden = true;
+    empty.hidden = false;
+    empty.textContent = status.whatsapp === 'open' ? 'El dispositivo ya está vinculado.' : 'No hay un QR pendiente.';
+  }
+}
+
+/* ---------------------------- emparejamiento --------------------------- */
+let pairingCode = null;
+let pairingExpiresAt = null;
+let pairingTicker = null;
+let pairingBusy = false;
+
 function stopPairingTicker() {
   if (pairingTicker) {
-    clearInterval(pairingTicker);
+    window.clearInterval(pairingTicker);
     pairingTicker = null;
   }
 }
@@ -172,6 +317,7 @@ async function requestLogout() {
   try {
     await api('/api/logout', { method: 'POST' });
     await refreshStatus();
+    toast('Sesión cerrada.');
   } catch (error) {
     alert(error.message);
   } finally {
@@ -179,6 +325,15 @@ async function requestLogout() {
   }
 }
 
+function copyText(value, message = 'Copiado.') {
+  if (typeof navigator === 'undefined' || !navigator.clipboard) {
+    toast(value);
+    return;
+  }
+  navigator.clipboard.writeText(value).then(() => toast(message)).catch(() => toast(value));
+}
+
+/* -------------------------------- banner ------------------------------- */
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -189,6 +344,7 @@ function fileToBase64(file) {
 }
 
 async function refreshBanner() {
+  if (!$('bannerText')) return;
   try {
     const banner = await api('/api/banner');
     $('bannerText').value = banner.text;
@@ -202,8 +358,9 @@ async function refreshBanner() {
 
 function showBannerMessage(text, isError = false) {
   const message = $('bannerMsg');
+  if (!message) return;
   message.textContent = text;
-  message.className = `form-message ${isError ? 'error' : 'muted'}`;
+  message.className = `form-message ${isError ? 'error' : ''}`.trim();
   message.hidden = false;
 }
 
@@ -217,6 +374,7 @@ async function saveBanner() {
     await api('/api/banner', { method: 'PUT', body: JSON.stringify(body) });
     $('bannerImage').value = '';
     showBannerMessage('Banner guardado.');
+    toast('Banner guardado.');
     await Promise.all([refreshBanner(), refreshMenuPreview()]);
   } catch (error) {
     showBannerMessage(error.message, true);
@@ -236,6 +394,11 @@ async function removeBannerImage() {
     $('removeImage').disabled = false;
   }
 }
+
+/* ------------------------------- comandos ------------------------------ */
+let commandSettings = null;
+let commandInventory = [];
+let commandCategory = 'Todos';
 
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -262,22 +425,24 @@ function cloneSettings(settings) {
 
 async function saveCommandConfiguration(next, successMessage = 'Guardado.') {
   const state = $('commandSaveState');
-  state.textContent = 'Guardando…';
+  if (state) state.textContent = 'Guardando…';
   try {
     const result = await api('/api/commands', { method: 'PUT', body: JSON.stringify(next) });
     commandSettings = result.settings;
     commandInventory = result.commands;
     $('commandDecoration').value = commandSettings.commandDecoration;
     renderCommands();
-    state.textContent = successMessage;
-    state.classList.remove('error');
+    if (state) state.textContent = successMessage;
     await refreshMenuPreview();
-    window.setTimeout(() => { if (state.textContent === successMessage) state.textContent = ''; }, 2600);
+    window.setTimeout(() => {
+      if (state && state.textContent === successMessage) state.textContent = '';
+    }, 2600);
     return true;
   } catch (error) {
-    state.textContent = error.message;
-    state.classList.add('error');
-    window.setTimeout(() => state.classList.remove('error'), 2500);
+    if (state) state.textContent = error.message;
+    window.setTimeout(() => {
+      if (state) state.textContent = '';
+    }, 3200);
     return false;
   }
 }
@@ -365,16 +530,41 @@ async function removeOrRestoreCommand(command) {
   }
 }
 
+function renderCategoryChips() {
+  const box = $('commandCategories');
+  if (!box || !commandInventory.length) return;
+  const counts = new Map();
+  for (const command of commandInventory) counts.set(command.category, (counts.get(command.category) ?? 0) + 1);
+  const categories = ['Todos', ...[...counts.keys()].sort()];
+  box.replaceChildren();
+  for (const category of categories) {
+    const chip = makeElement('button', `chip${commandCategory === category ? ' is-active' : ''}`);
+    chip.type = 'button';
+    const label = makeElement('span', '', category);
+    const total = makeElement('b', '', category === 'Todos' ? commandInventory.length : counts.get(category));
+    chip.append(label, total);
+    chip.addEventListener('click', () => {
+      commandCategory = category;
+      renderCategoryChips();
+      renderCommands();
+    });
+    box.append(chip);
+  }
+}
+
 function renderCommands() {
   const list = $('commandList');
-  const query = $('commandSearch').value.trim().toLowerCase();
+  if (!list) return;
+  const query = ($('commandSearch')?.value ?? '').trim().toLowerCase();
   const visibleCommands = commandInventory.filter((command) => {
     const searchable = `${command.name} ${command.category} ${command.description} ${command.aliases.join(' ')}`.toLowerCase();
-    return searchable.includes(query);
+    const matchesCategory = commandCategory === 'Todos' || command.category === commandCategory;
+    return matchesCategory && searchable.includes(query);
   });
   const implementedCount = commandInventory.filter((command) => command.implemented).length;
   const pendingCount = commandInventory.length - implementedCount;
   $('commandCount').textContent = `${implementedCount} listos · ${pendingCount} pendientes`;
+  setText('navCommandCount', implementedCount);
   list.replaceChildren();
 
   if (!visibleCommands.length) {
@@ -411,46 +601,296 @@ function renderCommands() {
 }
 
 async function loadCommands() {
+  const list = $('commandList');
+  if (!list) return;
   try {
     const result = await api('/api/commands');
     commandSettings = result.settings;
     commandInventory = result.commands;
     $('commandDecoration').value = commandSettings.commandDecoration;
+    renderCategoryChips();
     renderCommands();
   } catch (error) {
-    $('commandList').replaceChildren(makeElement('p', 'empty-state error', `No se pudieron cargar los comandos: ${error.message}`));
+    list.replaceChildren(makeElement('p', 'empty-state error', `No se pudieron cargar los comandos: ${error.message}`));
   }
 }
 
 async function refreshMenuPreview() {
+  const preview = $('menuPreview');
+  if (!preview) return;
   try {
     const result = await api('/api/menu');
-    $('menuPreview').textContent = result.text;
+    preview.textContent = result.text;
+    setText('menuState', 'vista previa en vivo');
   } catch (error) {
-    $('menuPreview').textContent = `No se pudo cargar la vista previa: ${error.message}`;
+    preview.textContent = `No se pudo cargar la vista previa: ${error.message}`;
   }
 }
 
+/* --------------------------------- logs -------------------------------- */
+let eventSource = null;
+
 function startLogs() {
+  const box = $('console');
+  if (!box || typeof EventSource !== 'function') return;
   eventSource?.close();
   eventSource = new EventSource('/api/logs/stream');
   eventSource.onmessage = (event) => {
     try {
       const entry = JSON.parse(event.data);
-      const line = makeElement('div', `lvl-${entry.level}`, `${entry.time.slice(11, 19)} ${entry.level.toUpperCase().padEnd(5)} [${entry.scope}] ${entry.message}`);
-      const box = $('console');
+      const line = makeElement('div', `lvl-${entry.level}`, `${String(entry.time).slice(11, 19)} ${String(entry.level).toUpperCase().padEnd(5)} [${entry.scope}] ${entry.message}`);
       box.append(line);
       while (box.childElementCount > 500) box.firstElementChild.remove();
       if ($('autoscroll').checked) box.scrollTop = box.scrollHeight;
-    } catch { /* ignora eventos malformados */ }
+    } catch {
+      /* ignora eventos malformados */
+    }
   };
   eventSource.onerror = () => {
-    // EventSource reconecta automáticamente; no es un error de configuración del usuario.
+    /* EventSource reconecta solo. */
   };
 }
 
-async function init() {
-  initTheme();
+/* ------------------------------ telemetría ----------------------------- */
+async function refreshSystem() {
+  const data = await apiOrNull('/api/system');
+  const pill = $('monitorPill');
+  if (!data) {
+    if (pill) {
+      pill.className = 'pill bad';
+      pill.querySelector('span:last-child').textContent = 'sin datos del servidor';
+    }
+    return;
+  }
+  if (pill) {
+    pill.className = 'pill ok';
+    pill.querySelector('span:last-child').textContent = `medido ${new Date(data.time).toLocaleTimeString('es-UY')}`;
+  }
+
+  const cpu = Number(data.cpuPercent) || 0;
+  setText('cpuValue', `${cpu.toFixed(1)} %`);
+  setWidth('cpuBar', cpu);
+  setText('cpuNote', `${data.cpuCores ?? '—'} núcleos · carga ${Array.isArray(data.loadAvg) ? data.loadAvg.join(' / ') : '—'}`);
+
+  const memory = data.memory ?? {};
+  setText('ramValue', `${Number(memory.usedPercent ?? 0).toFixed(1)} %`);
+  setWidth('ramBar', memory.usedPercent);
+  setText('ramNote', `Usado ${memory.usedGb ?? '—'} GB · Total ${memory.totalGb ?? '—'} GB · Libre ${memory.freeGb ?? '—'} GB`);
+
+  if (data.disk) {
+    setText('diskValue', `${Number(data.disk.usedPercent).toFixed(1)} %`);
+    setWidth('diskBar', data.disk.usedPercent);
+    setText('diskNote', `Usado ${data.disk.usedGb} GB · Total ${data.disk.totalGb} GB · Libre ${data.disk.freeGb} GB`);
+  } else {
+    setText('diskValue', 'sin datos');
+    setWidth('diskBar', 0);
+    setText('diskNote', 'El sistema de archivos no reporta métricas en este contenedor.');
+  }
+
+  const latency = data.dbLatencyMs;
+  const latencyPercent = latency === null || latency === undefined ? 0 : Math.max(6, Math.min(100, 100 - latency));
+  setText('netValue', latency === null || latency === undefined ? 'sin respuesta' : `${latency} ms`);
+  setWidth('netBar', latencyPercent);
+  setText('netNote', latency === null || latency === undefined ? 'Base de datos sin responder.' : `Latencia de PostgreSQL · ${lastStatus.whatsapp === 'open' ? 'WhatsApp en línea' : 'WhatsApp pendiente'}`);
+
+  setText('sysHost', data.hostname);
+  setText('sysPid', data.pid);
+  setText('sysNode', data.node);
+  setText('sysPlatform', `${data.platform ?? '—'} · ${data.arch ?? ''}`);
+  setText('sysCpuModel', `${data.cpuModel ?? '—'}${data.cpuSpeedMhz ? ` @ ${data.cpuSpeedMhz} MHz` : ''}`);
+  setText('sysLoad', Array.isArray(data.loadAvg) ? data.loadAvg.join(' / ') : '—');
+  setText('sysUptime', formatDuration(data.systemUptimeSec));
+  setText('sysTime', formatDate(data.time));
+  setText('heroDb', latency === null || latency === undefined ? 'sin respuesta' : `ok · ${latency} ms`);
+}
+
+async function refreshMetrics() {
+  const data = await apiOrNull('/api/metrics');
+  const metrics = data?.metrics;
+  if (!metrics) {
+    setText('botGroups', 'sin datos');
+    setText('heroDb', 'sin datos');
+    return;
+  }
+  countUp('statUsers', metrics.users);
+  countUp('statCharacters', metrics.characters);
+  countUp('statGroups', metrics.groups);
+  countUp('statMembers', metrics.members);
+  countUp('statRequests', metrics.pendingRequests);
+  countUp('statWarns', metrics.warnings);
+  setText('statCharactersNote', `${number(metrics.charactersOccupied)} ocupados`);
+  setText('statMembersNote', `${number(metrics.activeMembers)} activos en 7 días`);
+  setText('botGroups', number(metrics.groups));
+  setText('botUsers', number(metrics.users));
+  setText('botCharacters', `${number(metrics.charactersOccupied)} / ${number(metrics.characters)}`);
+  setText('botActivity', formatDate(metrics.lastActivityAt));
+  setText('cardGroups', number(metrics.groups));
+  setText('cardActive', number(metrics.activeMembers));
+  setText('cardActions', number(metrics.actions));
+  setText('monGroups', number(metrics.groups));
+  setText('monMembers', number(metrics.members));
+  setText('monUsers', number(metrics.users));
+  setText('monCharacters', `${number(metrics.charactersOccupied)} / ${number(metrics.characters)}`);
+  setText('monRequests', number(metrics.pendingRequests));
+  setText('monWarns', number(metrics.warnings));
+  setText('monActions', number(metrics.actions));
+  setText('monLastActivity', formatDate(metrics.lastActivityAt));
+}
+
+/* ------------------------------ navegación ----------------------------- */
+const VIEW_NAMES = {
+  inicio: 'Inicio',
+  conexion: 'Conexión',
+  bots: 'Mis Bots',
+  comandos: 'Comandos',
+  identidad: 'Identidad',
+  monitor: 'Monitor',
+  links: 'Links',
+  soporte: 'Soporte',
+};
+
+function showView(name) {
+  const target = VIEW_NAMES[name] ? name : 'inicio';
+  for (const link of document.querySelectorAll('[data-view]')) {
+    link.classList.toggle('is-active', link.dataset.view === target);
+  }
+  for (const section of document.querySelectorAll('.view')) {
+    section.classList.toggle('is-active', section.id === `view-${target}`);
+  }
+  setText('viewName', VIEW_NAMES[target]);
+}
+
+function initNav() {
+  const links = document.querySelectorAll('[data-view]');
+  if (!links.length) return;
+  for (const link of links) {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const name = link.dataset.view;
+      if (typeof location !== 'undefined') history.replaceState(null, '', `#${name}`);
+      showView(name);
+      if (typeof window.scrollTo === 'function') window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (name === 'monitor') void refreshSystem();
+    });
+  }
+  if (typeof location !== 'undefined' && location.hash) showView(location.hash.slice(1));
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('hashchange', () => {
+      if (location.hash) showView(location.hash.slice(1));
+    });
+  }
+}
+
+/* ------------------------------- landing ------------------------------- */
+async function initLanding() {
+  const status = await apiOrNull('/api/status');
+  if (status) paintStatus(status);
+
+  const [commands, metrics] = await Promise.all([apiOrNull('/api/commands'), apiOrNull('/api/metrics')]);
+  const inventory = commands?.commands ?? [];
+  const implemented = inventory.filter((command) => command.implemented).length;
+  const categories = new Set(inventory.map((command) => command.category)).size;
+  countUp('heroCount', implemented);
+  setText('heroCountLabel', 'Comandos disponibles');
+  countUp('landCommands', inventory.length);
+  countUp('landImplemented', implemented);
+  countUp('landCategories', categories);
+  if (metrics?.metrics) {
+    countUp('landGroups', metrics.metrics.groups);
+    countUp('landUsers', metrics.metrics.users);
+    countUp('landCharacters', metrics.metrics.characters);
+  }
+  const [statusLabel] = BADGE[status?.whatsapp] ?? ['Sin datos', 'bad'];
+  setText('landStatus', statusLabel);
+  if (status) setText('heroDb', metrics?.metrics ? 'ok' : 'sin datos');
+  await refreshMenuPreview();
+
+  const refresh = $('refreshPreview');
+  refresh?.addEventListener('click', () => refreshMenuPreview());
+  if (typeof window.setInterval === 'function') window.setInterval(refreshMenuPreview, 60_000);
+}
+
+/* ------------------------------- catálogo ------------------------------ */
+function renderCatalog() {
+  const box = $('catalog');
+  if (!box) return;
+  const query = ($('commandSearch')?.value ?? '').trim().toLowerCase();
+  const matches = commandInventory.filter((command) => {
+    const searchable = `${command.name} ${command.category} ${command.description} ${command.aliases.join(' ')} ${command.usage}`.toLowerCase();
+    const matchesCategory = commandCategory === 'Todos' || command.category === commandCategory;
+    return matchesCategory && searchable.includes(query);
+  });
+
+  box.replaceChildren();
+  setText('catalogCount', `${matches.length} / ${commandInventory.length}`);
+  setText('catalogMeta', `${commandInventory.length} comandos · ${commandInventory.filter((c) => c.implemented).length} ya implementados · actualizado ${formatDate(new Date())}`);
+
+  if (!matches.length) {
+    box.append(makeElement('p', 'empty-state', 'No se encontraron comandos con esos filtros.'));
+    return;
+  }
+
+  const groups = new Map();
+  for (const command of matches) groups.set(command.category, [...(groups.get(command.category) ?? []), command]);
+
+  for (const [category, commands] of [...groups.entries()].sort()) {
+    const section = makeElement('section', 'section');
+    section.style.paddingTop = '0';
+    const head = makeElement('div', 'section-head');
+    head.style.marginBottom = '18px';
+    head.append(makeElement('p', 'eyebrow', category));
+    head.append(makeElement('h3', '', `${commands.length} comando${commands.length === 1 ? '' : 's'}`));
+    section.append(head);
+
+    const grid = makeElement('div', 'catalog-grid');
+    for (const command of commands) {
+      const card = makeElement('button', 'cmd-card');
+      card.type = 'button';
+      card.title = `Copiar ${command.usage}`;
+      const title = makeElement('div', '');
+      title.append(makeElement('span', 'cmd-name', `.${command.name}`));
+      if (command.args) title.append(makeElement('span', 'cmd-args', command.args));
+      card.append(title);
+      card.append(makeElement('p', '', command.description));
+      if (command.aliases.length) card.append(makeElement('span', 'cmd-alias', `alias: ${command.aliases.map((alias) => `.${alias}`).join(' ')}`));
+      card.append(makeElement('span', 'cmd-alias', command.implemented ? '✓ disponible' : '○ pendiente'));
+      card.addEventListener('click', () => copyText(command.usage, `${command.usage} copiado.`));
+      grid.append(card);
+    }
+    section.append(grid);
+    box.append(section);
+  }
+}
+
+async function initCatalog() {
+  try {
+    const result = await api('/api/commands');
+    commandSettings = result.settings;
+    commandInventory = result.commands;
+    renderCategoryChips();
+    renderCatalog();
+  } catch (error) {
+    setText('catalogMeta', `No se pudo cargar el catálogo: ${error.message}`);
+    $('catalog').append(makeElement('p', 'empty-state error', 'Revisa que el servicio tenga base de datos disponible.'));
+  }
+
+  $('commandSearch')?.addEventListener('input', renderCatalog);
+  if (typeof document.addEventListener === 'function') {
+    document.addEventListener('keydown', (event) => {
+      if (event.key === '/' && document.activeElement !== $('commandSearch')) {
+        event.preventDefault();
+        $('commandSearch')?.focus();
+      }
+    });
+  }
+}
+
+/* --------------------------------- panel ------------------------------- */
+async function initPanel() {
+  const greeting = greetingFor(new Date().getHours());
+  setText('greeting', greeting.title);
+
+  initNav();
   $('pair').addEventListener('click', requestPairingCode);
   $('phone').addEventListener('keydown', (event) => {
     if (event.key !== 'Enter') return;
@@ -475,16 +915,40 @@ async function init() {
   $('commandDecoration').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') $('saveDecoration').click();
   });
+  $('pairCode').addEventListener('click', () => {
+    if (pairingCode) copyText(pairingCode, 'Código copiado.');
+  });
 
-  await Promise.all([refreshStatus(), refreshBanner(), loadCommands(), refreshMenuPreview()]);
+  await Promise.all([refreshStatus(), refreshBanner(), loadCommands(), refreshMenuPreview(), refreshSystem(), refreshMetrics()]);
   startLogs();
-  statusTimer = window.setInterval(refreshStatus, 5000);
+  if (typeof window.setInterval === 'function') {
+    window.setInterval(refreshStatus, 5000);
+    window.setInterval(refreshSystem, 15_000);
+    window.setInterval(refreshMetrics, 30_000);
+  }
+  showView(typeof location !== 'undefined' && location.hash ? location.hash.slice(1) : 'inicio');
 }
 
-window.addEventListener('beforeunload', () => {
-  clearInterval(statusTimer);
-  stopPairingTicker();
-  eventSource?.close();
-});
+/* --------------------------------- arranque ---------------------------- */
+function currentPage() {
+  const page = document.documentElement?.dataset?.page;
+  return page === 'landing' || page === 'cmds' ? page : 'home';
+}
 
-init();
+async function init() {
+  initTheme();
+  if (currentPage() === 'landing') return initLanding();
+  if (currentPage() === 'cmds') return initCatalog();
+  return initPanel();
+}
+
+if (typeof window.addEventListener === 'function') {
+  window.addEventListener('beforeunload', () => {
+    stopPairingTicker();
+    eventSource?.close();
+  });
+}
+
+init().catch((error) => {
+  console.error('No se pudo iniciar la interfaz:', error);
+});

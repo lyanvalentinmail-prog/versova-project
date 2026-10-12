@@ -1,5 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
+import { statfs } from 'node:fs/promises';
 import type { Server as HttpServer } from 'node:http';
+import { arch, cpus, hostname, loadavg, platform, release, totalmem, freemem, uptime as osUptime } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config/index.js';
@@ -7,7 +9,7 @@ import { conn, currentPairing, getSocket, logoutBot, requestPairing } from '../c
 import { getCommandSettings, saveCommandSettings } from '../core/command-settings.js';
 import { allCommands } from '../core/router.js';
 import { getCommandInventory, knownCommandNames } from '../commands/catalog.js';
-import { getSetting, setSetting } from '../database/repos.js';
+import { getPlatformMetrics, getSetting, setSetting } from '../database/repos.js';
 import { pool } from '../database/db.js';
 import { logBus, logger, recentLogs, type LogEntry } from '../utils/logger.js';
 import { hit } from '../utils/ratelimit.js';
@@ -37,7 +39,13 @@ export function startWeb(): HttpServer {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '3mb' }));
-  app.use(express.static(join(here, 'public'), { index: 'index.html' }));
+  const publicDir = join(here, 'public');
+  app.use(express.static(publicDir, { index: 'index.html', extensions: ['html'] }));
+
+  // Páginas del panel (una sola app, varias rutas como en la web de referencia).
+  app.get('/home', (_req, res) => res.sendFile(join(publicDir, 'home.html')));
+  app.get('/cmds', (_req, res) => res.sendFile(join(publicDir, 'cmds.html')));
+  app.get('/status', (_req, res) => res.redirect(302, '/home#monitor'));
 
   // Salud del servicio (Render y monitores externos).
   app.get('/health', async (_req, res) => {
@@ -91,6 +99,76 @@ export function startWeb(): HttpServer {
     } catch (err) {
       logger.error('web', `Logout falló: ${(err as Error).message}`);
       res.status(500).json({ error: 'No se pudo cerrar la sesión.' });
+    }
+  });
+
+  // Telemetría real del servidor para la sección Monitor del panel.
+  app.get('/api/system', async (_req, res) => {
+    const cpuList = cpus();
+    const cores = cpuList.length || 1;
+    const load = loadavg();
+    const totalBytes = totalmem();
+    const freeBytes = freemem();
+    const usedBytes = totalBytes - freeBytes;
+    const round = (value: number, digits = 1) => Number(value.toFixed(digits));
+    const percent = (part: number, whole: number) => (whole > 0 ? round((part / whole) * 100, 1) : 0);
+
+    let disk: { totalGb: number; freeGb: number; usedGb: number; usedPercent: number } | null = null;
+    try {
+      const fs = await statfs(process.cwd());
+      const total = fs.blocks * fs.bsize;
+      const free = fs.bavail * fs.bsize;
+      disk = {
+        totalGb: round(total / 1024 ** 3),
+        freeGb: round(free / 1024 ** 3),
+        usedGb: round((total - free) / 1024 ** 3),
+        usedPercent: percent(total - free, total),
+      };
+    } catch {
+      disk = null;
+    }
+
+    const dbStart = Date.now();
+    let dbLatencyMs: number | null = null;
+    try {
+      await pool.query('SELECT 1');
+      dbLatencyMs = Date.now() - dbStart;
+    } catch {
+      dbLatencyMs = null;
+    }
+
+    res.json({
+      hostname: hostname(),
+      pid: process.pid,
+      platform: `${platform()} ${release()}`,
+      arch: arch(),
+      node: process.version,
+      cpuModel: cpuList[0]?.model?.trim() ?? 'Desconocida',
+      cpuCores: cores,
+      cpuSpeedMhz: cpuList[0]?.speed ?? null,
+      loadAvg: load.map((value) => round(value, 2)),
+      cpuPercent: Math.min(100, percent(load[0] ?? 0, cores)),
+      uptimeSec: Math.floor(process.uptime()),
+      systemUptimeSec: Math.floor(osUptime()),
+      memory: {
+        totalGb: round(totalBytes / 1024 ** 3, 2),
+        usedGb: round(usedBytes / 1024 ** 3, 2),
+        freeGb: round(freeBytes / 1024 ** 3, 2),
+        usedPercent: percent(usedBytes, totalBytes),
+      },
+      disk,
+      dbLatencyMs,
+      time: new Date().toISOString(),
+    });
+  });
+
+  // Totales reales de la base (grupos, integrantes, personajes, advertencias…).
+  app.get('/api/metrics', async (_req, res) => {
+    try {
+      res.json({ ok: true, metrics: await getPlatformMetrics() });
+    } catch (err) {
+      logger.warn('web', `Métricas no disponibles: ${(err as Error).message}`);
+      res.status(503).json({ ok: false, error: 'La base de datos no está disponible ahora mismo.' });
     }
   });
 
